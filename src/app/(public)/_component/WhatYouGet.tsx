@@ -2,15 +2,14 @@ import ButtonTag from "@/components/shared/buttonTag";
 import SubtleText from "./SubtleText";
 import Image from "next/image";
 import ProductsCard from "@/components/shared/productsCard";
+import TitleCase from "@/components/shared/titleCase";
 
 export default function WhatYouGet() {
   return (
     <section className="px-15 pt-24 space-y-12 pb-10">
       <div className="text-center mx-auto w-[50%]">
         <ButtonTag title="Products" />
-        <h2 className="font-semibold text-4xl leading-[120%] tracking-[-2%] text-blackOthers mt-3">
-          What You Get
-        </h2>
+        <TitleCase text="What You Get" />
         <SubtleText text="From live class recordings to pre-recorded lectures, question banks, and SCA cases—everything you need in one place." />
       </div>
 

@@ -18,7 +18,7 @@ export default function EverythingYouNeed() {
 
       <aside className="basis-3/5">
         <Image
-          src={"/Images/everythingYouNeed.png"}
+          src={"/Images/everythingImage.svg"}
           alt="Image of Everything you need"
           width={752}
           height={415}

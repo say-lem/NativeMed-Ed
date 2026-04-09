@@ -136,18 +136,6 @@
   );
 }
 
-@theme {
-  --color-primary100: rgba(89, 37, 179, 1);
-  --color-Secondary100: rgba(28, 57, 103, 1);
-  --color-Subtle-text: rgba(111, 111, 111, 1);
-  --color-gray1: rgba(214, 214, 214, 1);
-  --color-gray2: rgba(183, 183, 185, 1);
-  --color-black: rgba(0, 0, 0, 1);
-  --color-blackOthers: rgba(8, 10, 13, 1);
-  --color-grayFromRadialBg: rgba(247, 244, 251, 1);
-  --color-primary-white: rgba(247, 244, 251, 1);
-}
-
 .tagStarBg {
   background: linear-gradient(
     93.39deg,
@@ -160,4 +148,16 @@
 
 .cardShadow {
   box-shadow: 0px 30px 60px 0px rgba(0, 0, 0, 0.1);
+}
+
+@theme {
+  --color-primary100: rgba(89, 37, 179, 1);
+  --color-Secondary100: rgba(28, 57, 103, 1);
+  --color-Subtle-text: rgba(111, 111, 111, 1);
+  --color-gray1: rgba(214, 214, 214, 1);
+  --color-gray2: rgba(183, 183, 185, 1);
+  --color-black: rgba(0, 0, 0, 1);
+  --color-blackOthers: rgba(8, 10, 13, 1);
+  --color-grayFromRadialBg: rgba(247, 244, 251, 1);
+  --color-primary-white: rgba(247, 244, 251, 1);
 }

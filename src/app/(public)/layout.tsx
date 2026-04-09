@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fustat } from "next/font/google";
 import "../globals.css";
 import PublicHeader from "@/components/shared/header/header";
+import Footer from "@/components/shared/footer/footer";
 
 const fustat = Fustat({
   subsets: ["latin"],
@@ -26,6 +27,7 @@ export default function RootLayout({
       <body className="min-h-full">
         <PublicHeader />
         {children}
+        <Footer />
       </body>
     </html>
   );

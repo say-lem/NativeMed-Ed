@@ -2,6 +2,8 @@ import ClassCountdown from "@/components/shared/countdown";
 import HomeHero from "./_component/Hero";
 import EverythingYouNeed from "./_component/EverythingYouNeed";
 import WhatYouGet from "./_component/WhatYouGet";
+import Testimonial from "./_component/Testimonial";
+import FaQs from "./_component/FaQs";
 
 export default function Home() {
   return (
@@ -15,6 +17,8 @@ export default function Home() {
       />
       <EverythingYouNeed />
       <WhatYouGet />
+      <Testimonial />
+      <FaQs />
     </>
   );
 }

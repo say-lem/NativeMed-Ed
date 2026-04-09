@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { NavLink } from "./navLink";
+import { HeaderNavLink } from "./navLink";
 
 export default function PublicHeader() {
   return (
@@ -13,10 +13,10 @@ export default function PublicHeader() {
       />
 
       <nav className="space-x-8">
-        <NavLink href="/" label="Home" />
-        <NavLink href="/products" label="Products" />
-        <NavLink href="/about" label="About" />
-        <NavLink href="/contact" label="Contact" />
+        <HeaderNavLink href="/" label="Home" />
+        <HeaderNavLink href="/products" label="Products" />
+        <HeaderNavLink href="/about" label="About" />
+        <HeaderNavLink href="/contact" label="Contact" />
       </nav>
 
       <Button className="bg-primary100 font-semibold text-xs">
