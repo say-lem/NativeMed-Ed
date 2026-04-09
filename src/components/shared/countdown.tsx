@@ -43,12 +43,21 @@ export default function ClassCountdown({
   ctaLabel = "Register Now",
 }: Props) {
   const target = targetDate instanceof Date ? targetDate : new Date(targetDate);
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(getTimeLeft(target));
+
+  // ✅ FIX: start with null (prevents SSR mismatch)
+  const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
-    const id = setInterval(() => setTimeLeft(getTimeLeft(target)), 1_000);
+    const update = () => setTimeLeft(getTimeLeft(target));
+
+    update(); // run immediately on mount
+    const id = setInterval(update, 1000);
+
     return () => clearInterval(id);
   }, [targetDate]);
+
+  // ✅ FIX: avoid hydration mismatch
+  if (!timeLeft) return null;
 
   const units = [
     { value: timeLeft.days, label: "Days" },
@@ -58,25 +67,15 @@ export default function ClassCountdown({
   ];
 
   return (
-    /*
-     * Full-width dark banner.
-     * overflow-hidden clips the rings that bleed outside the banner bounds.
-     * relative lets us position the rings behind the content.
-     */
     <div
       className="relative w-full overflow-hidden flex items-center justify-center py-20"
       style={{ background: "#07070f" }}
     >
-      {/*
-       * Concentric rings — rendered largest to smallest so each one
-       * paints on top of the previous. This creates the gradient effect:
-       * lightest/widest at the edges, darkest closest to the content.
-       */}
       {[
-        { size: "100%", bg: "rgba(214, 214, 214, 1))" }, // outermost - lightest dark gray
-        { size: "85%", bg: "red" }, // second - dark gray with purple tint
-        { size: "75%", bg: "green" }, // third - darker purple-gray
-        { size: "65%", bg: "black" }, // innermost - darkest purple
+        { size: "100%", bg: "rgba(214, 214, 214, 1)" }, // ✅ fixed extra ")"
+        { size: "85%", bg: "rgba(155, 124, 209, 0.08)" },
+        { size: "75%", bg: "rgba(8, 10, 13, 1)" },
+        { size: "65%", bg: "black" },
       ].map((ring, i) => (
         <div
           key={i}
@@ -95,25 +94,20 @@ export default function ClassCountdown({
         />
       ))}
 
-      {/* Content — z-10 keeps it above all the rings */}
       <div className="relative z-10 flex flex-col items-center text-center px-6 gap-9">
-        {/* Small date label above the title */}
         <div>
           <p className="text-Subtle-text leading-[150%] tracking-[-1%] font-normal">
             {eventDateLabel}
           </p>
 
-          {/* Main event title */}
           <h2 className="font-light leading-[130%] tracking-[-2%] text-4xl text-white">
             {eventTitle}
           </h2>
         </div>
 
-        {/* Timer — numbers separated by colons */}
         <div className="flex items-center justify-center gap-2.5">
           {units.map((unit, i) => (
             <div key={unit.label} className="flex items-start ">
-              {/* Single time unit: number + label */}
               <div className="flex flex-col items-center min-w-18 sm:min-w-24">
                 <span className=" sm:text-7xl font-light tabular-nums  text-8xl leading- none tracking-[-2%] text-white">
                   {pad(unit.value)}
@@ -123,7 +117,6 @@ export default function ClassCountdown({
                 </span>
               </div>
 
-              {/* Colon separator — skip after the last unit */}
               {i < units.length - 1 && (
                 <span className="text-8xl sm:text-6xl font-light text-gray2 leading-none px-4">
                   :
@@ -133,7 +126,6 @@ export default function ClassCountdown({
           ))}
         </div>
 
-        {/* CTA button */}
         <Button
           onClick={() => alert("Register clicked")}
           className="text-sm font-semibold text-white hover:opacity-90 active:scale-95 bg-primary100 transition-all leading-[150%]"

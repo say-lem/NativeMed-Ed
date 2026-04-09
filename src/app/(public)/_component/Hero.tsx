@@ -21,9 +21,9 @@ export default function HomeHero() {
           height={50}
         />
 
-        <h1 className="text-center font-semibold text-7xl tracking-[-2%] leading-21.25">
-          Master Your Medical Exams
-          <br /> with <span className="text-primary100">Expert</span> Guidance
+        <h1 className="text-center font-semibold text-7xl tracking-[-2%] leading-21.25 text-blackOthers">
+          Master Your Medical Exams with{" "}
+          <span className="text-primary100">Expert</span> Guidance
         </h1>
         <Image
           src="/Images/brain tile.png"
@@ -32,9 +32,8 @@ export default function HomeHero() {
           height={50}
         />
       </div>
-      <p className="text-center text-Subtle-text text-lg leading-[150%]">
+      <p className="text-Subtle-text text-lg leading-[150%] w-[60%] mx-auto text-center">
         We go beyond exam preparation, equipping you with the confidence and{" "}
-        <br />
         competence to excel as a General Practitioner or Family Physician.
       </p>
 
@@ -50,7 +49,13 @@ export default function HomeHero() {
         </Button>
       </div>
 
-      <Image src="/Images/Elipses.png" alt="Elipses" fill className="my-44" />
+      <Image
+        src="/Images/Elipses.png"
+        alt="Elipses"
+        loading="eager"
+        fill
+        className="my-44"
+      />
     </section>
   );
 }

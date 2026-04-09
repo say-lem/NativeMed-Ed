@@ -142,4 +142,22 @@
   --color-Subtle-text: rgba(111, 111, 111, 1);
   --color-gray1: rgba(214, 214, 214, 1);
   --color-gray2: rgba(183, 183, 185, 1);
+  --color-black: rgba(0, 0, 0, 1);
+  --color-blackOthers: rgba(8, 10, 13, 1);
+  --color-grayFromRadialBg: rgba(247, 244, 251, 1);
+  --color-primary-white: rgba(247, 244, 251, 1);
+}
+
+.tagStarBg {
+  background: linear-gradient(
+    93.39deg,
+    rgba(255, 255, 255, 0.3) -3.98%,
+    rgba(211, 189, 251, 0.3) 117.39%
+  );
+  box-shadow: 0px 0px 10px 0px rgba(222, 211, 240, 1);
+  border: solid white 0.5px;
+}
+
+.cardShadow {
+  box-shadow: 0px 30px 60px 0px rgba(0, 0, 0, 0.1);
 }
