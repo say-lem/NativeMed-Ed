@@ -13,7 +13,7 @@ export default function ProductsHero() {
           className="self-start"
         />
 
-        <h1 className="text-center font-semibold text-7xl tracking-[-2%] leading-21.25 text-blackOthers py-7">
+        <h1 className="text-center font-semibold text-5xl tracking-[-2%] leading-21.25 text-blackOthers py-7">
           Our Products
         </h1>
         <Image

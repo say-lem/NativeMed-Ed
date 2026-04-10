@@ -114,7 +114,12 @@ function FaQs() {
       </section>
 
       <div className="relative w-full h-screen">
-        <Image src="/Images/doctorsGiving.svg" alt="givingDoctors Image" fill />
+        <Image
+          src="/Images/doctorsGiving.svg"
+          alt="givingDoctors Image"
+          fill
+          className="object-fill"
+        />
       </div>
     </>
   );
