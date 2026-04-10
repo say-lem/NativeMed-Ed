@@ -160,4 +160,7 @@
   --color-blackOthers: rgba(8, 10, 13, 1);
   --color-grayFromRadialBg: rgba(247, 244, 251, 1);
   --color-primary-white: rgba(247, 244, 251, 1);
+  --color-subtle2: rgba(55, 55, 55, 1);
+  --color-primary20: rgba(222, 211, 240, 1);
+  --color-secondary20: rgba(210, 215, 225, 1);
 }
