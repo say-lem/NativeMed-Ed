@@ -53,7 +53,8 @@ const testimonials: Testimonial[] = [
 // Show 2 full cards + ~half of the next one.
 // Card width = (containerWidth - gaps) / 2.5
 // We express this as a calc() so it's responsive.
-const CARD_WIDTH = "calc((100%) / 2.5)";
+// Let's use Tailwind classes directly for width instead of this.
+// const CARD_WIDTH = "calc((100%) / 2.5)";
 
 function Testimonial() {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -123,8 +124,8 @@ function Testimonial() {
   };
 
   return (
-    <section className="px-15 pt-28 pb-24">
-      <div className="text-center mx-auto w-[50%] mb-12">
+    <section className="px-4 md:px-15 pt-12 md:pt-28 pb-12 md:pb-24">
+      <div className="text-center mx-auto w-full sm:w-[90%] md:w-[50%] mb-6 md:mb-12">
         <ButtonTag title="Testimonials" />
         <TitleCase text="See what the community is saying about native medical Education" />
       </div>
@@ -133,7 +134,7 @@ function Testimonial() {
       <div className="overflow-hidden">
         <div
           ref={trackRef}
-          className="flex gap-5 overflow-x-auto scroll-smooth pb-4"
+          className="flex gap-3 md:gap-5 overflow-x-auto scroll-smooth pb-4"
           style={{
             scrollSnapType: "x mandatory",
             WebkitOverflowScrolling: "touch",
@@ -150,27 +151,25 @@ function Testimonial() {
             <div
               key={t.id}
               data-card
-              className="flex-none flex flex-col border-[rgba(155,124,209,1)] select-none py-6 px-8 border-[0.2px] rounded-[16px] bg-[rgba(245,239,255,1)] gap-4"
+              className="flex-none flex flex-col border-[rgba(155,124,209,1)] select-none py-4 px-5 md:py-6 md:px-8 border-[0.2px] rounded-[16px] bg-[rgba(245,239,255,1)] gap-3 md:gap-4 w-[80%] sm:w-[75%] md:w-[calc(100%/2.5)]"
               style={{
                 scrollSnapAlign: "start",
-                width: CARD_WIDTH,
-                minWidth: CARD_WIDTH,
               }}
             >
               {/* Label */}
-              <p className="font-semibold text-lg leading-[120%] tracking-[-2%] text-blackOthers">
+              <p className="font-semibold text-base md:text-lg leading-[120%] tracking-[-2%] text-blackOthers">
                 {t.label}
               </p>
 
               {/* Quote */}
-              <p className="text-lg leading-[130%] tracking-[-2%] text-Secondary100">
+              <p className="text-sm md:text-lg leading-[130%] tracking-[-2%] text-Secondary100">
                 <span>&ldquo;</span>
                 {t.quote}
                 <span>&rdquo;</span>
               </p>
 
               {/* Author */}
-              <p className="font-semibold text-lg leading-[120%] tracking-[-2%] text-right">
+              <p className="font-semibold text-sm md:text-lg leading-[120%] tracking-[-2%] text-right">
                 — {t.author}
               </p>
             </div>

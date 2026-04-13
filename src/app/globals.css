@@ -121,7 +121,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
   }
   html {
     @apply font-sans;
@@ -163,4 +163,19 @@
   --color-subtle2: rgba(55, 55, 55, 1);
   --color-primary20: rgba(222, 211, 240, 1);
   --color-secondary20: rgba(210, 215, 225, 1);
+}
+
+.authFormBg {
+  background-image: url(/Images/authImage.svg);
+  background-position: center;
+  background-position: cover;
+}
+
+.authFormBorder {
+  box-shadow: 0px 8px 25px 3px rgba(0, 0, 0, 0.1);
+  border: 0.2px solid rgba(183, 183, 185, 1);
+}
+
+.buttonShadow {
+  box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.1);
 }

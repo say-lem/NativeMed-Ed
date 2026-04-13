@@ -6,8 +6,8 @@ import TitleCase from "@/components/shared/titleCase";
 
 export default function WhatYouGet() {
   return (
-    <section className="px-15 pt-24 space-y-12 pb-10">
-      <div className="text-center mx-auto w-[50%]">
+    <section className="px-4 md:px-15 pt-12 md:pt-24 space-y-6 md:space-y-12 pb-10">
+      <div className="text-center mx-auto w-full sm:w-[90%] md:w-[50%]">
         <ButtonTag title="Products" />
         <TitleCase text="What You Get" />
         <SubtleText text="From live class recordings to pre-recorded lectures, question banks, and SCA cases—everything you need in one place." />

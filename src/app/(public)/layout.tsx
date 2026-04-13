@@ -1,21 +1,5 @@
-import type { Metadata } from "next";
-import { Fustat } from "next/font/google";
-import "../globals.css";
 import PublicHeader from "@/components/shared/header/header";
 import Footer from "@/components/shared/footer/footer";
-
-const fustat = Fustat({
-  subsets: ["latin"],
-  weight: ["200", "300", "400", "500", "600", "700", "800"],
-  display: "swap",
-});
-
-export const metadata: Metadata = {
-  title: "Native Med",
-  icons: {
-    icon: "/Images/nativeMedLogo.png",
-  },
-};
 
 export default function RootLayout({
   children,
@@ -23,12 +7,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${fustat.className} h-full antialiased`}>
-      <body className="min-h-full">
-        <PublicHeader />
-        {children}
-        <Footer />
-      </body>
-    </html>
+    <main className="min-h-full">
+      <PublicHeader />
+      {children}
+      <Footer />
+    </main>
   );
 }

@@ -1,0 +1,28 @@
+import type { Metadata } from "next";
+import { Fustat } from "next/font/google";
+import "./globals.css";
+
+const fustat = Fustat({
+  subsets: ["latin"],
+  weight: ["200", "300", "400", "500", "600", "700", "800"],
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Native Med",
+  icons: {
+    icon: "/Images/nativeMedLogo.png",
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  return (
+    <html lang="en" className={`${fustat.className} h-full antialiased`}>
+      <body className="min-h-full">{children}</body>
+    </html>
+  );
+}

@@ -73,8 +73,8 @@ function FaQs() {
 
   return (
     <>
-      <section className="px-15 pt-24 pb-24">
-        <div className="text-center mx-auto w-[50%] mb-12">
+      <section className="px-4 md:px-15 pt-12 md:pt-24 pb-12 md:pb-24">
+        <div className="text-center mx-auto w-full sm:w-[90%] md:w-[50%] mb-6 md:mb-12">
           <ButtonTag title="FAQs" />
           <TitleCase text="Your Questions answered" />
         </div>
@@ -84,13 +84,13 @@ function FaQs() {
             const isOpen = openId === faq.id;
 
             return (
-              <div className="px-5" key={faq.id}>
+              <div className="px-2 md:px-5" key={faq.id}>
                 <button
                   onClick={() => toggle(faq.id)}
-                  className="w-full flex items-center justify-between gap-6 py-6 text-left"
+                  className="w-full flex items-center justify-between gap-3 md:gap-6 py-4 md:py-6 text-left"
                   aria-expanded={isOpen}
                 >
-                  <span className="font-semibold text-2xl leading-[120%] tracking-[-2%] cursor-pointer">
+                  <span className="font-semibold text-base md:text-2xl leading-[120%] tracking-[-2%] cursor-pointer text-left">
                     {faq.question}
                   </span>
                   <span className="text-black/60">
@@ -103,7 +103,7 @@ function FaQs() {
                     isOpen ? "max-h-96 pb-6" : "max-h-0"
                   }`}
                 >
-                  <p className="text-base px-6 leading-[160%] text-blackOthers text-center">
+                  <p className="text-sm md:text-base px-2 md:px-6 leading-[160%] text-blackOthers text-center">
                     {faq.answer}
                   </p>
                 </div>
@@ -113,7 +113,7 @@ function FaQs() {
         </div>
       </section>
 
-      <div className="relative w-full h-screen">
+      <div className="relative w-full h-[50vh] md:h-screen">
         <Image
           src="/Images/doctorsGiving.svg"
           alt="givingDoctors Image"

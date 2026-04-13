@@ -36,7 +36,7 @@ function getTimeLeft(target: Date): TimeLeft {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export default function ClassCountdown({
+function ClassCountdown({
   targetDate,
   eventDateLabel = "23rd March 2027",
   eventTitle = "Live Class Starts In:",
@@ -68,7 +68,7 @@ export default function ClassCountdown({
 
   return (
     <div
-      className="relative w-full overflow-hidden flex items-center justify-center py-20"
+      className="relative w-full overflow-hidden flex items-center justify-center py-10 md:py-20"
       style={{ background: "#07070f" }}
     >
       {[
@@ -94,31 +94,31 @@ export default function ClassCountdown({
         />
       ))}
 
-      <div className="relative z-10 flex flex-col items-center text-center px-6 gap-9">
+      <div className="relative z-10 flex flex-col items-center text-center px-4 md:px-6 gap-6 md:gap-9">
         <div>
           <p className="text-Subtle-text leading-[150%] tracking-[-1%] font-normal">
             {eventDateLabel}
           </p>
 
-          <h2 className="font-light leading-[130%] tracking-[-2%] text-4xl text-white">
+          <h2 className="font-light leading-[130%] tracking-[-2%] text-2xl md:text-4xl text-white">
             {eventTitle}
           </h2>
         </div>
 
-        <div className="flex items-center justify-center gap-2.5">
+        <div className="flex items-center justify-center gap-1 sm:gap-2.5 flex-wrap">
           {units.map((unit, i) => (
             <div key={unit.label} className="flex items-start ">
-              <div className="flex flex-col items-center min-w-18 sm:min-w-24">
-                <span className=" sm:text-7xl font-light tabular-nums  text-8xl leading- none tracking-[-2%] text-white">
+              <div className="flex flex-col items-center min-w-12 sm:min-w-18 md:min-w-24">
+                <span className="text-3xl sm:text-5xl md:text-8xl font-light tabular-nums leading-none tracking-[-2%] text-white">
                   {pad(unit.value)}
                 </span>
-                <span className="text-xl leading-[120%] text-gray1 tracking-[-2%] font-light ">
+                <span className="text-xs sm:text-sm md:text-xl leading-[120%] text-gray1 tracking-[-2%] font-light">
                   {unit.label}
                 </span>
               </div>
 
               {i < units.length - 1 && (
-                <span className="text-8xl sm:text-6xl font-light text-gray2 leading-none px-4">
+                <span className="text-3xl sm:text-5xl md:text-8xl font-light text-gray2 leading-none px-1 sm:px-2 md:px-4">
                   :
                 </span>
               )}
@@ -134,5 +134,16 @@ export default function ClassCountdown({
         </Button>
       </div>
     </div>
+  );
+}
+
+export default function CountDownToClass() {
+  return (
+    <ClassCountdown
+      targetDate="2027-03-23T00:00:00"
+      eventDateLabel="23rd March 2028"
+      eventTitle="Live Class Starts In:"
+      ctaLabel="Register Now"
+    />
   );
 }
