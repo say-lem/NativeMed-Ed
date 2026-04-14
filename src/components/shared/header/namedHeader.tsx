@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { GrCart } from "react-icons/gr";
 
 type AvatarSize = "sm" | "md" | "lg";
@@ -28,14 +29,14 @@ export default function NamedHeader({
   return (
     <div className="flex gap-6 items-center">
       {/* Cart with notification badge */}
-      <div className="relative">
+      <Link href="/cart" className="relative">
         <GrCart className="text-Secondary100 size-4" />
         {mockUser.cartCount > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
             {mockUser.cartCount > 99 ? "99+" : mockUser.cartCount}
           </span>
         )}
-      </div>
+      </Link>
 
       <div className="flex items-center gap-2">
         <aside

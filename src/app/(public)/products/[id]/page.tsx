@@ -47,7 +47,8 @@ export default function ProductByIdPage({
                   MRCGP SCA Revision
                 </h3>
                 <h4 className="font-semibold text-4xl leading-[130%] tracking-[-2%] text-blackOthers">
-                  £19.99<span className="text-lg leading-[120%]">/month</span>
+                  £{card.price.toFixed(2)}
+                  <span className="text-lg leading-[120%]">/month</span>
                 </h4>
                 <p className="font-light text-xl leading-[150%] text-[rgba(55, 55, 55, 1)]">
                   Prepare effectively for the MRCGP Simulated Consultation
