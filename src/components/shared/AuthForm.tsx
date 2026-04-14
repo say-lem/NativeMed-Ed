@@ -66,7 +66,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
                 </span>
               ) : (
                 <span className="font-light text-sm md:text-base leading-[150%] text-subtle-text">
-                  Don't have an account?
+                  Don&apos;t have an account?
                   <span className="text-primary-100 font-bold"> Sign Up</span>
                 </span>
               )}

@@ -11,10 +11,7 @@ export default function PublicHeader() {
   const [isOpen, setIsOpen] = useState(false);
 
   // False Auth state for testing
-  const [isLoggedIn, setIsLoggedIn] = useState(true);
-  const toggleAuth = () => {
-    setIsLoggedIn(!isLoggedIn);
-  };
+  const [isLoggedIn] = useState(true);
 
   return (
     <header className="radialBgGradient min-h-14 sm:min-h-16 md:min-h-20 lg:min-h-25 flex items-center justify-between px-4 sm:px-6 lg:px-15 sticky top-0 backdrop-blur-md z-50 border-b border-white/20">

@@ -42,12 +42,13 @@ function ClassCountdown({
   eventTitle = "Live Class Starts In:",
   ctaLabel = "Register Now",
 }: Props) {
-  const target = targetDate instanceof Date ? targetDate : new Date(targetDate);
+
 
   // ✅ FIX: start with null (prevents SSR mismatch)
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
+    const target = targetDate instanceof Date ? targetDate : new Date(targetDate);
     const update = () => setTimeLeft(getTimeLeft(target));
 
     update(); // run immediately on mount

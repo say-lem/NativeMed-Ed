@@ -8,11 +8,11 @@ function MissionStatement() {
           Mission Statement
         </h2>
         <p className="leading-[130%] md:leading-[120%] font-medium text-sm sm:text-base md:text-xl lg:text-2xl text-gray-1 mx-auto w-[92%] sm:w-[85%] md:w-[70%] lg:w-[60%]">
-          "Our mission is to empower doctors to excel in their careers by
+          &quot;Our mission is to empower doctors to excel in their careers by
           providing high-quality, affordable, and practical medical education.
           We are dedicated to fostering confidence, competence, and lifelong
           learning, ensuring that every doctor we teach is prepared to deliver
-          compassionate, effective care to their patients".
+          compassionate, effective care to their patients&quot;.
         </p>
       </div>
 
