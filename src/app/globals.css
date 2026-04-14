@@ -170,7 +170,7 @@
 .authFormBg {
   background-image: url(/Images/authImage.svg);
   background-position: center;
-  background-position: cover;
+  background-size: cover;
 }
 
 .authFormBorder {
