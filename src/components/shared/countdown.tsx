@@ -68,7 +68,7 @@ function ClassCountdown({
 
   return (
     <div
-      className="relative w-full overflow-hidden flex items-center justify-center py-10 md:py-20"
+      className="relative w-full overflow-hidden flex items-center justify-center py-8 sm:py-12 md:py-16 lg:py-20"
       style={{ background: "#07070f" }}
     >
       {[
@@ -94,31 +94,31 @@ function ClassCountdown({
         />
       ))}
 
-      <div className="relative z-10 flex flex-col items-center text-center px-4 md:px-6 gap-6 md:gap-9">
+      <div className="relative z-10 flex flex-col items-center text-center px-4 sm:px-6 gap-4 sm:gap-6 lg:gap-9">
         <div>
-          <p className="text-subtle-text leading-[150%] tracking-[-1%] font-normal">
+          <p className="text-subtle-text leading-[150%] tracking-[-1%] font-normal text-sm sm:text-base">
             {eventDateLabel}
           </p>
 
-          <h2 className="font-light leading-[130%] tracking-[-2%] text-2xl md:text-4xl text-white">
+          <h2 className="font-light leading-[130%] tracking-[-2%] text-xl sm:text-2xl md:text-3xl lg:text-4xl text-white">
             {eventTitle}
           </h2>
         </div>
 
-        <div className="flex items-center justify-center gap-1 sm:gap-2.5 flex-wrap">
+        <div className="flex items-center justify-center gap-1 sm:gap-2 md:gap-2.5">
           {units.map((unit, i) => (
             <div key={unit.label} className="flex items-start ">
-              <div className="flex flex-col items-center min-w-12 sm:min-w-18 md:min-w-24">
-                <span className="text-3xl sm:text-5xl md:text-8xl font-light tabular-nums leading-none tracking-[-2%] text-white">
+              <div className="flex flex-col items-center min-w-10 sm:min-w-14 md:min-w-18 lg:min-w-24">
+                <span className="text-2xl sm:text-4xl md:text-5xl lg:text-8xl font-light tabular-nums leading-none tracking-[-2%] text-white">
                   {pad(unit.value)}
                 </span>
-                <span className="text-xs sm:text-sm md:text-xl leading-[120%] text-gray-1 tracking-[-2%] font-light">
+                <span className="text-[10px] sm:text-xs md:text-sm lg:text-xl leading-[120%] text-gray-1 tracking-[-2%] font-light">
                   {unit.label}
                 </span>
               </div>
 
               {i < units.length - 1 && (
-                <span className="text-3xl sm:text-5xl md:text-8xl font-light text-gray-2 leading-none px-1 sm:px-2 md:px-4">
+                <span className="text-2xl sm:text-4xl md:text-5xl lg:text-8xl font-light text-gray-2 leading-none px-0.5 sm:px-1 md:px-2 lg:px-4">
                   :
                 </span>
               )}

@@ -73,8 +73,8 @@ function FaQs() {
 
   return (
     <>
-      <section className="px-4 md:px-15 pt-12 md:pt-24 pb-12 md:pb-24">
-        <div className="text-center mx-auto w-full sm:w-[90%] md:w-[50%] mb-6 md:mb-12">
+      <section className="px-4 sm:px-8 md:px-10 lg:px-15 pt-10 sm:pt-14 md:pt-18 lg:pt-24 pb-10 sm:pb-14 md:pb-18 lg:pb-24">
+        <div className="text-center mx-auto w-full sm:w-[85%] md:w-[65%] lg:w-[50%] mb-4 sm:mb-6 md:mb-8 lg:mb-12">
           <ButtonTag title="FAQs" />
           <TitleCase text="Your Questions answered" />
         </div>
@@ -84,13 +84,13 @@ function FaQs() {
             const isOpen = openId === faq.id;
 
             return (
-              <div className="px-2 md:px-5" key={faq.id}>
+              <div className="px-1 sm:px-2 lg:px-5" key={faq.id}>
                 <button
                   onClick={() => toggle(faq.id)}
-                  className="w-full flex items-center justify-between gap-3 md:gap-6 py-4 md:py-6 text-left"
+                  className="w-full flex items-center justify-between gap-2 sm:gap-3 lg:gap-6 py-3 sm:py-4 lg:py-6 text-left"
                   aria-expanded={isOpen}
                 >
-                  <span className="font-semibold text-base md:text-2xl leading-[120%] tracking-[-2%] cursor-pointer text-left">
+                  <span className="font-semibold text-sm sm:text-base md:text-lg lg:text-2xl leading-[120%] tracking-[-2%] cursor-pointer text-left">
                     {faq.question}
                   </span>
                   <span className="text-black/60">
@@ -100,10 +100,10 @@ function FaQs() {
 
                 <div
                   className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                    isOpen ? "max-h-96 pb-6" : "max-h-0"
+                    isOpen ? "max-h-96 pb-4 sm:pb-6" : "max-h-0"
                   }`}
                 >
-                  <p className="text-sm md:text-base px-2 md:px-6 leading-[160%] text-black-others text-center">
+                  <p className="text-xs sm:text-sm lg:text-base px-1 sm:px-2 lg:px-6 leading-[160%] text-black-others text-center">
                     {faq.answer}
                   </p>
                 </div>
@@ -113,7 +113,7 @@ function FaQs() {
         </div>
       </section>
 
-      <div className="relative w-full h-[50vh] md:h-screen">
+      <div className="relative w-full h-[35vh] sm:h-[40vh] md:h-[50vh] lg:h-screen">
         <Image
           src="/Images/doctorsGiving.svg"
           alt="givingDoctors Image"

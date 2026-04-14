@@ -2,12 +2,12 @@ import TitleCase from "@/components/shared/TitleCase";
 import Image from "next/image";
 
 const aboutFounder = ({ text }: { text: string }) => {
-  return <p className="text-subtle-2 text-base md:text-lg leading-[150%] mt-3 md:mt-5">{text}</p>;
+  return <p className="text-subtle-2 text-sm sm:text-base lg:text-lg leading-[150%] mt-2 sm:mt-3 lg:mt-5">{text}</p>;
 };
 
 const founderLaurel = ({ text }: { text: string }) => {
   return (
-    <p className="text-base md:text-lg leading-[120%] tracking-[-2%] text-subtle-2 -mt-2">
+    <p className="text-sm sm:text-base lg:text-lg leading-[120%] tracking-[-2%] text-subtle-2 -mt-2">
       {text}
     </p>
   );
@@ -15,8 +15,8 @@ const founderLaurel = ({ text }: { text: string }) => {
 
 function Founder() {
   return (
-    <section className="px-4 md:px-15 radialBgGradient pt-12 md:pt-20 pb-24 md:pb-44">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+    <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-10 sm:pt-14 lg:pt-20 pb-16 sm:pb-24 md:pb-32 lg:pb-44">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6 sm:gap-8">
         <aside className="w-full md:basis-3/5">
           <TitleCase text="About The Founder" />
           {aboutFounder({
@@ -28,7 +28,7 @@ function Founder() {
           })}
 
           {aboutFounder({
-            text: "As an educator and mentor, Dr Ohaa is known for his approachable teaching style, deep clinical knowledge, and unwavering dedication to his students’ success. He understands the complexities of preparing for the SCA and MRCGP, and his goal is to provide the support, insights, and tools doctors need to succeed, not just in exams, but in their professional lives.",
+            text: "As an educator and mentor, Dr Ohaa is known for his approachable teaching style, deep clinical knowledge, and unwavering dedication to his students' success. He understands the complexities of preparing for the SCA and MRCGP, and his goal is to provide the support, insights, and tools doctors need to succeed, not just in exams, but in their professional lives.",
           })}
 
           {aboutFounder({
@@ -45,10 +45,10 @@ function Founder() {
           />
 
           <div className="mt-2.5 space-y-2.5 text-center">
-            <h2 className="text-xl md:text-2xl leading-[130%] -tracking-[2%] text-black-others font-semibold">
+            <h2 className="text-lg sm:text-xl lg:text-2xl leading-[130%] -tracking-[2%] text-black-others font-semibold">
               Dr Clinton Ohaa
             </h2>
-            <h4 className="font-semibold text-base md:text-lg leading-[120%] tracking-[-2%] text-black-others">
+            <h4 className="font-semibold text-sm sm:text-base lg:text-lg leading-[120%] tracking-[-2%] text-black-others">
               MBBS, MRCS, MRCGP, MBA
             </h4>
             {founderLaurel({
@@ -59,7 +59,7 @@ function Founder() {
             })}
             {founderLaurel({ text: "PGCert (Medical Education)" })}
 
-            <p className="text-base md:text-lg leading-[120%] tracking-[-2%] mt-2.5 font-semibold text-secondary-100">
+            <p className="text-sm sm:text-base lg:text-lg leading-[120%] tracking-[-2%] mt-2.5 font-semibold text-secondary-100">
               FOUNDER
             </p>
           </div>

@@ -17,13 +17,13 @@ export default function PublicHeader() {
   };
 
   return (
-    <header className="radialBgGradient min-h-20 md:min-h-25 flex items-center justify-between px-5 md:px-15 sticky top-0 backdrop-blur-md z-50 border-b border-white/20">
+    <header className="radialBgGradient min-h-14 sm:min-h-16 md:min-h-20 lg:min-h-25 flex items-center justify-between px-4 sm:px-6 lg:px-15 sticky top-0 backdrop-blur-md z-50 border-b border-white/20">
       <Image
         src={"/Images/nativeMedLogo.png"}
         alt="NativeMed Logo"
         width={49}
         height={50}
-        className="w-10 md:w-12.25"
+        className="w-8 sm:w-9 md:w-10 lg:w-12.25"
       />
 
       <nav className="hidden lg:flex space-x-8">
@@ -34,11 +34,19 @@ export default function PublicHeader() {
       </nav>
 
       {isLoggedIn ? (
-        <NamedHeader />
+        <div className="flex items-center gap-2 sm:gap-4">
+          <NamedHeader />
+          <button
+            className="lg:hidden text-black"
+            onClick={() => setIsOpen(!isOpen)}
+            aria-label="Toggle Navigation"
+          >
+            {isOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
       ) : (
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           <Link href="/register">
-            {" "}
             <Button className="bg-primary-100 font-semibold text-xs hidden sm:inline-flex">
               Get Started
             </Button>
@@ -48,13 +56,13 @@ export default function PublicHeader() {
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle Navigation"
           >
-            {isOpen ? <X size={28} /> : <Menu size={28} />}
+            {isOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       )}
 
       {isOpen && (
-        <div className="absolute top-full left-0 w-full bg-[#f8f9ff]/95 backdrop-blur-md flex flex-col items-center py-8 gap-6 lg:hidden border-b border-white/20 shadow-xl">
+        <div className="absolute top-full left-0 w-full bg-[#f8f9ff]/95 backdrop-blur-md flex flex-col items-center py-6 sm:py-8 gap-4 sm:gap-6 lg:hidden border-b border-white/20 shadow-xl">
           <div onClick={() => setIsOpen(false)}>
             <HeaderNavLink href="/" label="Home" />
           </div>
@@ -68,12 +76,13 @@ export default function PublicHeader() {
             <HeaderNavLink href="/contact" label="Contact" />
           </div>
 
-          <Link href="/register">
-            Get
-            <Button className="bg-primary-100 font-semibold text-xs mt-4 w-[80%] max-w-75">
-              Started
-            </Button>
-          </Link>
+          {!isLoggedIn && (
+            <Link href="/register" onClick={() => setIsOpen(false)}>
+              <Button className="bg-primary-100 font-semibold text-xs mt-2 px-8">
+                Get Started
+              </Button>
+            </Link>
+          )}
         </div>
       )}
     </header>

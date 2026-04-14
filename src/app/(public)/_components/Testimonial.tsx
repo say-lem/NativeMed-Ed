@@ -50,12 +50,6 @@ const testimonials: Testimonial[] = [
   },
 ];
 
-// Show 2 full cards + ~half of the next one.
-// Card width = (containerWidth - gaps) / 2.5
-// We express this as a calc() so it's responsive.
-// Let's use Tailwind classes directly for width instead of this.
-// const CARD_WIDTH = "calc((100%) / 2.5)";
-
 function Testimonial() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -124,8 +118,8 @@ function Testimonial() {
   };
 
   return (
-    <section className="px-4 md:px-15 pt-12 md:pt-28 pb-12 md:pb-24">
-      <div className="text-center mx-auto w-full sm:w-[90%] md:w-[50%] mb-6 md:mb-12">
+    <section className="px-4 sm:px-8 md:px-10 lg:px-15 pt-10 sm:pt-14 md:pt-20 lg:pt-28 pb-10 sm:pb-14 md:pb-18 lg:pb-24">
+      <div className="text-center mx-auto w-full sm:w-[85%] md:w-[65%] lg:w-[50%] mb-4 sm:mb-6 md:mb-8 lg:mb-12">
         <ButtonTag title="Testimonials" />
         <TitleCase text="See what the community is saying about native medical Education" />
       </div>
@@ -134,7 +128,7 @@ function Testimonial() {
       <div className="overflow-hidden">
         <div
           ref={trackRef}
-          className="flex gap-3 md:gap-5 overflow-x-auto scroll-smooth pb-4"
+          className="flex gap-3 sm:gap-4 lg:gap-5 overflow-x-auto scroll-smooth pb-4"
           style={{
             scrollSnapType: "x mandatory",
             WebkitOverflowScrolling: "touch",
@@ -151,25 +145,25 @@ function Testimonial() {
             <div
               key={t.id}
               data-card
-              className="flex-none flex flex-col border-[rgba(155,124,209,1)] select-none py-4 px-5 md:py-6 md:px-8 border-[0.2px] rounded-[16px] bg-[rgba(245,239,255,1)] gap-3 md:gap-4 w-[80%] sm:w-[75%] md:w-[calc(100%/2.5)]"
+              className="flex-none flex flex-col border-[rgba(155,124,209,1)] select-none py-4 px-4 sm:py-5 sm:px-6 lg:py-6 lg:px-8 border-[0.2px] rounded-[16px] bg-[rgba(245,239,255,1)] gap-2.5 sm:gap-3 lg:gap-4 w-[85%] sm:w-[70%] md:w-[45%] lg:w-[calc(100%/2.5)]"
               style={{
                 scrollSnapAlign: "start",
               }}
             >
               {/* Label */}
-              <p className="font-semibold text-base md:text-lg leading-[120%] tracking-[-2%] text-black-others">
+              <p className="font-semibold text-sm sm:text-base lg:text-lg leading-[120%] tracking-[-2%] text-black-others">
                 {t.label}
               </p>
 
               {/* Quote */}
-              <p className="text-sm md:text-lg leading-[130%] tracking-[-2%] text-secondary-100">
+              <p className="text-xs sm:text-sm lg:text-lg leading-[130%] tracking-[-2%] text-secondary-100">
                 <span>&ldquo;</span>
                 {t.quote}
                 <span>&rdquo;</span>
               </p>
 
               {/* Author */}
-              <p className="font-semibold text-sm md:text-lg leading-[120%] tracking-[-2%] text-right">
+              <p className="font-semibold text-xs sm:text-sm lg:text-lg leading-[120%] tracking-[-2%] text-right">
                 — {t.author}
               </p>
             </div>

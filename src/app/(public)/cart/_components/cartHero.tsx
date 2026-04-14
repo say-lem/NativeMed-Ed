@@ -39,11 +39,11 @@ export default function CartHero() {
   const cartDisplay = cart.map((item) => (
     <div
       key={item.id}
-      className="bg-white authFormBorder rounded-[16px] p-4 gap-12 flex items-start"
+      className="bg-white authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-6 lg:gap-12 flex flex-col sm:flex-row items-start"
     >
-      <aside className="basis-1/2 ">
+      <aside className="w-full sm:basis-1/2">
         {/* Cart Image */}
-        <div className="relative w-full min-h-48 md:min-h-64 ">
+        <div className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 ">
           <Image
             src={item.img}
             alt={`image of ${item.title}`}
@@ -56,25 +56,25 @@ export default function CartHero() {
         </div>
       </aside>
 
-      <aside className="space-y-4">
+      <aside className="space-y-3 sm:space-y-4">
         {/* Cart text */}
-        <h2 className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-black-others">
+        <h2 className="font-semibold text-lg sm:text-xl lg:text-2xl leading-[130%] tracking-[-2%] text-black-others">
           {item.title}
         </h2>
-        <h4 className="font-semibold text-4xl leading-[120%] tracking-[-1%] text-black-others">
+        <h4 className="font-semibold text-2xl sm:text-3xl lg:text-4xl leading-[120%] tracking-[-1%] text-black-others">
           £{item.amt.toFixed(2)}
-          <span className="text-xl font-normal leading-[150%]">/month</span>
+          <span className="text-base sm:text-lg lg:text-xl font-normal leading-[150%]">/month</span>
         </h4>
-        <p className="font-light text-xl leading-[150%] text-[#373737] ">
+        <p className="font-light text-sm sm:text-base lg:text-xl leading-[150%] text-[#373737] ">
           {item.desc}
         </p>
 
-        <ul className="py-4 space-y-3 text-[#373737]">
-          <li className="font-bold text-xl leading-[120%] tracking-[-1%]">
+        <ul className="py-2 sm:py-4 space-y-2 sm:space-y-3 text-[#373737]">
+          <li className="font-bold text-base sm:text-lg lg:text-xl leading-[120%] tracking-[-1%]">
             What&apos;s Included
           </li>
           {item.descList.map((itemDesc) => (
-            <li key={itemDesc} className="flex gap-3 items-center">
+            <li key={itemDesc} className="flex gap-2 sm:gap-3 items-center text-sm sm:text-base">
               <span>
                 <svg
                   width="19"
@@ -101,19 +101,19 @@ export default function CartHero() {
   ));
 
   return (
-    <section className="pt-12 pb-32 px-15 radialBgGradient">
+    <section className="pt-8 sm:pt-10 lg:pt-12 pb-16 sm:pb-24 lg:pb-32 px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient">
       <TitleCase text="Shopping Cart" />
       <SubtleText text={`${cart.length} items in your cart`} />
 
-      <div className="mt-8 flex items-start gap-4">
-        <aside className="space-y-4 basis-2/3">
+      <div className="mt-6 sm:mt-8 flex flex-col lg:flex-row items-start gap-4">
+        <aside className="space-y-4 w-full lg:basis-2/3">
           {/* Cart component */}
           {cartDisplay}
         </aside>
 
-        <aside className="basis-1/3 bg-primary-white p-6 rounded-[16px] space-y-6">
+        <aside className="w-full lg:basis-1/3 bg-primary-white p-4 sm:p-6 rounded-[16px] space-y-4 sm:space-y-6">
           {/* Order Summary */}
-          <h2 className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-black-others">
+          <h2 className="font-semibold text-xl sm:text-2xl leading-[130%] tracking-[-2%] text-black-others">
             Order Summary
           </h2>
 
@@ -121,8 +121,8 @@ export default function CartHero() {
             {/* items in cart */}
             {cart.map((item) => (
               <div key={item.id} className="flex justify-between">
-                <p className="leading-[150%] text-subtle-text">{item.title}</p>
-                <p className="font-semibold leading-[120%] tracking-[-2%] text-black-others">
+                <p className="leading-[150%] text-subtle-text text-sm sm:text-base">{item.title}</p>
+                <p className="font-semibold leading-[120%] tracking-[-2%] text-black-others text-sm sm:text-base">
                   £{item.amt.toFixed(2)}
                 </p>
               </div>
@@ -130,10 +130,10 @@ export default function CartHero() {
           </div>
 
           <div className="border-t-[0.5px] pt-[17.6px] border-gray-2 flex justify-between">
-            <p className="text-lg font-semibold leading-[120%] tracking-[-2%] text-black-others">
+            <p className="text-base sm:text-lg font-semibold leading-[120%] tracking-[-2%] text-black-others">
               Total
             </p>
-            <p className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-primary-100">
+            <p className="font-semibold text-xl sm:text-2xl leading-[130%] tracking-[-2%] text-primary-100">
               £{cart.reduce((a, b) => a + b.amt, 0).toFixed(2)}
             </p>
           </div>
@@ -154,7 +154,7 @@ export default function CartHero() {
             </svg>
           </Button>
 
-          <div className="rounded-[12px] space-y-2 p-4 bg-white">
+          <div className="rounded-[12px] space-y-2 p-3 sm:p-4 bg-white">
             <h4 className="font-bold text-sm leading-5 text-primary-100">
               Secure Checkout
             </h4>

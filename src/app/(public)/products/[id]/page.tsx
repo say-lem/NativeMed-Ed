@@ -27,10 +27,10 @@ export default function ProductByIdPage({
   return (
     <>
       {" "}
-      <section className="px-4 md:px-15 radialBgGradient pt-12 md:pt-20 pb-36">
-        <aside className="px-10">
-          <div className="authFormBorder rounded-[16px] p-4 gap-5 flex justify-center overflow-x-hidden">
-            <aside className="relative basis-1/2 min-h-[60vh]">
+      <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-8 sm:pt-12 lg:pt-20 pb-16 sm:pb-24 lg:pb-36">
+        <aside className="px-0 sm:px-4 lg:px-10">
+          <div className="authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-5 flex flex-col md:flex-row justify-center overflow-x-hidden">
+            <aside className="relative w-full md:basis-1/2 min-h-[35vh] sm:min-h-[40vh] md:min-h-[50vh] lg:min-h-[60vh]">
               <Image
                 src={card.img}
                 alt={`image of ${card.title}`}
@@ -41,40 +41,40 @@ export default function ProductByIdPage({
                 {card.tag}
               </p>
             </aside>
-            <aside className="basis-1/2 flex flex-col justify-between">
-              <div className="space-y-4">
-                <h3 className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-black-others">
+            <aside className="w-full md:basis-1/2 flex flex-col justify-between gap-4 sm:gap-6">
+              <div className="space-y-3 sm:space-y-4">
+                <h3 className="font-semibold text-lg sm:text-xl lg:text-2xl leading-[130%] tracking-[-2%] text-black-others">
                   MRCGP SCA Revision
                 </h3>
-                <h4 className="font-semibold text-4xl leading-[130%] tracking-[-2%] text-black-others">
+                <h4 className="font-semibold text-2xl sm:text-3xl lg:text-4xl leading-[130%] tracking-[-2%] text-black-others">
                   £{card.price.toFixed(2)}
-                  <span className="text-lg leading-[120%]">/month</span>
+                  <span className="text-base sm:text-lg leading-[120%]">/month</span>
                 </h4>
-                <p className="font-light text-xl leading-[150%] text-[rgba(55, 55, 55, 1)]">
+                <p className="font-light text-sm sm:text-base lg:text-xl leading-[150%] text-[rgba(55, 55, 55, 1)]">
                   Prepare effectively for the MRCGP Simulated Consultation
                   Assessment (SCA) with our Online Monthly Subscription.
                 </p>
               </div>
-              <div className="flex gap-4 items-center justify-end">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center sm:justify-end">
                 <Button
-                  className="text-black-others font-bold border text-base border-black-others"
+                  className="text-black-others font-bold border text-sm sm:text-base border-black-others"
                   variant="outline"
                 >
                   <span>
-                    <AiOutlineShoppingCart className="text-black-others size-5" />
+                    <AiOutlineShoppingCart className="text-black-others size-4 sm:size-5" />
                   </span>
                   <span>Add to Cart</span>
                 </Button>
-                <Button className="font-bold text-base bg-black-others">
+                <Button className="font-bold text-sm sm:text-base bg-black-others">
                   Buy Now
                 </Button>
               </div>
             </aside>
           </div>
         </aside>
-        <aside className="pt-16 space-y-8">
+        <aside className="pt-10 sm:pt-12 lg:pt-16 space-y-6 sm:space-y-8">
           <TitleCase text="You Might Also Like" />
-          <div className="px-10">
+          <div className="px-0 sm:px-4 lg:px-10">
             <ProductsCard cutBy={4} />
           </div>
         </aside>

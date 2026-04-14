@@ -3,27 +3,27 @@ import Image from "next/image";
 
 export default function HomeHero() {
   return (
-    <section className="radialBgGradient  min-h-[80vh] md:min-h-[120vh] overflow-hidden relative">
-      <div className="flex items-center justify-center px-4 md:px-15 pt-8 md:pt-16">
+    <section className="radialBgGradient min-h-[70vh] sm:min-h-[80vh] md:min-h-[100vh] lg:min-h-[120vh] overflow-hidden relative">
+      <div className="flex items-center justify-center px-4 sm:px-8 lg:px-15 pt-6 sm:pt-8 lg:pt-16">
         <Image
           src="/Images/socket tile.png"
           alt="Socket Tile"
           width={50}
           height={50}
-          className="w-7.5 md:w-12.5 h-auto"
+          className="w-6 sm:w-7.5 lg:w-12.5 h-auto"
         />
       </div>
 
-      <div className="relative mt-6 md:mt-14 flex flex-col md:flex-row items-center justify-center gap-4 md:gap-15">
+      <div className="relative mt-4 sm:mt-6 lg:mt-14 flex flex-col lg:flex-row items-center justify-center gap-4">
         <Image
           src="/Images/dna tile.png"
           alt="DNA Tile"
           width={50}
           height={50}
-          className="hidden md:block"
+          className="hidden lg:block"
         />
 
-        <h1 className="text-center font-semibold text-3xl sm:text-4xl md:text-7xl tracking-[-2%] leading-[1.2] md:leading-21.25 text-black-others max-w-full px-1">
+        <h1 className="text-center font-semibold text-2xl sm:text-3xl md:text-5xl lg:text-7xl tracking-[-2%] leading-[1.2] lg:leading-21.25 text-black-others max-w-full px-4 sm:px-6">
           Master Your Medical Exams with{" "}
           <span className="text-primary-100">Expert</span> Guidance
         </h1>
@@ -32,15 +32,15 @@ export default function HomeHero() {
           alt="DNA Tile"
           width={50}
           height={50}
-          className="hidden md:block"
+          className="hidden lg:block"
         />
       </div>
-      <p className="text-subtle-text text-sm sm:text-base md:text-lg leading-[150%] w-[95%] sm:w-[90%] md:w-[60%] mx-auto text-center mt-4 md:mt-0">
+      <p className="text-subtle-text text-xs sm:text-sm md:text-base lg:text-lg leading-[150%] w-[92%] sm:w-[85%] md:w-[70%] lg:w-[60%] mx-auto text-center mt-3 sm:mt-4 lg:mt-0">
         We go beyond exam preparation, equipping you with the confidence and{" "}
         competence to excel as a General Practitioner or Family Physician.
       </p>
 
-      <div className="mt-6 md:mt-10 text-center">
+      <div className="mt-5 sm:mt-6 lg:mt-10 text-center">
         <Button className="bg-primary-100 font-bold tracking-[-1%] leading-[120%] space-x-1">
           <span>Start Learning</span>
           <Image
@@ -52,7 +52,7 @@ export default function HomeHero() {
         </Button>
       </div>
 
-      <div className="relative w-full h-[40vh] md:h-screen -mt-[30vh] md:-mt-[65vh]">
+      <div className="relative w-full h-[30vh] sm:h-[35vh] md:h-[60vh] lg:h-screen -mt-[20vh] sm:-mt-[25vh] md:-mt-[45vh] lg:-mt-[65vh]">
         <Image src="/Images/Elipses.png" alt="Elipses" loading="eager" fill />
       </div>
     </section>
