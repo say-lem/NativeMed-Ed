@@ -16,7 +16,7 @@ export default function PublicHeader() {
         alt="NativeMed Logo"
         width={49}
         height={50}
-        className="w-[40px] md:w-[49px]"
+        className="w-10 md:w-12.25"
       />
 
       <nav className="hidden lg:flex space-x-8">

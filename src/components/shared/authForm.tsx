@@ -1,7 +1,9 @@
+"use client";
 import TitleCase from "./titleCase";
 import SubtleText from "@/app/(public)/_component/SubtleText";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 function Label({ text }: { text: string }) {
   return (
@@ -10,7 +12,9 @@ function Label({ text }: { text: string }) {
 }
 
 export default function AuthForm({ mode }: { mode: "login" | "register" }) {
+  const router = useRouter();
   const register = mode === "register";
+
   return (
     <section className="mt-8 px-15">
       <div className="authFormBorder rounded-[16px] flex justify-center overflow-x-hidden">
@@ -48,7 +52,10 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
           </div>
 
           <div className="w-full text-center flex flex-col items-center gap-2">
-            <Button className="w-[90%] font-bold">
+            <Button
+              onClick={() => router.push("/dashboard")}
+              className="w-[90%] font-bold"
+            >
               {register ? "Sign Up" : "Sign In"}
             </Button>
             <Link href={register ? "/login" : "/register"}>

@@ -163,6 +163,8 @@
   --color-subtle2: rgba(55, 55, 55, 1);
   --color-primary20: rgba(222, 211, 240, 1);
   --color-secondary20: rgba(210, 215, 225, 1);
+  --color-primary10: rgba(238, 233, 247, 1);
+  --color-primary40: rgba(189, 168, 225, 1);
 }
 
 .authFormBg {
@@ -178,4 +180,8 @@
 
 .buttonShadow {
   box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.1);
+}
+
+.questionBankShadow {
+  box-shadow: 0px 0px 48px 0px rgba(0, 0, 0, 0.05);
 }

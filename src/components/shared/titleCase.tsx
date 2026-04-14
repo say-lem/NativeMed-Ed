@@ -5,3 +5,11 @@ export default function TitleCase({ text }: { text: string }) {
     </h2>
   );
 }
+
+export function BannerTitleCase({ text }: { text: string }) {
+  return (
+    <h2 className="font-semibold text-4xl leading-[130%] tracking-[-2%] text-white">
+      {text}
+    </h2>
+  );
+}
