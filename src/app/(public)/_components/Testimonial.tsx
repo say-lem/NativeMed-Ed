@@ -1,6 +1,6 @@
 "use client";
-import ButtonTag from "@/components/shared/buttonTag";
-import TitleCase from "@/components/shared/titleCase";
+import ButtonTag from "@/components/shared/ButtonTag";
+import TitleCase from "@/components/shared/TitleCase";
 import { useRef, useState, useEffect, useCallback } from "react";
 
 interface Testimonial {
@@ -157,12 +157,12 @@ function Testimonial() {
               }}
             >
               {/* Label */}
-              <p className="font-semibold text-base md:text-lg leading-[120%] tracking-[-2%] text-blackOthers">
+              <p className="font-semibold text-base md:text-lg leading-[120%] tracking-[-2%] text-black-others">
                 {t.label}
               </p>
 
               {/* Quote */}
-              <p className="text-sm md:text-lg leading-[130%] tracking-[-2%] text-Secondary100">
+              <p className="text-sm md:text-lg leading-[130%] tracking-[-2%] text-secondary-100">
                 <span>&ldquo;</span>
                 {t.quote}
                 <span>&rdquo;</span>

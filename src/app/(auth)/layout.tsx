@@ -12,7 +12,7 @@ export default function AuthLayout({
   return (
     <main className="min-h-full bg-white px-15 pt-16">
       <button onClick={() => router.back()}>
-        <IoArrowBack className="size-4 text-Secondary100" />
+        <IoArrowBack className="size-4 text-secondary-100" />
       </button>
 
       {children}

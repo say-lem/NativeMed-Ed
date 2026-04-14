@@ -1,6 +1,6 @@
 "use client";
-import ButtonTag from "@/components/shared/buttonTag";
-import TitleCase from "@/components/shared/titleCase";
+import ButtonTag from "@/components/shared/ButtonTag";
+import TitleCase from "@/components/shared/TitleCase";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -79,7 +79,7 @@ function FaQs() {
           <TitleCase text="Your Questions answered" />
         </div>
 
-        <div className="divide-y-[0.5px] divide-gray2">
+        <div className="divide-y-[0.5px] divide-gray-2">
           {faqs.map((faq) => {
             const isOpen = openId === faq.id;
 
@@ -103,7 +103,7 @@ function FaQs() {
                     isOpen ? "max-h-96 pb-6" : "max-h-0"
                   }`}
                 >
-                  <p className="text-sm md:text-base px-2 md:px-6 leading-[160%] text-blackOthers text-center">
+                  <p className="text-sm md:text-base px-2 md:px-6 leading-[160%] text-black-others text-center">
                     {faq.answer}
                   </p>
                 </div>

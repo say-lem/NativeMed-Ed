@@ -96,7 +96,7 @@ function ClassCountdown({
 
       <div className="relative z-10 flex flex-col items-center text-center px-4 md:px-6 gap-6 md:gap-9">
         <div>
-          <p className="text-Subtle-text leading-[150%] tracking-[-1%] font-normal">
+          <p className="text-subtle-text leading-[150%] tracking-[-1%] font-normal">
             {eventDateLabel}
           </p>
 
@@ -112,13 +112,13 @@ function ClassCountdown({
                 <span className="text-3xl sm:text-5xl md:text-8xl font-light tabular-nums leading-none tracking-[-2%] text-white">
                   {pad(unit.value)}
                 </span>
-                <span className="text-xs sm:text-sm md:text-xl leading-[120%] text-gray1 tracking-[-2%] font-light">
+                <span className="text-xs sm:text-sm md:text-xl leading-[120%] text-gray-1 tracking-[-2%] font-light">
                   {unit.label}
                 </span>
               </div>
 
               {i < units.length - 1 && (
-                <span className="text-3xl sm:text-5xl md:text-8xl font-light text-gray2 leading-none px-1 sm:px-2 md:px-4">
+                <span className="text-3xl sm:text-5xl md:text-8xl font-light text-gray-2 leading-none px-1 sm:px-2 md:px-4">
                   :
                 </span>
               )}
@@ -128,7 +128,7 @@ function ClassCountdown({
 
         <Button
           onClick={() => alert("Register clicked")}
-          className="text-sm font-semibold text-white hover:opacity-90 active:scale-95 bg-primary100 transition-all leading-[150%]"
+          className="text-sm font-semibold text-white hover:opacity-90 active:scale-95 bg-primary-100 transition-all leading-[150%]"
         >
           {ctaLabel}
         </Button>

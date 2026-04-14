@@ -1,13 +1,13 @@
 "use client";
-import TitleCase from "./titleCase";
-import SubtleText from "@/app/(public)/_component/SubtleText";
+import TitleCase from "./TitleCase";
+import SubtleText from "./SubtleText";
 import { Button } from "../ui/button";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 function Label({ text }: { text: string }) {
   return (
-    <p className="text-blackOthers leading-[120%] tracking-[-1%] ">{text}</p>
+    <p className="text-black-others leading-[120%] tracking-[-1%] ">{text}</p>
   );
 }
 
@@ -38,7 +38,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
               <input
                 type="text"
                 placeholder="johndoe@gmail.com"
-                className="border-[0.5px] rounded-[8px] px-4 py-3 border-secondary20 w-full "
+                className="border-[0.5px] rounded-[8px] px-4 py-3 border-secondary-20 w-full "
               />
             </div>
             <div className="space-y-2">
@@ -46,7 +46,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
               <input
                 type="password"
                 placeholder=""
-                className="border-[0.5px] rounded-[8px] px-4 py-3 border-secondary20 w-full "
+                className="border-[0.5px] rounded-[8px] px-4 py-3 border-secondary-20 w-full "
               />
             </div>
           </div>
@@ -60,14 +60,14 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
             </Button>
             <Link href={register ? "/login" : "/register"}>
               {register ? (
-                <span className="font-light text-sm md:text-base leading-[150%] text-Subtle-text">
+                <span className="font-light text-sm md:text-base leading-[150%] text-subtle-text">
                   Already have an account?{" "}
-                  <span className="text-primary100 font-bold">Sign In</span>
+                  <span className="text-primary-100 font-bold">Sign In</span>
                 </span>
               ) : (
-                <span className="font-light text-sm md:text-base leading-[150%] text-Subtle-text">
+                <span className="font-light text-sm md:text-base leading-[150%] text-subtle-text">
                   Don’t have an account?
-                  <span className="text-primary100 font-bold"> Sign Up</span>
+                  <span className="text-primary-100 font-bold"> Sign Up</span>
                 </span>
               )}
             </Link>

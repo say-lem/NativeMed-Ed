@@ -1,8 +1,8 @@
-import ButtonTag from "@/components/shared/buttonTag";
-import SubtleText from "./SubtleText";
+import ButtonTag from "@/components/shared/ButtonTag";
+import SubtleText from "@/components/shared/SubtleText";
 import Image from "next/image";
-import ProductsCard from "@/components/shared/productsCard";
-import TitleCase from "@/components/shared/titleCase";
+import ProductsCard from "@/components/shared/ProductsCard";
+import TitleCase from "@/components/shared/TitleCase";
 
 export default function WhatYouGet() {
   return (
@@ -15,7 +15,7 @@ export default function WhatYouGet() {
 
       <ProductsCard cutBy={3} />
 
-      <p className="text-primary100 leading-[150%] font-semibold flex items-center gap-2 justify-end cursor-pointer hover:underline underline-offset-2">
+      <p className="text-primary-100 leading-[150%] font-semibold flex items-center gap-2 justify-end cursor-pointer hover:underline underline-offset-2">
         <span>See more</span>
         <Image
           src={"/Images/arrow-foward-purple.png"}

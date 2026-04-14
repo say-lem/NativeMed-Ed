@@ -2,10 +2,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import { HeaderNavLink } from "./navLink";
+import { HeaderNavLink } from "./NavLink";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
-import NamedHeader from "./namedHeader";
+import NamedHeader from "./NamedHeader";
 
 export default function PublicHeader() {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,7 +39,7 @@ export default function PublicHeader() {
         <div className="flex items-center gap-4">
           <Link href="/register">
             {" "}
-            <Button className="bg-primary100 font-semibold text-xs hidden sm:inline-flex">
+            <Button className="bg-primary-100 font-semibold text-xs hidden sm:inline-flex">
               Get Started
             </Button>
           </Link>
@@ -70,7 +70,7 @@ export default function PublicHeader() {
 
           <Link href="/register">
             Get
-            <Button className="bg-primary100 font-semibold text-xs mt-4 w-[80%] max-w-75">
+            <Button className="bg-primary-100 font-semibold text-xs mt-4 w-[80%] max-w-75">
               Started
             </Button>
           </Link>

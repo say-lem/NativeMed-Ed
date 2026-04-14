@@ -1,13 +1,13 @@
-import TitleCase from "@/components/shared/titleCase";
+import TitleCase from "@/components/shared/TitleCase";
 import Image from "next/image";
 
 const aboutFounder = ({ text }: { text: string }) => {
-  return <p className="text-subtle2 text-base md:text-lg leading-[150%] mt-3 md:mt-5">{text}</p>;
+  return <p className="text-subtle-2 text-base md:text-lg leading-[150%] mt-3 md:mt-5">{text}</p>;
 };
 
 const founderLaurel = ({ text }: { text: string }) => {
   return (
-    <p className="text-base md:text-lg leading-[120%] tracking-[-2%] text-subtle2 -mt-2">
+    <p className="text-base md:text-lg leading-[120%] tracking-[-2%] text-subtle-2 -mt-2">
       {text}
     </p>
   );
@@ -45,10 +45,10 @@ function Founder() {
           />
 
           <div className="mt-2.5 space-y-2.5 text-center">
-            <h2 className="text-xl md:text-2xl leading-[130%] -tracking-[2%] text-blackOthers font-semibold">
+            <h2 className="text-xl md:text-2xl leading-[130%] -tracking-[2%] text-black-others font-semibold">
               Dr Clinton Ohaa
             </h2>
-            <h4 className="font-semibold text-base md:text-lg leading-[120%] tracking-[-2%] text-blackOthers">
+            <h4 className="font-semibold text-base md:text-lg leading-[120%] tracking-[-2%] text-black-others">
               MBBS, MRCS, MRCGP, MBA
             </h4>
             {founderLaurel({
@@ -59,7 +59,7 @@ function Founder() {
             })}
             {founderLaurel({ text: "PGCert (Medical Education)" })}
 
-            <p className="text-base md:text-lg leading-[120%] tracking-[-2%] mt-2.5 font-semibold text-Secondary100">
+            <p className="text-base md:text-lg leading-[120%] tracking-[-2%] mt-2.5 font-semibold text-secondary-100">
               FOUNDER
             </p>
           </div>

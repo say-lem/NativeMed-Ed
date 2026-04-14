@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { FooterNavLink } from "../header/navLink";
+import { FooterNavLink } from "../header/NavLink";
 import { Button } from "@/components/ui/button";
 
 export default function Footer() {
@@ -38,8 +38,8 @@ export default function Footer() {
         </div>
       </footer>
 
-      <div className="border-t border-Subtle-text bg-black py-6 md:py-8 text-center px-4">
-        <p className="leading-6 tracking-[-0.31px] text-Subtle-text text-xs sm:text-sm md:text-base">
+      <div className="border-t border-subtle-text bg-black py-6 md:py-8 text-center px-4">
+        <p className="leading-6 tracking-[-0.31px] text-subtle-text text-xs sm:text-sm md:text-base">
           © 2026 Native Medical Education. All rights reserved.
         </p>
       </div>

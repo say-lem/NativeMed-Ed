@@ -1,5 +1,5 @@
-import ProductsHero from "./_components/hero";
-import CountDownToClass from "@/components/shared/countdown";
+import ProductsHero from "./_components/Hero";
+import CountDownToClass from "@/components/shared/Countdown";
 
 export default function ProductPage() {
   return (

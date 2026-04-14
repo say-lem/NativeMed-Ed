@@ -1,4 +1,4 @@
-import QuestionBankHero from "./_components/questionBankHero";
+import QuestionBankHero from "./_components/QuestionBankHero";
 
 export default function QuestionBank() {
   return (

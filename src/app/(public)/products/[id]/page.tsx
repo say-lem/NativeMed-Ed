@@ -1,7 +1,7 @@
-import CountDownToClass from "@/components/shared/countdown";
+import CountDownToClass from "@/components/shared/Countdown";
 
-import ProductsCard from "@/components/shared/productsCard";
-import TitleCase from "@/components/shared/titleCase";
+import ProductsCard from "@/components/shared/ProductsCard";
+import TitleCase from "@/components/shared/TitleCase";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { use } from "react";
@@ -43,10 +43,10 @@ export default function ProductByIdPage({
             </aside>
             <aside className="basis-1/2 flex flex-col justify-between">
               <div className="space-y-4">
-                <h3 className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-blackOthers">
+                <h3 className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-black-others">
                   MRCGP SCA Revision
                 </h3>
-                <h4 className="font-semibold text-4xl leading-[130%] tracking-[-2%] text-blackOthers">
+                <h4 className="font-semibold text-4xl leading-[130%] tracking-[-2%] text-black-others">
                   £{card.price.toFixed(2)}
                   <span className="text-lg leading-[120%]">/month</span>
                 </h4>
@@ -57,15 +57,15 @@ export default function ProductByIdPage({
               </div>
               <div className="flex gap-4 items-center justify-end">
                 <Button
-                  className="text-blackOthers font-bold border text-base border-blackOthers"
+                  className="text-black-others font-bold border text-base border-black-others"
                   variant="outline"
                 >
                   <span>
-                    <AiOutlineShoppingCart className="text-blackOthers size-5" />
+                    <AiOutlineShoppingCart className="text-black-others size-5" />
                   </span>
                   <span>Add to Cart</span>
                 </Button>
-                <Button className="font-bold text-base bg-blackOthers">
+                <Button className="font-bold text-base bg-black-others">
                   Buy Now
                 </Button>
               </div>

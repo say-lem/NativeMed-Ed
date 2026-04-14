@@ -1,4 +1,4 @@
-import ProductsCard from "@/components/shared/productsCard";
+import ProductsCard from "@/components/shared/ProductsCard";
 import Image from "next/image";
 
 export default function ProductsHero() {
@@ -13,7 +13,7 @@ export default function ProductsHero() {
           className="self-start hidden md:block"
         />
 
-        <h1 className="text-center font-semibold text-3xl sm:text-4xl md:text-5xl tracking-[-2%] leading-[1.2] md:leading-21.25 text-blackOthers py-4 md:py-7">
+        <h1 className="text-center font-semibold text-3xl sm:text-4xl md:text-5xl tracking-[-2%] leading-[1.2] md:leading-21.25 text-black-others py-4 md:py-7">
           Our Products
         </h1>
         <Image

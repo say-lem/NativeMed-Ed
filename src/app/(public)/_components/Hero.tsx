@@ -23,9 +23,9 @@ export default function HomeHero() {
           className="hidden md:block"
         />
 
-        <h1 className="text-center font-semibold text-3xl sm:text-4xl md:text-7xl tracking-[-2%] leading-[1.2] md:leading-21.25 text-blackOthers max-w-full px-1">
+        <h1 className="text-center font-semibold text-3xl sm:text-4xl md:text-7xl tracking-[-2%] leading-[1.2] md:leading-21.25 text-black-others max-w-full px-1">
           Master Your Medical Exams with{" "}
-          <span className="text-primary100">Expert</span> Guidance
+          <span className="text-primary-100">Expert</span> Guidance
         </h1>
         <Image
           src="/Images/brain tile.png"
@@ -35,13 +35,13 @@ export default function HomeHero() {
           className="hidden md:block"
         />
       </div>
-      <p className="text-Subtle-text text-sm sm:text-base md:text-lg leading-[150%] w-[95%] sm:w-[90%] md:w-[60%] mx-auto text-center mt-4 md:mt-0">
+      <p className="text-subtle-text text-sm sm:text-base md:text-lg leading-[150%] w-[95%] sm:w-[90%] md:w-[60%] mx-auto text-center mt-4 md:mt-0">
         We go beyond exam preparation, equipping you with the confidence and{" "}
         competence to excel as a General Practitioner or Family Physician.
       </p>
 
       <div className="mt-6 md:mt-10 text-center">
-        <Button className="bg-primary100 font-bold tracking-[-1%] leading-[120%] space-x-1">
+        <Button className="bg-primary-100 font-bold tracking-[-1%] leading-[120%] space-x-1">
           <span>Start Learning</span>
           <Image
             src="/Images/arrow_forward.png"

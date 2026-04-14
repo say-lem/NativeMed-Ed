@@ -66,7 +66,7 @@ export default function ProductsCard({ cutBy = 0 }: { cutBy?: number }) {
 
             <aside className="px-4 md:px-6">
               <div className="space-y-2">
-                <p className="text-lg md:text-xl font-semibold leading-[130%] tracking-[-1%] text-blackOthers line-clamp-2">
+                <p className="text-lg md:text-xl font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
                   {card.title}
                 </p>
                 <p className="line-clamp-3 text-sm leading-[150%] text-[rgba(55, 55, 55, 1)] h-auto md:h-28">
@@ -76,12 +76,12 @@ export default function ProductsCard({ cutBy = 0 }: { cutBy?: number }) {
             </aside>
 
             <div className="px-4 md:px-6 flex justify-between items-center">
-              <p className="text-blackOthers text-lg tracking-[-1%] font-semibold leading-[120%]">
+              <p className="text-black-others text-lg tracking-[-1%] font-semibold leading-[120%]">
                 <span>{`£${card.price.toFixed(2)}`}</span>
                 <span className="text-xs font-medium">/month</span>
               </p>
 
-              <Button className="bg-blackOthers shadow-[0px 4px 16px 0px rgba(0, 0, 0, 0.1)] font-bold text-sm leadng-[150%]">
+              <Button className="bg-black-others shadow-[0px 4px 16px 0px rgba(0, 0, 0, 0.1)] font-bold text-sm leadng-[150%]">
                 Buy Now
               </Button>
             </div>

@@ -1,4 +1,4 @@
-import AuthForm from "@/components/shared/authForm";
+import AuthForm from "@/components/shared/AuthForm";
 
 export default function Login() {
   return (

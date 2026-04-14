@@ -30,7 +30,7 @@ export default function NamedHeader({
     <div className="flex gap-6 items-center">
       {/* Cart with notification badge */}
       <Link href="/cart" className="relative">
-        <GrCart className="text-Secondary100 size-4" />
+        <GrCart className="text-secondary-100 size-4" />
         {mockUser.cartCount > 0 && (
           <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center leading-none">
             {mockUser.cartCount > 99 ? "99+" : mockUser.cartCount}
@@ -40,15 +40,15 @@ export default function NamedHeader({
 
       <div className="flex items-center gap-2">
         <aside
-          className={`${sizeMap[avatarSize]} rounded-full bg-primary40 text-Secondary100 text-lg flex items-center justify-center font-medium select-none shrink-0`}
+          className={`${sizeMap[avatarSize]} rounded-full bg-primary-40 text-secondary-100 text-lg flex items-center justify-center font-medium select-none shrink-0`}
         >
           {getInitials(mockUser.name)}
         </aside>
         <aside className="flex flex-col">
-          <h3 className="font-bold leading-[120%] text-sm tracking-[-1%] text-Secondary100">
+          <h3 className="font-bold leading-[120%] text-sm tracking-[-1%] text-secondary-100">
             {mockUser.name}
           </h3>
-          <p className="text-xs text-gray2 leading-[150%]">
+          <p className="text-xs text-gray-2 leading-[150%]">
             {mockUser.acctType} account
           </p>
         </aside>

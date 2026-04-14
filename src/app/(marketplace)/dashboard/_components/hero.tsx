@@ -5,7 +5,7 @@ export default function DashboardHero() {
         <h3 className="font-semibold text-white text-3xl leading-[130%] tracking-[-2%]">
           Welcome Back, John Doe
         </h3>
-        <p className="text-sm md:text-base leading-[150%] text-gray2">
+        <p className="text-sm md:text-base leading-[150%] text-gray-2">
           {" "}
           Let&apos;s continue your journey to exam success
         </p>

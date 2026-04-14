@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import SideNavLink from "./sideNavLinks";
+import SideNavLink from "./SideNavLinks";
 import {
   CoursesIcon,
   DashboardIcon,
@@ -9,7 +9,7 @@ import {
   QuestionBankIcon,
   SettingsIcon,
   SubscriptionsIcon,
-} from "./icons";
+} from "./Icons";
 import { usePathname } from "next/navigation";
 import { LogOutIcon } from "lucide-react";
 
@@ -25,7 +25,7 @@ export default function SideNav() {
           height={45}
         />
 
-        <p className="font-semibold leading-[150%] text-blackOthers mt-5">
+        <p className="font-semibold leading-[150%] text-black-others mt-5">
           Native Medical Education{" "}
         </p>
       </aside>

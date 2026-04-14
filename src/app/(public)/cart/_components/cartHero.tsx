@@ -1,5 +1,5 @@
-import TitleCase from "@/components/shared/titleCase";
-import SubtleText from "../../_component/SubtleText";
+import TitleCase from "@/components/shared/TitleCase";
+import SubtleText from "@/components/shared/SubtleText";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 
@@ -58,10 +58,10 @@ export default function CartHero() {
 
       <aside className="space-y-4">
         {/* Cart text */}
-        <h2 className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-blackOthers">
+        <h2 className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-black-others">
           {item.title}
         </h2>
-        <h4 className="font-semibold text-4xl leading-[120%] tracking-[-1%] text-blackOthers">
+        <h4 className="font-semibold text-4xl leading-[120%] tracking-[-1%] text-black-others">
           £{item.amt.toFixed(2)}
           <span className="text-xl font-normal leading-[150%]">/month</span>
         </h4>
@@ -113,7 +113,7 @@ export default function CartHero() {
 
         <aside className="basis-1/3 bg-primary-white p-6 rounded-[16px] space-y-6">
           {/* Order Summary */}
-          <h2 className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-blackOthers">
+          <h2 className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-black-others">
             Order Summary
           </h2>
 
@@ -121,19 +121,19 @@ export default function CartHero() {
             {/* items in cart */}
             {cart.map((item) => (
               <div key={item.id} className="flex justify-between">
-                <p className="leading-[150%] text-Subtle-text">{item.title}</p>
-                <p className="font-semibold leading-[120%] tracking-[-2%] text-blackOthers">
+                <p className="leading-[150%] text-subtle-text">{item.title}</p>
+                <p className="font-semibold leading-[120%] tracking-[-2%] text-black-others">
                   £{item.amt.toFixed(2)}
                 </p>
               </div>
             ))}
           </div>
 
-          <div className="border-t-[0.5px] pt-[17.6px] border-gray2 flex justify-between">
-            <p className="text-lg font-semibold leading-[120%] tracking-[-2%] text-blackOthers">
+          <div className="border-t-[0.5px] pt-[17.6px] border-gray-2 flex justify-between">
+            <p className="text-lg font-semibold leading-[120%] tracking-[-2%] text-black-others">
               Total
             </p>
-            <p className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-primary100">
+            <p className="font-semibold text-2xl leading-[130%] tracking-[-2%] text-primary-100">
               £{cart.reduce((a, b) => a + b.amt, 0).toFixed(2)}
             </p>
           </div>
@@ -155,10 +155,10 @@ export default function CartHero() {
           </Button>
 
           <div className="rounded-[12px] space-y-2 p-4 bg-white">
-            <h4 className="font-bold text-sm leading-5 text-primary100">
+            <h4 className="font-bold text-sm leading-5 text-primary-100">
               Secure Checkout
             </h4>
-            <p className="text-xs leading-[150%] text-Subtle-text">
+            <p className="text-xs leading-[150%] text-subtle-text">
               Your payment information is encrypted and secure. We accept Stripe
               and PayPal.
             </p>

@@ -1,6 +1,6 @@
-import { BannerTitleCase } from "@/components/shared/titleCase";
+import { BannerTitleCase } from "@/components/shared/TitleCase";
 import { IoSearchSharp } from "react-icons/io5";
-import BannerBg from "../../_components/bannerBg";
+import BannerBg from "../../_components/BannerBg";
 
 export default function CoursesHero() {
   return (

@@ -1,7 +1,7 @@
-import { BannerTitleCase } from "@/components/shared/titleCase";
+import { BannerTitleCase } from "@/components/shared/TitleCase";
 import { IoSearchSharp } from "react-icons/io5";
-import QuestionBankCards from "../questionBankCard";
-import BannerBg from "../../_components/bannerBg";
+import QuestionBankCards from "../QuestionBankCard";
+import BannerBg from "../../_components/BannerBg";
 
 export default function QuestionBankHero() {
   return (

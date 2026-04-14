@@ -1,6 +1,6 @@
-import Founder from "./_components/founder";
-import AboutHero from "./_components/hero";
-import MissionStatement from "./_components/missionStatement";
+import Founder from "./_components/Founder";
+import AboutHero from "./_components/Hero";
+import MissionStatement from "./_components/MissionStatement";
 
 export default function AboutPage() {
   return (

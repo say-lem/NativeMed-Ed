@@ -1,4 +1,4 @@
-import ButtonTag from "@/components/shared/buttonTag";
+import ButtonTag from "@/components/shared/ButtonTag";
 import Image from "next/image";
 
 export default function AboutHero() {
@@ -13,10 +13,10 @@ export default function AboutHero() {
           className="self-start hidden md:block"
         />
         <div className="w-[95%] md:w-[60%] py-6 md:py-10">
-          <h1 className="text-center font-semibold text-3xl sm:text-4xl md:text-5xl tracking-[-2%] leading-[1.2] md:leading-21.25 text-blackOthers">
-            More Than <span className="text-primary100">Exam</span> Preparation
+          <h1 className="text-center font-semibold text-3xl sm:text-4xl md:text-5xl tracking-[-2%] leading-[1.2] md:leading-21.25 text-black-others">
+            More Than <span className="text-primary-100">Exam</span> Preparation
           </h1>
-          <p className="text-Subtle-text text-sm md:text-base leading-[150%] mx-auto text-center mt-2">
+          <p className="text-subtle-text text-sm md:text-base leading-[150%] mx-auto text-center mt-2">
             We are committed to helping you succeed in your SCA and MRCGP while
             building the confidence and competence to excel as a General
             Practitioner or Family Physician.
@@ -45,7 +45,7 @@ export default function AboutHero() {
             Bridging the Gap in Medical Education
           </h2>
 
-          <p className="mt-3 md:mt-4 text-Subtle-text text-base md:text-lg leading-[150%]">
+          <p className="mt-3 md:mt-4 text-subtle-text text-base md:text-lg leading-[150%]">
             Native Medical Education was established in January 2024 with a
             clear mission: to create an accessible and affordable teaching
             platform tailored for doctors preparing for the Simulated

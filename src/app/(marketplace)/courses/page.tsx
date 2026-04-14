@@ -1,4 +1,4 @@
-import CoursesHero from "./_components/coursesHero";
+import CoursesHero from "./_components/CoursesHero";
 
 export default function CoursesPage() {
   return (

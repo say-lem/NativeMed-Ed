@@ -37,14 +37,14 @@ const questionBank = [
 ];
 
 export default function QuestionBankCards() {
-  return questionBank.map((item) => {
-    const bg = bgColors[Math.floor(Math.random() * bgColors.length)];
-    const icon = cardIcons[Math.floor(Math.random() * cardIcons.length)];
+  return questionBank.map((item, idx) => {
+    const bg = bgColors[idx % bgColors.length];
+    const icon = cardIcons[idx % cardIcons.length];
     return (
       <Link
         href={"#"}
         key={item.id}
-        className="border-[0.2px] p-4 rounded-[16px] gap-4 bg-white border-gray2 questionBankShadow flex items-center hover:scale-105"
+        className="border-[0.2px] p-4 rounded-[16px] gap-4 bg-white border-gray-2 questionBankShadow flex items-center hover:scale-105"
       >
         <aside
           style={{ backgroundColor: bg }}
@@ -53,10 +53,10 @@ export default function QuestionBankCards() {
           {icon}
         </aside>
         <aside className="space-y-0.5">
-          <p className="font-semibold text-lg leading-[120%] tracking-[-2%] text-blackOthers">
+          <p className="font-semibold text-lg leading-[120%] tracking-[-2%] text-black-others">
             {item.title}
           </p>
-          <p className="text-sm text-Subtle-text leading-[150%]">
+          <p className="text-sm text-subtle-text leading-[150%]">
             {item.num} Cases
           </p>
         </aside>

@@ -1,4 +1,4 @@
-import SubHero from "./_components/subHero";
+import SubHero from "./_components/SubHero";
 
 export default function SubscriptionPage() {
   return (

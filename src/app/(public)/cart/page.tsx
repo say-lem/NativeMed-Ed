@@ -1,4 +1,4 @@
-import CartHero from "./_components/cartHero";
+import CartHero from "./_components/CartHero";
 
 export default function Cart() {
   return (
