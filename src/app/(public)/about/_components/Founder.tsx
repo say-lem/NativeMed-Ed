@@ -41,7 +41,8 @@ function Founder() {
             alt="Founder"
             height={474}
             width={464}
-            className="w-full h-auto"
+            className="w-full h-auto object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
           />
 
           <div className="mt-2.5 space-y-2.5 text-center">

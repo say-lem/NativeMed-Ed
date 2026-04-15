@@ -58,7 +58,13 @@ export default function ProductsCard({ cutBy = 0 }: { cutBy?: number }) {
             className="rounded-[16px] border-[0.5px] border-[rgba(247, 244, 251, 1)] cardShadow space-y-3 sm:space-y-4 lg:space-y-8 overflow-y-hidden pb-3 sm:pb-4"
           >
             <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64">
-              <Image src={card.img} alt={`image of ${card.title}`} fill />
+              <Image 
+                src={card.img} 
+                alt={`image of ${card.title}`} 
+                fill 
+                className="object-cover object-center" 
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
               <p className="absolute rounded-[100px] py-2 px-3 top-2 right-5 bg-[rgba(0, 0, 0, 0.5)] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
                 {card.tag}
               </p>

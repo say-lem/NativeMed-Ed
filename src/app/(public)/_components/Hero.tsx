@@ -10,7 +10,7 @@ export default function HomeHero() {
           alt="Socket Tile"
           width={50}
           height={50}
-          className="w-6 sm:w-7.5 lg:w-12.5 h-auto"
+          className="w-6 sm:w-7.5 lg:w-12.5 h-auto object-contain"
         />
       </div>
 
@@ -20,7 +20,7 @@ export default function HomeHero() {
           alt="DNA Tile"
           width={50}
           height={50}
-          className="hidden lg:block"
+          className="hidden lg:block object-contain"
         />
 
         <h1 className="text-center font-semibold text-2xl sm:text-3xl md:text-5xl lg:text-7xl tracking-[-2%] leading-[1.2] lg:leading-21.25 text-black-others max-w-full px-4 sm:px-6">
@@ -29,10 +29,10 @@ export default function HomeHero() {
         </h1>
         <Image
           src="/Images/brain tile.png"
-          alt="DNA Tile"
+          alt="Brain Tile"
           width={50}
           height={50}
-          className="hidden lg:block"
+          className="hidden lg:block object-contain"
         />
       </div>
       <p className="text-subtle-text text-xs sm:text-sm md:text-base lg:text-lg leading-[150%] w-[92%] sm:w-[85%] md:w-[70%] lg:w-[60%] mx-auto text-center mt-3 sm:mt-4 lg:mt-0">
@@ -53,7 +53,7 @@ export default function HomeHero() {
       </div>
 
       <div className="relative w-full h-[30vh] sm:h-[35vh] md:h-[60vh] lg:h-screen -mt-[20vh] sm:-mt-[25vh] md:-mt-[45vh] lg:-mt-[65vh]">
-        <Image src="/Images/Elipses.png" alt="Elipses" loading="eager" fill />
+        <Image src="/Images/Elipses.png" alt="Elipses" priority fill className="object-cover object-bottom" sizes="100vw" />
       </div>
     </section>
   );

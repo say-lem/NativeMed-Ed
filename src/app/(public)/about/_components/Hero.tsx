@@ -10,7 +10,7 @@ export default function AboutHero() {
           alt="DNA Tile"
           width={50}
           height={50}
-          className="self-start hidden lg:block"
+          className="self-start hidden lg:block object-contain"
         />
         <div className="w-[95%] sm:w-[85%] md:w-[70%] lg:w-[60%] py-4 sm:py-6 lg:py-10">
           <h1 className="text-center font-semibold text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-[-2%] leading-[1.2] lg:leading-21.25 text-black-others">
@@ -25,15 +25,15 @@ export default function AboutHero() {
 
         <Image
           src="/Images/brain tile.png"
-          alt="DNA Tile"
+          alt="Brain Tile"
           width={50}
           height={50}
-          className="self-end hidden lg:block"
+          className="self-end hidden lg:block object-contain"
         />
       </div>
 
       <div className="relative w-full h-[30vh] sm:h-[35vh] md:h-[60vh] lg:h-screen -mt-[20vh] sm:-mt-[25vh] md:-mt-[45vh] lg:-mt-[65vh]">
-        <Image src="/Images/Elipses.png" alt="Elipses" loading="eager" fill />
+        <Image src="/Images/Elipses.png" alt="Elipses" priority fill className="object-cover object-bottom" sizes="100vw" />
       </div>
 
       {/* Bridging the gap in education section */}
@@ -61,7 +61,8 @@ export default function AboutHero() {
             alt="Nurses studying together"
             width={496}
             height={442}
-            className="w-full h-auto"
+            className="w-full h-auto object-cover"
+            sizes="(max-width: 768px) 100vw, 50vw"
           />
         </aside>
       </div>

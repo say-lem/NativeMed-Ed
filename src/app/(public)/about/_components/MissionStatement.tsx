@@ -16,12 +16,13 @@ function MissionStatement() {
         </p>
       </div>
 
-      <div className="relative w-full h-[35vh] sm:h-[40vh] md:h-[50vh] lg:h-screen">
+      <div className="relative w-full h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[70vh] xl:h-[85vh] max-h-[900px]">
         <Image
           src="/Images/What we really do.svg"
           alt="Image of what we do"
           fill
-          className="object-fill"
+          className="object-cover object-center"
+          sizes="100vw"
         />
       </div>
     </section>

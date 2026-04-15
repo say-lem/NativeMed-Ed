@@ -48,7 +48,8 @@ export default function CartHero() {
             src={item.img}
             alt={`image of ${item.title}`}
             fill
-            className="rounded-[8px] object-cover"
+            className="rounded-[8px] object-cover object-center"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
           <p className="absolute rounded-[100px] py-2 px-3 top-2 right-5 bg-[rgba(0, 0, 0, 0.5)] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
             {item.tag}

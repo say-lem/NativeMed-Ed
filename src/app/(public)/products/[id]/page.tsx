@@ -35,7 +35,9 @@ export default function ProductByIdPage({
                 src={card.img}
                 alt={`image of ${card.title}`}
                 fill
-                className="object-cover rounded-lg"
+                className="object-cover object-center rounded-lg"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
               />
               <p className="absolute rounded-[100px] py-2 px-3 top-2 right-5 bg-[rgba(0, 0, 0, 0.5)] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
                 {card.tag}
