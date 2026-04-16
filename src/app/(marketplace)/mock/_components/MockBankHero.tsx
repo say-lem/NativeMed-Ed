@@ -1,7 +1,7 @@
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import { IoSearchSharp } from "react-icons/io5";
 import BannerBg from "../../_components/BannerBg";
-import QuestionBankCards from "../MockBankCards";
+import MockCasesCards from "./MockBankCards";
 
 export default function MockBankHero() {
   return (
@@ -19,7 +19,7 @@ export default function MockBankHero() {
       </BannerBg>
 
       <div className="px-4 sm:px-6 lg:px-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 py-6 sm:py-8">
-        <QuestionBankCards />
+        <MockCasesCards />
       </div>
     </section>
   );

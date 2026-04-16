@@ -15,6 +15,7 @@ import { LogOutIcon } from "lucide-react";
 
 export default function SideNav() {
   const pathName = usePathname();
+
   return (
     <div>
       <aside className="flex gap-1 items-center px-5">

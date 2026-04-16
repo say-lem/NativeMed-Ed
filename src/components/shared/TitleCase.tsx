@@ -8,7 +8,7 @@ export default function TitleCase({ text }: { text: string }) {
 
 export function BannerTitleCase({ text }: { text: string }) {
   return (
-    <h2 className="font-semibold text-2xl sm:text-3xl lg:text-4xl leading-[130%] tracking-[-2%] text-white">
+    <h2 className="font-semibold text-2xl sm:text-3xl lg:text-4xl leading-[130%] tracking-[-2%] text-white capitalize">
       {text}
     </h2>
   );

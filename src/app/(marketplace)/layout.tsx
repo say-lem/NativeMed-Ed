@@ -29,7 +29,7 @@ export default function MarketplaceLayout({
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
           lg:static lg:translate-x-0 lg:w-auto lg:basis-[24vw]
-          pt-4 border-r-[0.5px] border-gray-2 min-h-screen pr-4 pb-10
+          pt-4 min-h-screen pr-4 pb-10
         `}
       >
         {/* Close button inside drawer on mobile */}
@@ -46,7 +46,7 @@ export default function MarketplaceLayout({
         </div>
       </aside>
 
-      <aside className="flex-1 pt-4 sm:pt-6 lg:pt-9 space-y-4 sm:space-y-5 min-w-0">
+      <aside className="flex-1 pt-4 sm:pt-6 lg:pt-9 space-y-4 sm:space-y-5 min-w-0 border-l-[0.5px] border-gray-2">
         <div className="flex justify-between items-center px-4 sm:px-6 lg:px-10">
           {/* Hamburger on mobile */}
           <button

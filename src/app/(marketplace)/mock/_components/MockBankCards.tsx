@@ -14,7 +14,7 @@ const cardIcons = [
   <PiBoneLight key="bone" className="size-7 text-[#5E5E5E]" />,
 ];
 
-const bgColors = [
+const cardIconColors = [
   "#FFE6F5CC",
   "#E6F3FFCC",
   "#FDFCE5CC",
@@ -36,13 +36,14 @@ const questionBank = [
   { id: 8, title: "Dermatology", num: 150 },
 ];
 
-export default function QuestionBankCards() {
+export default function MockCasesCards() {
   return questionBank.map((item, idx) => {
-    const bg = bgColors[idx % bgColors.length];
+    const bg = cardIconColors[idx % cardIconColors.length];
     const icon = cardIcons[idx % cardIcons.length];
+
     return (
       <Link
-        href={"#"}
+        href={`/mock/${item.title.toLowerCase()}`}
         key={item.id}
         className="border-[0.2px] p-4 rounded-[16px] gap-4 bg-white border-gray-2 questionBankShadow flex items-center hover:scale-105"
       >
