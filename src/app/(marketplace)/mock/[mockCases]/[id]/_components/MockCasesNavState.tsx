@@ -25,10 +25,38 @@ const mockData = {
     "Atorvastatin 20 mg at night",
     "Tamsulosin 400 mcg once daily",
   ],
+  recentNotes: [
+    {
+      time: " 1 week ago",
+      doctor: "Dr Native",
+      complaint:
+        "Patient Reports worsening lower urinary tract symptoms (LUTS) despite being on tamsulosin. ",
+      examination:
+        "PR exam- enlarged prostate, no masses, no tenderness. Urinalysis- clear ",
+      Plan: "PSA, HBA1C, U+E’s, urine culture, Discuss further after results",
+    },
+    {
+      time: " 2 weeks ago",
+      doctor: "Dr Native",
+      complaint:
+        "Patient Reports worsening lower urinary tract symptoms (LUTS) despite being on tamsulosin. ",
+      examination:
+        "PR exam- enlarged prostate, no masses, no tenderness. Urinalysis- clear ",
+      Plan: "PSA, HBA1C, U+E’s, urine culture, Discuss further after results",
+    },
+  ],
   furtherReading: [
     "NICE CKS: Hypothyroidism - Subclinical hypothyroidism (non-pregnant)",
     "NICE CKS: Hypothyroidism - Subclinical hypothyroidism (non-ggg)",
   ],
+  investigationResults: {
+    tableData: [
+      { test: "TSH", result: "4.9 mU/L", referenceRange: "0.4 – 4.0 mU/L" },
+      { test: "Free T4", result: "20 pmol/L", referenceRange: "9 – 24 pmol/L" },
+    ],
+    normalResults:
+      "FBC, U&Es, LFTs, Creatine Kinase, Coeliac Screen, HbA1c — All Normal",
+  },
 };
 
 export default function MocKCasesNavState({ color }: Prop) {
@@ -65,9 +93,9 @@ export default function MocKCasesNavState({ color }: Prop) {
         ) : activeBtn === "Patient" ? (
           <Patient />
         ) : activeBtn === "Doctor" ? (
-          <Doctor />
+          <Doctor mockData={mockData} />
         ) : activeBtn === "Examiner" ? (
-          <Examiner />
+          <Examiner mockData={mockData} />
         ) : (
           <Resources mockData={mockData} />
         )}{" "}

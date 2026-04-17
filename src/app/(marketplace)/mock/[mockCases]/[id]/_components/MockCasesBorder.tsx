@@ -12,7 +12,7 @@ export default function MockCasesBorder({
 
 export function MockCasesPurpleBg({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bg-secondary-white rounded-[8px] p-4 space-y-2.5 mt-2">
+    <div className="bg-secondary-white rounded-[8px] p-4 space-y-5 mt-2">
       {children}
     </div>
   );
