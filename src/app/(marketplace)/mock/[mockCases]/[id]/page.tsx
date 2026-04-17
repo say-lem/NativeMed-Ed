@@ -1,8 +1,9 @@
-"use client";
-import { use, useState } from "react";
+import { use } from "react";
 import MockHeaderBg from "../_components/MockHeaderBg";
 import BackIcon from "../_components/BackSvg";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
+import MocKCasesNavState from "./_components/MockCasesNavState";
+import { GetRandomColor } from "../../_components/GetRandomColor";
 
 export default function ViewMockCases({
   params,
@@ -10,11 +11,7 @@ export default function ViewMockCases({
   params: Promise<{ id: string }>;
 }) {
   const { id } = use(params);
-  const [activeBtn, setActiveBtn] = useState("Full Case");
-
-  const toggleActiveBtn = (value: string) => {
-    setActiveBtn(value);
-  };
+  const color = GetRandomColor();
 
   return (
     <>
@@ -26,21 +23,7 @@ export default function ViewMockCases({
       </MockHeaderBg>
 
       <section className="px-8 py-4 ">
-        <div className="flex gap-2">
-          {["Full Case", "Patient", "Doctor", "Examiner", "Resources"].map(
-            (item) => (
-              <button
-                key={item}
-                className={`text-subtle-text font-semibold leading-[120%] tracking-[-1%] px-4 pb-2.5 ${
-                  activeBtn === item ? "border-b-2 border-subtle-text" : ""
-                }`}
-                onClick={() => toggleActiveBtn(item)}
-              >
-                {item}
-              </button>
-            ),
-          )}
-        </div>
+        <MocKCasesNavState color={color} />
       </section>
     </>
   );

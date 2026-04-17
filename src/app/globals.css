@@ -153,6 +153,7 @@
 @theme {
   --color-primary-100: rgba(89, 37, 179, 1);
   --color-secondary-100: rgba(28, 57, 103, 1);
+  --color-secondary-white: rgba(244, 245, 247, 1);
   --color-subtle-text: rgba(111, 111, 111, 1);
   --color-gray-1: rgba(214, 214, 214, 1);
   --color-gray-2: rgba(183, 183, 185, 1);
