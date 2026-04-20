@@ -6,6 +6,11 @@ interface recentNotes {
   Plan: string;
 }
 
+interface dataGatheringAndDiagnosis {
+  title: string;
+  otherThings: string[];
+}
+
 export interface MockCasesPresentation {
   name: string;
   gender: string;
@@ -18,4 +23,9 @@ export interface MockCasesPresentation {
     normalResults: string;
   };
   recentNotes: recentNotes[];
+  dataGatheringAndDiagnosis: dataGatheringAndDiagnosis[];
+  patientExplanation: string;
+  learningPoints: string;
+  management: string[];
+  safetyNet: string;
 }
