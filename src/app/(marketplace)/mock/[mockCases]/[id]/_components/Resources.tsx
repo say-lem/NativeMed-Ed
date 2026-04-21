@@ -1,4 +1,4 @@
-import { MockCasesPresentation } from "@/types/MockCasesPresentation";
+import { TypeMockCasesPresentation } from "@/types/MockCasesPresentationInterface";
 import MockCasesBorder from "./MockCasesBorder";
 import { MockHeaderText } from "./MockText";
 import Link from "next/link";
@@ -40,7 +40,7 @@ function LinkSvg() {
 export default function Resources({
   mockData,
 }: {
-  mockData: MockCasesPresentation;
+  mockData: TypeMockCasesPresentation;
 }) {
   return (
     <>

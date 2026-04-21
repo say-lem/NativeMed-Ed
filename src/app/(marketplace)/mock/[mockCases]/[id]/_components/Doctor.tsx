@@ -1,4 +1,4 @@
-import { MockCasesPresentation } from "@/types/MockCasesPresentation";
+import { TypeMockCasesPresentation } from "@/types/MockCasesPresentationInterface";
 import MockCasesBorder, { MockCasesPurpleBg } from "./MockCasesBorder";
 import { MockHeaderText, MockNormalText, MockTagText } from "./MockText";
 
@@ -16,7 +16,7 @@ function PurpleBgText({ title, desc }: { title: string; desc: string }) {
 export default function Doctor({
   mockData,
 }: {
-  mockData: MockCasesPresentation;
+  mockData: TypeMockCasesPresentation;
 }) {
   return (
     <>

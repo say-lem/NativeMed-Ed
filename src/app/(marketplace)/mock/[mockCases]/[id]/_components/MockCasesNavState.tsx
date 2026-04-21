@@ -98,6 +98,29 @@ const mockData = {
   ],
   safetyNet:
     "Advise the patient to get in touch if they feel worse, experience new symptoms, or if the tiredness becomes overwhelming or disabling.",
+  patientBrief:
+    "You are Lizzy, a 49-year-old woman, and you've been feeling unusually tired for about a month. This started shortly after a viral illness that took a few weeks to fully recover from. You've now started to feel better from the virus, but the tiredness hasn't gone away. You work as a medical secretary at a GP practice, and the fatigue is beginning to affect your ability to keep up with tasks. Your manager has noticed a drop in your performance, which is adding to your stress.",
+  socialHistory:
+    "You don't smoke or drink alcohol. You're married and have two children at home.",
+  importantNote:
+    "Say NO to any other questions asked outside of the details already provided in the scenario.",
+  questionsForDoctor: [
+    "If the doctor gives a diagnosis of subclinical hypothyroidism and says no treatment is needed right now, you will ask: So what should I do about the tiredness? What do you think is causing it?",
+  ],
+  patientsIdeaConcernExpectation: [
+    {
+      tag: "idea",
+      desc: "I think it might be related to my thyroid, but I'm not sure. I've been feeling really tired for a while now, and I'm worried it might be something serious.",
+    },
+    {
+      tag: "concern",
+      desc: "I think it might be related to my thyroid, but I'm not sure. I've been feeling really tired for a while now, and I'm worried it might be something serious.",
+    },
+    {
+      tag: "Expectation",
+      desc: "You'd like to understand what's causing it and find a solution.",
+    },
+  ],
 };
 
 export default function MocKCasesNavState({ color }: Prop) {
@@ -132,7 +155,7 @@ export default function MocKCasesNavState({ color }: Prop) {
         {activeBtn === "Full Case" ? (
           <FullCase mockData={mockData} />
         ) : activeBtn === "Patient" ? (
-          <Patient />
+          <Patient mockData={mockData} />
         ) : activeBtn === "Doctor" ? (
           <Doctor mockData={mockData} />
         ) : activeBtn === "Examiner" ? (

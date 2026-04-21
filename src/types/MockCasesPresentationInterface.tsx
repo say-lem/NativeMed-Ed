@@ -11,7 +11,12 @@ interface dataGatheringAndDiagnosis {
   otherThings: string[];
 }
 
-export interface MockCasesPresentation {
+interface patientsIdeaConcernExpectation {
+  tag: string;
+  desc: string;
+}
+
+export interface TypeMockCasesPresentation {
   name: string;
   gender: string;
   age: number;
@@ -28,4 +33,9 @@ export interface MockCasesPresentation {
   learningPoints: string;
   management: string[];
   safetyNet: string;
+  patientBrief: string;
+  socialHistory: string;
+  importantNote: string;
+  questionsForDoctor: string[];
+  patientsIdeaConcernExpectation: patientsIdeaConcernExpectation[];
 }

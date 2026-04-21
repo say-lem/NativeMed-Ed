@@ -166,6 +166,7 @@
   --color-secondary-20: rgba(210, 215, 225, 1);
   --color-primary-10: rgba(238, 233, 247, 1);
   --color-primary-40: rgba(189, 168, 225, 1);
+  --color-error-other: rgba(215, 1, 23, 1);
 }
 
 .authFormBg {

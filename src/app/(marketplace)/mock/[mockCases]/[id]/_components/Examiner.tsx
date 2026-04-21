@@ -1,4 +1,4 @@
-import { MockCasesPresentation } from "@/types/MockCasesPresentation";
+import { TypeMockCasesPresentation } from "@/types/MockCasesPresentationInterface";
 import MockCasesBorder, { MockCasesPurpleBg } from "./MockCasesBorder";
 import { MockHeaderText } from "./MockText";
 
@@ -22,7 +22,7 @@ export function PlusIconSvg() {
 export default function Examiner({
   mockData,
 }: {
-  mockData: MockCasesPresentation;
+  mockData: TypeMockCasesPresentation;
 }) {
   console.log(mockData);
   return (
