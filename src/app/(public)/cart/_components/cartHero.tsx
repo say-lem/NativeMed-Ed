@@ -51,7 +51,7 @@ export default function CartHero() {
             className="rounded-[8px] object-cover object-center"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
-          <p className="absolute rounded-[100px] py-2 px-3 top-2 right-5 bg-[rgba(0, 0, 0, 0.5)] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
+          <p className="absolute rounded-[100px] py-2 px-3 top-2 right-5 bg-[#00000080] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
             {item.tag}
           </p>
         </div>
@@ -64,7 +64,9 @@ export default function CartHero() {
         </h2>
         <h4 className="font-semibold text-2xl sm:text-3xl lg:text-4xl leading-[120%] tracking-[-1%] text-black-others">
           £{item.amt.toFixed(2)}
-          <span className="text-base sm:text-lg lg:text-xl font-normal leading-[150%]">/month</span>
+          <span className="text-base sm:text-lg lg:text-xl font-normal leading-[150%]">
+            /month
+          </span>
         </h4>
         <p className="font-light text-sm sm:text-base lg:text-xl leading-[150%] text-[#373737] ">
           {item.desc}
@@ -75,7 +77,10 @@ export default function CartHero() {
             What&apos;s Included
           </li>
           {item.descList.map((itemDesc) => (
-            <li key={itemDesc} className="flex gap-2 sm:gap-3 items-center text-sm sm:text-base">
+            <li
+              key={itemDesc}
+              className="flex gap-2 sm:gap-3 items-center text-sm sm:text-base"
+            >
               <span>
                 <svg
                   width="19"
@@ -122,7 +127,9 @@ export default function CartHero() {
             {/* items in cart */}
             {cart.map((item) => (
               <div key={item.id} className="flex justify-between">
-                <p className="leading-[150%] text-subtle-text text-sm sm:text-base">{item.title}</p>
+                <p className="leading-[150%] text-subtle-text text-sm sm:text-base">
+                  {item.title}
+                </p>
                 <p className="font-semibold leading-[120%] tracking-[-2%] text-black-others text-sm sm:text-base">
                   £{item.amt.toFixed(2)}
                 </p>

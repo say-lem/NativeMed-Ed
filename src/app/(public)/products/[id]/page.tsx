@@ -39,7 +39,7 @@ export default function ProductByIdPage({
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
               />
-              <p className="absolute rounded-[100px] py-2 px-3 top-2 right-5 bg-[rgba(0, 0, 0, 0.5)] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
+              <p className="absolute rounded-[100px] py-2 px-3 top-2 right-5 bg-[#00000080] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
                 {card.tag}
               </p>
             </aside>
@@ -50,9 +50,11 @@ export default function ProductByIdPage({
                 </h3>
                 <h4 className="font-semibold text-2xl sm:text-3xl lg:text-4xl leading-[130%] tracking-[-2%] text-black-others">
                   £{card.price.toFixed(2)}
-                  <span className="text-base sm:text-lg leading-[120%]">/month</span>
+                  <span className="text-base sm:text-lg leading-[120%]">
+                    /month
+                  </span>
                 </h4>
-                <p className="font-light text-sm sm:text-base lg:text-xl leading-[150%] text-[rgba(55, 55, 55, 1)]">
+                <p className="font-light text-sm sm:text-base lg:text-xl leading-[150%] text-[#373737]">
                   Prepare effectively for the MRCGP Simulated Consultation
                   Assessment (SCA) with our Online Monthly Subscription.
                 </p>
