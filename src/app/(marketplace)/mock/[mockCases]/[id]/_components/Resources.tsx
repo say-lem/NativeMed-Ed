@@ -55,7 +55,7 @@ export default function Resources({
             <Link
               key={data}
               href="#"
-              className="flex gap-1 items-center text-xs sm:text-sm text-[#992E6C] hover:underline break-words"
+              className="flex gap-1 items-center text-xs sm:text-sm text-[#992E6C] hover:underline wrap-break-word"
             >
               <LinkSvg />
               <span>{data}</span>

@@ -4,9 +4,7 @@ import SideNavLink from "./SideNavLinks";
 import {
   CoursesIcon,
   DashboardIcon,
-  LecturesIcon,
   MockIcon,
-  QuestionBankIcon,
   SettingsIcon,
   SubscriptionsIcon,
 } from "./Icons";
@@ -27,7 +25,7 @@ export default function SideNav() {
         />
 
         <p className="font-semibold leading-[150%] text-black-others mt-5">
-          Native Medical Education{" "}
+          Native Medical Education
         </p>
       </aside>
 
@@ -41,15 +39,7 @@ export default function SideNav() {
           href="/dashboard"
           label="Dashboard"
         />
-        <SideNavLink
-          icon={
-            <QuestionBankIcon
-              color={pathName === "/questionbank" ? "#5925B3" : "#373737"}
-            />
-          }
-          href="/questionbank"
-          label="Question Bank"
-        />
+
         <SideNavLink
           icon={
             <CoursesIcon
@@ -68,15 +58,7 @@ export default function SideNav() {
           href="/mock"
           label="Mock"
         />
-        <SideNavLink
-          icon={
-            <LecturesIcon
-              color={pathName === "/lectures" ? "#5925B3" : "#373737"}
-            />
-          }
-          href="/lectures"
-          label="Lectures"
-        />
+
         <SideNavLink
           icon={
             <SubscriptionsIcon
