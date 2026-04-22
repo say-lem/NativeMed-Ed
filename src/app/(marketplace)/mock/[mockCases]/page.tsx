@@ -30,7 +30,7 @@ export default function PerMockCasesHero({
         </div>
       </MockHeaderBg>
 
-      <div className="px-8 space-x-2.5 py-6 ">
+      <div className="px-4 sm:px-6 lg:px-8 space-x-2.5 py-4 sm:py-6 ">
         <DifferentMockCases parentPage={mockCases} />
       </div>
     </>

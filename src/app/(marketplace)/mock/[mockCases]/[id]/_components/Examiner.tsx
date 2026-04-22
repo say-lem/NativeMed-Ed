@@ -31,19 +31,19 @@ export default function Examiner({
 
       <MockCasesBorder>
         <div className="space-y-4">
-          <h3 className="font-semibold leading-6 ">
+          <h3 className="font-semibold text-sm sm:text-base leading-6 ">
             Data Gathering and Diagnosis
           </h3>
 
           {mockData.dataGatheringAndDiagnosis.map((item) => (
             <MockCasesPurpleBg key={item.title}>
-              <p className="text-sm leading-5 text-[#080A0D] font-semibold">
+              <p className="text-xs sm:text-sm leading-5 text-[#080A0D] font-semibold">
                 {item.title}
               </p>
 
               <div className="space-y-2">
                 {item.otherThings.map((item) => (
-                  <p className="flex items-center gap-2" key={item}>
+                  <p className="flex items-center gap-2 text-xs sm:text-sm" key={item}>
                     <PlusIconSvg /> <span>{item}</span>
                   </p>
                 ))}
@@ -64,7 +64,7 @@ export default function Examiner({
             .map((line, index) => (
               <p
                 key={index}
-                className="leading-[150%] "
+                className="text-sm sm:text-base leading-[150%] "
                 style={{ marginBottom: 12 }}
               >
                 {line}
@@ -80,11 +80,11 @@ export default function Examiner({
         {mockData.management.map((item, index) => (
           <MockCasesPurpleBg key={index}>
             <p className="flex gap-2 align-baseline">
-              <span className="size-6 p-4 rounded-full bg-[#992E6C] text-white flex items-center justify-center font-semibold text-sm leading-5">
+              <span className="size-5 sm:size-6 p-3 sm:p-4 rounded-full bg-[#992E6C] text-white flex items-center justify-center font-semibold text-xs sm:text-sm leading-5">
                 {index + 1}
               </span>
 
-              <span className="leading-6 text-[15px] text-[#080A0D]">
+              <span className="leading-6 text-xs sm:text-sm lg:text-[15px] text-[#080A0D]">
                 {item}
               </span>
             </p>
@@ -92,8 +92,8 @@ export default function Examiner({
         ))}
 
         <div className="bg-[#FFF6FC] text-[#C11616] border-[0.5px] p-4 border-[#992E6C] rounded-[10px] space-y-2">
-          <p className="font-semibold text-sm leading-5"> Safety Net:</p>
-          <p className="text-sm leading-5">{mockData.safetyNet}</p>
+          <p className="font-semibold text-xs sm:text-sm leading-5"> Safety Net:</p>
+          <p className="text-xs sm:text-sm leading-5">{mockData.safetyNet}</p>
         </div>
       </MockCasesBorder>
 
@@ -108,7 +108,7 @@ export default function Examiner({
             .map((line, index) => (
               <p
                 key={index}
-                className="leading-[150%] "
+                className="text-sm sm:text-base leading-[150%] "
                 style={{ marginBottom: 12 }}
               >
                 {line}

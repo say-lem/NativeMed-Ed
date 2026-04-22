@@ -48,14 +48,14 @@ export default function Resources({
 
       <MockCasesBorder>
         <div className="bg-[#FFF6FC] border-[0.5px] p-4 border-[#992E6C] rounded-[10px] space-y-2">
-          <p className="text-subtle-2 text-sm font-semibold leading-5 ">
+          <p className="text-subtle-2 text-xs sm:text-sm font-semibold leading-5 ">
             Further Reading:
           </p>
           {mockData.furtherReading.map((data) => (
             <Link
               key={data}
               href="#"
-              className="flex gap-1 items-center text-[#992E6C] hover:underline"
+              className="flex gap-1 items-center text-xs sm:text-sm text-[#992E6C] hover:underline break-words"
             >
               <LinkSvg />
               <span>{data}</span>

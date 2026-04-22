@@ -45,7 +45,7 @@ export default function MockCasesCards() {
       <Link
         href={`/mock/${item.title.toLowerCase()}`}
         key={item.id}
-        className="border-[0.2px] p-4 rounded-[16px] gap-4 bg-white border-gray-2 questionBankShadow flex items-center hover:scale-105"
+        className="border-[0.2px] p-3 sm:p-4 rounded-[16px] gap-3 sm:gap-4 bg-white border-gray-2 questionBankShadow flex items-center hover:scale-105"
       >
         <aside
           style={{ backgroundColor: bg }}
@@ -54,7 +54,7 @@ export default function MockCasesCards() {
           {icon}
         </aside>
         <aside className="space-y-0.5">
-          <p className="font-semibold text-lg leading-[120%] tracking-[-2%] text-black-others">
+          <p className="font-semibold text-base sm:text-lg leading-[120%] tracking-[-2%] text-black-others">
             {item.title}
           </p>
           <p className="text-sm text-subtle-text leading-[150%]">

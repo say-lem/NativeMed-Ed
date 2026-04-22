@@ -22,7 +22,7 @@ export default function ViewMockCases({
         <BannerTitleCase text={id} />
       </MockHeaderBg>
 
-      <section className="px-8 py-4 ">
+      <section className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4 ">
         <MocKCasesNavState color={color} />
       </section>
     </>

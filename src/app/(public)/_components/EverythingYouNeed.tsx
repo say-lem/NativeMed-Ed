@@ -23,6 +23,7 @@ export default function EverythingYouNeed() {
           width={752}
           height={415}
           className="w-full h-auto"
+          sizes="(max-width: 768px) 100vw, 60vw"
         />
       </aside>
     </section>

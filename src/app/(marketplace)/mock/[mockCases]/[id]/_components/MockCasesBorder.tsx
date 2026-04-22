@@ -4,7 +4,7 @@ export default function MockCasesBorder({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-[0.5px] border-gray-2 p-6 space-y-8 rounded-[12px] mt-3">
+    <section className="border-[0.5px] border-gray-2 p-3 sm:p-4 lg:p-6 space-y-5 sm:space-y-6 lg:space-y-8 rounded-[12px] mt-3">
       {children}
     </section>
   );

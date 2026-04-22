@@ -12,7 +12,7 @@ function Label({ text }: { text: string }) {
 
 export default function Contact() {
   return (
-    <section className="px-4 md:px-15 radialBgGradient pt-20 md:pt-36 pb-32 md:pb-60 flex flex-col md:flex-row justify-between gap-8 md:gap-12">
+    <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-12 sm:pt-20 md:pt-36 pb-16 sm:pb-24 md:pb-40 lg:pb-60 flex flex-col md:flex-row justify-between gap-8 md:gap-12">
       <aside className="w-full md:basis-1/3">
         <h2 className="font-semibold tracking-[-2%] text-3xl sm:text-4xl md:text-5xl leading-[130%] text-black-others">
           Feel Free To <span className="text-primary-100">Reach Out</span>
@@ -34,7 +34,7 @@ export default function Contact() {
           </button>
         </div>
       </aside>
-      <aside className="w-full md:basis-2/3 rounded-[16px] border border-primary-20 p-5 md:p-8 space-y-5 md:space-y-7">
+      <aside className="w-full md:basis-2/3 rounded-[16px] border border-primary-20 p-4 sm:p-5 md:p-8 space-y-4 sm:space-y-5 md:space-y-7">
         <div className="space-y-2">
           <Label text="Full Name" />
           <input

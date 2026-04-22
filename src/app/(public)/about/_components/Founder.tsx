@@ -16,7 +16,7 @@ const founderLaurel = ({ text }: { text: string }) => {
 function Founder() {
   return (
     <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-10 sm:pt-14 lg:pt-20 pb-16 sm:pb-24 md:pb-32 lg:pb-44">
-      <div className="flex flex-col md:flex-row justify-between items-start gap-6 sm:gap-8">
+      <div className="flex flex-col md:flex-row justify-between items-start gap-6 sm:gap-8 md:gap-10">
         <aside className="w-full md:basis-3/5">
           <TitleCase text="About The Founder" />
           {aboutFounder({

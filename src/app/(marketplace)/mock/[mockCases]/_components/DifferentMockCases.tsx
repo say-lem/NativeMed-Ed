@@ -80,10 +80,10 @@ export default function DifferentMockCases({
         <Link
           href={`/mock/${parentPage}/${mockCase.id}`}
           key={mockCase.id}
-          className="flex justify-between border-b-[0.5px] px-4 py-6 border-gray-2 "
+          className="flex justify-between border-b-[0.5px] px-2 sm:px-4 py-4 sm:py-6 border-gray-2 gap-4"
         >
           <aside className="space-y-2">
-            <h2 className="font-semibold text-lg leading-[120%] tracking-[-2%] text-black-others">
+            <h2 className="font-semibold text-base sm:text-lg leading-[120%] tracking-[-2%] text-black-others">
               {mockCase.title}
             </h2>
             <p className="flex items-center gap-1 text-subtle-text text-sm leading-[150%]">
@@ -93,7 +93,7 @@ export default function DifferentMockCases({
           </aside>
           <aside>
             <p
-              className={`leadinf-[150%] ${mockCase.status === "In Progress" ? "text-[#D19E08]" : mockCase.status === "Completed" ? "text-[#00A63D] " : "text-black-others"}`}
+              className={`text-xs sm:text-sm leading-[150%] ${mockCase.status === "In Progress" ? "text-[#D19E08]" : mockCase.status === "Completed" ? "text-[#00A63D] " : "text-black-others"}`}
             >
               {mockCase.status === "Completed" ? (
                 <span className="flex items-center gap-1">

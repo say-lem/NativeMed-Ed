@@ -131,7 +131,7 @@ export default function MocKCasesNavState({ color }: Prop) {
 
   return (
     <>
-      <div className="flex gap-2">
+      <div className="flex gap-1 sm:gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
         {["Full Case", "Patient", "Doctor", "Examiner", "Resources"].map(
           (item) => (
             <button
@@ -140,7 +140,7 @@ export default function MocKCasesNavState({ color }: Prop) {
                 borderBottomColor: activeBtn === item ? color : "",
               }}
               key={item}
-              className={`text-subtle-text font-semibold cursor-pointer leading-[120%] tracking-[-1%] px-4 pb-2.5 ${
+              className={`text-subtle-text font-semibold cursor-pointer leading-[120%] tracking-[-1%] px-2 sm:px-4 pb-2.5 text-xs sm:text-sm whitespace-nowrap ${
                 activeBtn === item ? "border-b-2 font-black" : ""
               }`}
               onClick={() => toggleActiveBtn(item)}
@@ -151,7 +151,7 @@ export default function MocKCasesNavState({ color }: Prop) {
         )}
       </div>
 
-      <div className="py-8">
+      <div className="py-4 sm:py-6 lg:py-8">
         {activeBtn === "Full Case" ? (
           <FullCase mockData={mockData} />
         ) : activeBtn === "Patient" ? (

@@ -5,10 +5,10 @@ import { MockHeaderText, MockNormalText, MockTagText } from "./MockText";
 function PurpleBgText({ title, desc }: { title: string; desc: string }) {
   return (
     <p>
-      <span className="text-black-others font-medium text-sm leading-[150%] tracking-[-1%]">
+      <span className="text-black-others font-medium text-xs sm:text-sm leading-[150%] tracking-[-1%]">
         {title}
       </span>{" "}
-      <span className="text-sm leading-[150%] tracking-[-1%]">{desc}</span>
+      <span className="text-xs sm:text-sm leading-[150%] tracking-[-1%]">{desc}</span>
     </p>
   );
 }
@@ -23,7 +23,7 @@ export default function Doctor({
       <MockHeaderText text="Patient Data" />
 
       <MockCasesBorder>
-        <div className="flex gap-20">
+        <div className="flex flex-wrap gap-6 sm:gap-10 lg:gap-20">
           <aside className="space-y-2">
             <MockTagText text="Patient Name" />
             <MockNormalText text={mockData.name} />
@@ -61,7 +61,7 @@ export default function Doctor({
           <MockCasesPurpleBg>
             {mockData.recentNotes.map((data) => (
               <div key={data.time} className="">
-                <p className="font-semibold text-sm leading-[150%] tracking-[-1%] text-black-others">
+                <p className="font-semibold text-xs sm:text-sm leading-[150%] tracking-[-1%] text-black-others">
                   {data.time} (seen by {data.doctor})
                 </p>
 
@@ -81,11 +81,11 @@ export default function Doctor({
         <div>
           <div className="mt-3 rounded-lg overflow-hidden border border-gray-2">
             {/* Header */}
-            <div className="grid grid-cols-3 bg-[#FFF4FB] border-b-[0.2px] border-gray-2 px-4 py-3">
+            <div className="grid grid-cols-3 bg-[#FFF4FB] border-b-[0.2px] border-gray-2 px-2 sm:px-4 py-2 sm:py-3">
               {["Test", "Result", "Reference Range"].map((heading) => (
                 <span
                   key={heading}
-                  className="text-sm font-semibold leading-[150%] tracking-[-1%] text-black-others"
+                  className="text-xs sm:text-sm font-semibold leading-[150%] tracking-[-1%] text-black-others"
                 >
                   {heading}
                 </span>
@@ -95,14 +95,14 @@ export default function Doctor({
             {/* Rows */}
             <div className="bg-white divide-y-[0.2px] divide-gray-2">
               {mockData.investigationResults.tableData.map((row) => (
-                <div key={row.test} className="grid grid-cols-3 px-4 py-3">
-                  <span className="text-sm leading-[150%] tracking-[-1%] text-subtle-2">
+                <div key={row.test} className="grid grid-cols-3 px-2 sm:px-4 py-2 sm:py-3">
+                  <span className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-subtle-2">
                     {row.test}
                   </span>
-                  <span className="text-sm leading-[150%] tracking-[-1%] text-subtle-2">
+                  <span className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-subtle-2">
                     {row.result}
                   </span>
-                  <span className="text-sm leading-[150%] tracking-[-1%] text-subtle-2">
+                  <span className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-subtle-2">
                     {row.referenceRange}
                   </span>
                 </div>
@@ -111,7 +111,7 @@ export default function Doctor({
 
             {/* Footer note */}
             <div className="bg-white border-t-[0.2px] border-gray-2 px-4 py-3">
-              <span className="text-sm leading-[150%] tracking-[-1%] text-[#0A0A0A]">
+              <span className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-[#0A0A0A]">
                 {mockData.investigationResults.normalResults}
               </span>
             </div>
