@@ -187,3 +187,13 @@
 .questionBankShadow {
   box-shadow: 0px 0px 48px 0px rgba(0, 0, 0, 0.05);
 }
+
+.courseBorder {
+  border: 0.5px solid var(--color-primary-white, #f7f4fb);
+  box-shadow: 0px 30px 60px 0px #0000001a;
+}
+
+.alsoLikeBorder {
+  border: 0.5px solid var(--Primary-Primary-white, #f7f4fb);
+  box-shadow: -15px 2px 60px 0px #0000001a;
+}

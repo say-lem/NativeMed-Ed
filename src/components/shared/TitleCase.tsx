@@ -13,3 +13,14 @@ export function BannerTitleCase({ text }: { text: string }) {
     </h2>
   );
 }
+
+export function AnotherTitleCase({ text }: { text: string }) {
+  return (
+    <h2
+      className="font-semibold
+    text-lg lg:text-2xl leading-[130%] tracking-[-2%] text-black-others capitalize"
+    >
+      {text}
+    </h2>
+  );
+}

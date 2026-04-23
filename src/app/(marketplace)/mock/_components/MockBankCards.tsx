@@ -34,6 +34,7 @@ const questionBank = [
   { id: 6, title: "Dermatology", num: 150 },
   { id: 7, title: "Gastroenterology", num: 150 },
   { id: 8, title: "Dermatology", num: 150 },
+  { id: 9, title: "All Cases", num: 150 },
 ];
 
 export default function MockCasesCards() {
