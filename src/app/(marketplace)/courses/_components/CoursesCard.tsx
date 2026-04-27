@@ -86,7 +86,7 @@ const courseCard = courses.map((card) => (
 
 export default function CoursesCard() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-9 py-12 px-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-9 py-12 sm:px-8 px-4">
       {courseCard}
     </div>
   );

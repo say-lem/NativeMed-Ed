@@ -18,8 +18,8 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
   return (
     <section className="mt-4 sm:mt-6 lg:mt-8 px-0 sm:px-4 lg:px-15">
       <div className="authFormBorder rounded-[16px] flex flex-col lg:flex-row justify-between overflow-x-hidden">
-        <aside className="hidden lg:block w-1/2 border border-green-600 authFormBg"></aside>
-        <aside className="w-full lg:w-1/2 flex items-center flex-col gap-8 sm:gap-10 lg:gap-12 justify-center px-4 sm:px-8 lg:px-15 py-8 sm:py-10 lg:py-0">
+        <aside className="hidden -ml-6 lg:block w-1/2 authFormBg"></aside>
+        <aside className="w-full lg:w-1/2 flex items-center flex-col gap-8 sm:gap-10 lg:gap-12 justify-center px-4 sm:pr-8 lg:pr-10 py-8 sm:py-10">
           <div>
             <TitleCase text={register ? "Get Started" : "Welcome Back"} />
             <SubtleText

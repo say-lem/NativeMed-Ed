@@ -62,7 +62,7 @@ const courseCard = courses.map((course) => (
 
 export default function YouMightAlsoLike() {
   return (
-    <section className="py-12 px-8 space-y-4">
+    <section className="py-12 px-4 lg:px-8 space-y-4">
       <TitleCase text="You Might Also Like" />
 
       <div className="space-y-4">{courseCard}</div>
