@@ -83,7 +83,7 @@ export default function DifferentMockCases({
           className="flex justify-between border-b-[0.5px] px-2 sm:px-4 py-4 sm:py-6 border-gray-2 gap-4"
         >
           <aside className="space-y-2">
-            <h2 className="font-semibold text-base sm:text-lg leading-[120%] tracking-[-2%] text-black-others">
+            <h2 className="font-semibold text-sm md:text-lg leading-[120%] tracking-[-2%] text-black-others">
               {mockCase.title}
             </h2>
             <p className="flex items-center gap-1 text-subtle-text text-sm leading-[150%]">
