@@ -42,13 +42,12 @@ function ClassCountdown({
   eventTitle = "Live Class Starts In:",
   ctaLabel = "Register Now",
 }: Props) {
-
-
   // ✅ FIX: start with null (prevents SSR mismatch)
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
 
   useEffect(() => {
-    const target = targetDate instanceof Date ? targetDate : new Date(targetDate);
+    const target =
+      targetDate instanceof Date ? targetDate : new Date(targetDate);
     const update = () => setTimeLeft(getTimeLeft(target));
 
     update(); // run immediately on mount
@@ -73,7 +72,7 @@ function ClassCountdown({
       style={{ background: "#07070f" }}
     >
       {[
-        { size: "100%", bg: "rgba(214, 214, 214, 1)" }, // ✅ fixed extra ")"
+        { size: "100%", bg: "#1E1C2C" }, // ✅ fixed extra ")"
         { size: "85%", bg: "rgba(155, 124, 209, 0.08)" },
         { size: "75%", bg: "rgba(8, 10, 13, 1)" },
         { size: "65%", bg: "black" },
