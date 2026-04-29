@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export default function HomeHero() {
   return (
-    <section className="radialBgGradient min-h-[70vh] sm:min-h-[80vh] md:min-h-[100vh] lg:min-h-[120vh] overflow-hidden relative">
+    <section className="radialBgGradient min-h-[70vh] sm:min-h-[80vh] md:min-h-screen lg:min-h-[120vh] overflow-hidden relative">
       <div className="flex items-center justify-center px-4 sm:px-8 lg:px-15 pt-6 sm:pt-8 lg:pt-16">
         <Image
           src="/Images/socket tile.png"
@@ -53,7 +53,14 @@ export default function HomeHero() {
       </div>
 
       <div className="relative w-full h-[30vh] sm:h-[35vh] md:h-[60vh] lg:h-screen -mt-[20vh] sm:-mt-[25vh] md:-mt-[45vh] lg:-mt-[65vh]">
-        <Image src="/Images/Elipses.png" alt="Elipses" priority fill className="object-cover object-bottom" sizes="100vw" />
+        <Image
+          src="/Images/Elipses.png"
+          alt="Elipses"
+          priority
+          fill
+          className="object-cover object-bottom"
+          sizes="100vw"
+        />
       </div>
     </section>
   );
