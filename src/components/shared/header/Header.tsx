@@ -1,17 +1,24 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { HeaderNavLink } from "./NavLink";
-import { Menu, X } from "lucide-react";
+import { Loader2, Menu, X } from "lucide-react";
 import Link from "next/link";
 import NamedHeader from "./NamedHeader";
+import type { User } from "@/types/api";
 
-export default function PublicHeader() {
+export default function PublicHeader({ user }: { user?: User | null }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [navPending, startNav] = useTransition();
+  const router = useRouter();
+  const isLoggedIn = !!user;
 
-  // False Auth state for testing
-  const [isLoggedIn] = useState(false);
+  const goToDashboard = () => {
+    setIsOpen(false);
+    startNav(() => router.push("/dashboard"));
+  };
 
   return (
     <header className="radialBgGradient min-h-14 sm:min-h-16 md:min-h-20 lg:min-h-25 flex items-center justify-between px-4 sm:px-6 lg:px-15 sticky top-0 backdrop-blur-md z-50 border-b border-white/20">
@@ -32,7 +39,7 @@ export default function PublicHeader() {
 
       {isLoggedIn ? (
         <div className="flex items-center gap-2 sm:gap-4">
-          <NamedHeader />
+          <NamedHeader user={user} />
           <button
             className="lg:hidden text-black"
             onClick={() => setIsOpen(!isOpen)}
@@ -73,7 +80,16 @@ export default function PublicHeader() {
             <HeaderNavLink href="/contact" label="Contact" />
           </div>
 
-          {!isLoggedIn && (
+          {isLoggedIn ? (
+            <Button
+              onClick={goToDashboard}
+              disabled={navPending}
+              className="bg-primary-100 font-semibold text-xs mt-2 px-8 disabled:opacity-70"
+            >
+              {navPending && <Loader2 className="size-4 animate-spin" />}
+              {navPending ? "Loading..." : "Go to Dashboard"}
+            </Button>
+          ) : (
             <Link href="/register" onClick={() => setIsOpen(false)}>
               <Button className="bg-primary-100 font-semibold text-xs mt-2 px-8">
                 Get Started

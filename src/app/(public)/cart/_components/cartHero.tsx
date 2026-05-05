@@ -39,7 +39,7 @@ export default function CartHero() {
   const cartDisplay = cart.map((item) => (
     <div
       key={item.id}
-      className="bg-white authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-6 lg:gap-12 flex flex-col sm:flex-row items-start"
+      className="bg-white authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-5 md:gap-6 lg:gap-12 flex flex-col sm:flex-row items-start"
     >
       <aside className="w-full sm:basis-1/2">
         {/* Cart Image */}

@@ -16,7 +16,7 @@ function MissionStatement() {
         </p>
       </div>
 
-      <div className="relative w-full h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[70vh] xl:h-[85vh] max-h-[900px]">
+      <div className="relative w-full h-[35vh] sm:h-[45vh] md:h-[55vh] lg:h-[70vh] xl:h-[85vh] 2xl:max-h-250">
         <Image
           src="/Images/What we really do.svg"
           alt="Image of what we do"

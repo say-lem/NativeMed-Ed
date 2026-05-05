@@ -6,7 +6,7 @@ export default function Footer() {
   return (
     <>
       <footer className="bg-black pt-16 sm:pt-24 md:pt-32 lg:pt-40 pb-10 sm:pb-16 md:pb-20 lg:pb-24 px-4 sm:px-8 md:px-10 lg:px-15 -mt-8 sm:-mt-12 md:-mt-16 lg:-mt-24">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-0">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-6 lg:gap-0">
           <Image
             src={"/Images/nativeMedLogo.png"}
             alt="nativeMedLogo"
@@ -22,8 +22,8 @@ export default function Footer() {
             <FooterNavLink href="/contact" label="Contact" />
           </nav>
 
-          <div className="space-y-3 sm:space-y-4 sm:col-span-2 lg:col-span-1">
-            <h3 className="font-medium text-base sm:text-lg lg:text-2xl leading-[140%] tracking-[-2%] text-white w-full lg:w-[85%] capitalize">
+          <div className="space-y-3 sm:space-y-4 sm:col-span-2 md:col-span-1">
+            <h3 className="font-medium text-base sm:text-lg lg:text-2xl leading-[140%] tracking-[-2%] text-white w-full md:w-[90%] lg:w-[85%] capitalize">
               Stay up to date with our latest news & Classes
             </h3>
             <aside className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">

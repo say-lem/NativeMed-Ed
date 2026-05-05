@@ -18,7 +18,7 @@ export default function MockBankHero() {
         </div>
       </BannerBg>
 
-      <div className="px-4 sm:px-6 lg:px-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 py-6 sm:py-8">
+      <div className="px-4 sm:px-6 lg:px-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6 py-6 sm:py-8">
         <MockCasesCards />
       </div>
     </section>

@@ -52,11 +52,11 @@ export default function SideNav() {
         <SideNavLink
           icon={
             <MockIcon
-              color={pathName === "/mockicon" ? "#5925B3" : "#373737"}
+              color={pathName === "/full-cases" ? "#5925B3" : "#373737"}
             />
           }
-          href="/mock"
-          label="Mock"
+          href="/full-cases"
+          label="Full Cases"
         />
 
         <SideNavLink

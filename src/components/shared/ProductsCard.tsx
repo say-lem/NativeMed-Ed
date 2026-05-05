@@ -49,7 +49,7 @@ export default function ProductsCard({ cutBy = 0 }: { cutBy?: number }) {
   const cardToShow = cutBy > 0 ? card.slice(0, cutBy) : card;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-9">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-9">
       {cardToShow.map((card) => (
         <Link href={`/products/${card.id}`} key={card.id}>
           <div
