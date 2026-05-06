@@ -8,9 +8,9 @@ import DifferentMockCases from "./_components/DifferentMockCases";
 export default function PerMockCasesHero({
   params,
 }: {
-  params: Promise<{ mockCases: string }>;
+  params: Promise<{ cases: string }>;
 }) {
-  const { mockCases } = use(params);
+  const { cases } = use(params);
 
   return (
     <>
@@ -18,20 +18,20 @@ export default function PerMockCasesHero({
         <div className="self-start">
           <BackIcon />
         </div>
-        <BannerTitleCase text={mockCases} />
+        <BannerTitleCase text={cases} />
 
         <div className="w-full sm:w-[80%] lg:w-[50%] rounded-[8px] flex gap-2.5 py-2.5 sm:py-3 px-3 sm:px-4 border-[0.5px] bg-[#FFFFFF12] text-[#B7B7B98C] border-[#D6D6D64F] items-center">
           <IoSearchSharp className="size-5 sm:size-6 text-white" />
           <input
             type="text"
-            placeholder={`Search ${mockCases} cases...`}
+            placeholder={`Search ${cases} cases...`}
             className="border-0 outline-0 w-full text-sm sm:text-base text-white"
           />
         </div>
       </MockHeaderBg>
 
       <div className="px-4 sm:px-6 lg:px-8 space-x-2.5 py-4 sm:py-6 ">
-        <DifferentMockCases parentPage={mockCases} />
+        <DifferentMockCases parentPage={cases} />
       </div>
     </>
   );

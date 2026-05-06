@@ -44,7 +44,7 @@ export default function MockCasesCards() {
 
     return (
       <Link
-        href={`/mock/${item.title.toLowerCase()}`}
+        href={`/full-cases/${item.title.toLowerCase()}`}
         key={item.id}
         className="border-[0.2px] p-3 sm:p-4 rounded-[16px] gap-3 sm:gap-4 bg-white border-gray-2 questionBankShadow flex items-center hover:scale-105"
       >

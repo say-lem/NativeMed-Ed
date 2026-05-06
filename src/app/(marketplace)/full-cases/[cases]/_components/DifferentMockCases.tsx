@@ -78,7 +78,7 @@ export default function DifferentMockCases({
     return mockCases.map((mockCase) => {
       return (
         <Link
-          href={`/mock/${parentPage}/${mockCase.id}`}
+          href={`/full-cases/${parentPage}/${mockCase.id}`}
           key={mockCase.id}
           className="flex justify-between border-b-[0.5px] px-2 sm:px-4 py-4 sm:py-6 border-gray-2 gap-4"
         >
