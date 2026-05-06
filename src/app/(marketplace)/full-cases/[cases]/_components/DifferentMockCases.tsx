@@ -1,5 +1,13 @@
-import { CircleCheck } from "lucide-react";
 import Link from "next/link";
+import type { Case } from "@/types/api";
+
+const DEFAULT_DURATION_MIN = 15;
+
+const difficultyClass: Record<Case["difficulty"], string> = {
+  easy: "text-[#00A63D]",
+  medium: "text-[#D19E08]",
+  hard: "text-[#D70117]",
+};
 
 function TimerSvg() {
   return (
@@ -18,96 +26,63 @@ function TimerSvg() {
   );
 }
 
+function genderInitial(gender: Case["patientData"]["gender"]): string {
+  return gender === "female" ? "F" : "M";
+}
+
 export default function DifferentMockCases({
-  parentPage,
+  cases,
+  parentSlug,
+  showSpecialty = false,
 }: {
-  parentPage: string;
+  cases: Case[];
+  parentSlug: string;
+  showSpecialty?: boolean;
 }) {
-  const mockCases = [
-    {
-      id: 1,
-      title: "Station 1: Chest Pain in 57 Year Old",
-      duration: 15,
-      status: "Completed",
-    },
-    {
-      id: 2,
-      title: "Station 1: Chest Pain in 57 Year Old",
-      duration: 15,
-      status: "Not Started",
-    },
-    {
-      id: 3,
-      title: "Station 1: Chest Pain in 57 Year Old",
-      duration: 15,
-      status: "In Progress",
-    },
-    {
-      id: 4,
-      title: "Station 1: Chest Pain in 57 Year Old",
-      duration: 15,
-      status: "Not Started",
-    },
-    {
-      id: 5,
-      title: "Station 1: Chest Pain in 57 Year Old",
-      duration: 15,
-      status: "Not Started",
-    },
-    {
-      id: 6,
-      title: "Station 1: Chest Pain in 57 Year Old",
-      duration: 15,
-      status: "In Progress",
-    },
-    {
-      id: 7,
-      title: "Station 1: Chest Pain in 57 Year Old",
-      duration: 15,
-      status: "Not Started",
-    },
-    {
-      id: 8,
-      title: "Station 1: Chest Pain in 57 Year Old",
-      duration: 15,
-      status: "Completed",
-    },
-  ];
+  if (cases.length === 0) {
+    return (
+      <p className="text-center text-subtle-text py-12">
+        No cases available in this section yet.
+      </p>
+    );
+  }
 
-  const renderMockCases = () => {
-    return mockCases.map((mockCase) => {
-      return (
-        <Link
-          href={`/full-cases/${parentPage}/${mockCase.id}`}
-          key={mockCase.id}
-          className="flex justify-between border-b-[0.5px] px-2 sm:px-4 py-4 sm:py-6 border-gray-2 gap-4"
-        >
-          <aside className="space-y-2">
-            <h2 className="font-semibold text-sm md:text-lg leading-[120%] tracking-[-2%] text-black-others">
-              {mockCase.title}
-            </h2>
-            <p className="flex items-center gap-1 text-subtle-text text-sm leading-[150%]">
-              <TimerSvg />
-              <span> {mockCase.duration} mins</span>
-            </p>
-          </aside>
-          <aside>
-            <p
-              className={`text-xs sm:text-sm leading-[150%] ${mockCase.status === "In Progress" ? "text-[#D19E08]" : mockCase.status === "Completed" ? "text-[#00A63D] " : "text-black-others"}`}
-            >
-              {mockCase.status === "Completed" ? (
-                <span className="flex items-center gap-1">
-                  <CircleCheck size={20} /> {mockCase.status}
-                </span>
-              ) : (
-                mockCase.status
-              )}
-            </p>
-          </aside>
-        </Link>
-      );
-    });
-  };
+  return (
+    <>
+      {cases.map((c) => {
+        const patient = `${c.patientData.name}, ${c.patientData.age}${genderInitial(c.patientData.gender)}`;
+        const subtitle = showSpecialty
+          ? `Station ${c.stationNumber} · ${patient} · ${c.specialty}`
+          : `Station ${c.stationNumber} · ${patient}`;
 
-  return <>{renderMockCases()}</>;
+        return (
+          <Link
+            href={`/full-cases/${parentSlug}/${c._id}`}
+            key={c._id}
+            className="flex justify-between border-b-[0.5px] px-2 sm:px-4 py-4 sm:py-6 border-gray-2 gap-4"
+          >
+            <aside className="space-y-1.5 sm:space-y-2 min-w-0">
+              <h2 className="font-semibold text-sm md:text-lg leading-[120%] tracking-[-2%] text-black-others line-clamp-2">
+                {c.title}
+              </h2>
+              <p className="text-xs sm:text-sm text-subtle-text leading-[150%] line-clamp-1">
+                {subtitle}
+              </p>
+              <p className="flex items-center gap-1 text-subtle-text text-sm leading-[150%]">
+                <TimerSvg />
+                <span>{DEFAULT_DURATION_MIN} mins</span>
+              </p>
+            </aside>
+            <aside className="shrink-0">
+              <p
+                className={`text-xs sm:text-sm capitalize leading-[150%] ${difficultyClass[c.difficulty] ?? "text-black-others"}`}
+              >
+                {c.difficulty}
+              </p>
+            </aside>
+          </Link>
+        );
+      })}
+    </>
+  );
 }

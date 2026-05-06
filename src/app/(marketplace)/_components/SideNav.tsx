@@ -56,7 +56,7 @@ export default function SideNav() {
             />
           }
           href="/full-cases"
-          label="Full Cases"
+          label="Case Bank"
         />
 
         <SideNavLink

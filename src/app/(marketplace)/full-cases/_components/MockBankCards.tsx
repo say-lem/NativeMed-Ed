@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { FaRegHeart, FaUser } from "react-icons/fa";
 import { IoWaterOutline } from "react-icons/io5";
-import { MdOutlineAir } from "react-icons/md";
+import { MdApps, MdOutlineAir } from "react-icons/md";
 import { PiBoneLight } from "react-icons/pi";
 import { RiBrainFill } from "react-icons/ri";
+import { slugify } from "@/lib/slug";
+import type { Specialty } from "@/types/api";
 
 const cardIcons = [
   <FaRegHeart key="heart" className="size-7 text-[#5E5E5E]" />,
@@ -25,44 +27,71 @@ const cardIconColors = [
   "#FFF4E6CC",
 ];
 
-const questionBank = [
-  { id: 1, title: "Cardiology", num: 150 },
-  { id: 2, title: "Neurology", num: 150 },
-  { id: 3, title: "Endocrine", num: 150 },
-  { id: 4, title: "MusculoSkeletal", num: 150 },
-  { id: 5, title: "Psychiatry", num: 150 },
-  { id: 6, title: "Dermatology", num: 150 },
-  { id: 7, title: "Gastroenterology", num: 150 },
-  { id: 8, title: "Dermatology", num: 150 },
-  { id: 9, title: "All Cases", num: 150 },
-];
+const cardClass =
+  "border-[0.2px] p-3 sm:p-4 rounded-[16px] gap-3 sm:gap-4 bg-white border-gray-2 questionBankShadow flex items-center hover:scale-105";
 
-export default function MockCasesCards() {
-  return questionBank.map((item, idx) => {
-    const bg = cardIconColors[idx % cardIconColors.length];
-    const icon = cardIcons[idx % cardIcons.length];
-
+export default function MockCasesCards({
+  specialties,
+}: {
+  specialties: Specialty[];
+}) {
+  if (specialties.length === 0) {
     return (
-      <Link
-        href={`/full-cases/${item.title.toLowerCase()}`}
-        key={item.id}
-        className="border-[0.2px] p-3 sm:p-4 rounded-[16px] gap-3 sm:gap-4 bg-white border-gray-2 questionBankShadow flex items-center hover:scale-105"
-      >
+      <p className="col-span-full text-center text-subtle-text py-12">
+        No specialties available right now. Please check back later.
+      </p>
+    );
+  }
+
+  const totalCases = specialties.reduce((sum, s) => sum + s.count, 0);
+
+  return (
+    <>
+      <Link href="/full-cases/all" className={cardClass}>
         <aside
-          style={{ backgroundColor: bg }}
+          style={{ backgroundColor: "#EEE9F7" }}
           className="flex rounded-full p-4"
         >
-          {icon}
+          <MdApps className="size-7 text-primary-100" />
         </aside>
         <aside className="space-y-0.5">
           <p className="font-semibold text-base sm:text-lg leading-[120%] tracking-[-2%] text-black-others">
-            {item.title}
+            All Cases
           </p>
           <p className="text-sm text-subtle-text leading-[150%]">
-            {item.num} Cases
+            {totalCases} {totalCases === 1 ? "Case" : "Cases"}
           </p>
         </aside>
       </Link>
-    );
-  });
+
+      {specialties.map((item, idx) => {
+        const bg = cardIconColors[idx % cardIconColors.length];
+        const icon = cardIcons[idx % cardIcons.length];
+        const slug = slugify(item.specialty);
+
+        return (
+          <Link
+            href={`/full-cases/${slug}`}
+            key={item.specialty}
+            className={cardClass}
+          >
+            <aside
+              style={{ backgroundColor: bg }}
+              className="flex rounded-full p-4"
+            >
+              {icon}
+            </aside>
+            <aside className="space-y-0.5">
+              <p className="font-semibold text-base sm:text-lg leading-[120%] tracking-[-2%] text-black-others">
+                {item.specialty}
+              </p>
+              <p className="text-sm text-subtle-text leading-[150%]">
+                {item.count} {item.count === 1 ? "Case" : "Cases"}
+              </p>
+            </aside>
+          </Link>
+        );
+      })}
+    </>
+  );
 }
