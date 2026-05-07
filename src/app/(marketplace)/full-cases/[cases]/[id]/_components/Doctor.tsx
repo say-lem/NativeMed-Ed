@@ -95,12 +95,22 @@ export default function Doctor({
             {/* Rows */}
             <div className="bg-white divide-y-[0.2px] divide-gray-2">
               {mockData.investigationResults.tableData.map((row) => (
-                <div key={row.test} className="grid grid-cols-3 px-2 sm:px-4 py-2 sm:py-3">
+                <div
+                  key={row.test}
+                  className="grid grid-cols-3 px-2 sm:px-4 py-2 sm:py-3"
+                >
                   <span className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-subtle-2">
                     {row.test}
                   </span>
-                  <span className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-subtle-2">
+                  <span
+                    className={`text-xs sm:text-sm leading-[150%] tracking-[-1%] ${
+                      row.isAbnormal
+                        ? "text-error-other font-semibold"
+                        : "text-subtle-2"
+                    }`}
+                  >
                     {row.result}
+                    {row.isAbnormal ? " ⚠" : ""}
                   </span>
                   <span className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-subtle-2">
                     {row.referenceRange}

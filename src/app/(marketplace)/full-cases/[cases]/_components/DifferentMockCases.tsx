@@ -51,9 +51,7 @@ export default function DifferentMockCases({
     <>
       {cases.map((c) => {
         const patient = `${c.patientData.name}, ${c.patientData.age}${genderInitial(c.patientData.gender)}`;
-        const subtitle = showSpecialty
-          ? `Station ${c.stationNumber} · ${patient} · ${c.specialty}`
-          : `Station ${c.stationNumber} · ${patient}`;
+        const subtitle = `Station ${c.stationNumber} · ${patient}`;
 
         return (
           <Link
@@ -74,11 +72,17 @@ export default function DifferentMockCases({
               </p>
             </aside>
             <aside className="shrink-0">
-              <p
-                className={`text-xs sm:text-sm capitalize leading-[150%] ${difficultyClass[c.difficulty] ?? "text-black-others"}`}
-              >
-                {c.difficulty}
-              </p>
+              {showSpecialty ? (
+                <p className="text-xs sm:text-sm leading-[150%] text-primary-100 font-semibold">
+                  {c.specialty}
+                </p>
+              ) : (
+                <p
+                  className={`text-xs sm:text-sm capitalize leading-[150%] ${difficultyClass[c.difficulty] ?? "text-black-others"}`}
+                >
+                  {c.difficulty}
+                </p>
+              )}
             </aside>
           </Link>
         );

@@ -93,6 +93,7 @@ export interface BloodTestRow {
   test?: string;
   result?: string;
   referenceRange?: string;
+  isAbnormal?: boolean;
 }
 
 export interface BloodTestResults {

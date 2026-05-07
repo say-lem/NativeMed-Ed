@@ -51,16 +51,22 @@ export default function Resources({
           <p className="text-subtle-2 text-xs sm:text-sm font-semibold leading-5 ">
             Further Reading:
           </p>
-          {mockData.furtherReading.map((data) => (
-            <Link
-              key={data}
-              href="#"
-              className="flex gap-1 items-center text-xs sm:text-sm text-[#992E6C] hover:underline wrap-break-word"
-            >
-              <LinkSvg />
-              <span>{data}</span>
-            </Link>
-          ))}
+          {mockData.furtherReading.length === 0 ? (
+            <p className="text-xs sm:text-sm text-subtle-text">—</p>
+          ) : (
+            mockData.furtherReading.map((data) => (
+              <Link
+                key={data.url}
+                href={data.url}
+                target="_blank"
+                rel="noreferrer"
+                className="flex gap-1 items-center text-xs sm:text-sm text-[#992E6C] hover:underline wrap-break-word"
+              >
+                <LinkSvg />
+                <span>{data.title}</span>
+              </Link>
+            ))
+          )}
         </div>
       </MockCasesBorder>
     </>

@@ -59,36 +59,25 @@ export default function Patient({
           </aside>
         </div>
 
-        <MockPatientBorder bgColor="#F4F5F7" borderColor="null">
-          <div className="text-black-others text-sm leading-[150%] space-y-4">
-            <aside>
-              <h2 className="font-semibold">If asked about periods:</h2>
-              <p className="font-medium ">Your menstrual cycles are regular</p>
-            </aside>
-            <aside>
-              <h2 className="font-semibold">If asked about supplements:</h2>
-              <p className="font-medium ">
-                You have ben taking some over-the-counter multivitamins
-                recently, thinking you might be low on something like B12 or
-                iron.
-              </p>
-            </aside>
-          </div>
-        </MockPatientBorder>
-
         <div className="space-y-4">
           <h2 className="font-semibold text-sm sm:text-base leading-[150%] tracking-[-1%] text-black-others space-y-4">
             Patient&apos;s Ideas, Concerns, Expectations:
           </h2>
 
-          {mockData.patientsIdeaConcernExpectation.map((item, index) => (
-            <div key={index} className="flex gap-4 items-start">
-              <h3 className="uppercase font-bold text-xs leading-5 text-black-others bg-[#FFF4FB] py-1 px-2 rounded-xs">
-                {item.tag}:
-              </h3>
-              <p className="text-xs sm:text-sm text-subtle-2 leading-6">{item.desc}</p>
-            </div>
-          ))}
+          {mockData.patientsIdeaConcernExpectation.length === 0 ? (
+            <p className="text-xs sm:text-sm text-subtle-text leading-6">—</p>
+          ) : (
+            mockData.patientsIdeaConcernExpectation.map((item, index) => (
+              <div key={index} className="flex gap-4 items-start">
+                <h3 className="uppercase font-bold text-xs leading-5 text-black-others bg-[#FFF4FB] py-1 px-2 rounded-xs">
+                  {item.tag}:
+                </h3>
+                <p className="text-xs sm:text-sm text-subtle-2 leading-6">
+                  {item.desc}
+                </p>
+              </div>
+            ))
+          )}
         </div>
 
         <MockPatientBorder bgColor="#FBE5E7" borderColor="#D70117">
@@ -104,13 +93,20 @@ export default function Patient({
           <h2 className="text-sm sm:text-base leading-5 font-semibold text-black-others">
             Questions for the Doctor
           </h2>
-          {mockData.questionsForDoctor.map((item, index) => (
-            <ul className="space-y-4" key={index}>
-              <li className="text-xs sm:text-sm leading-5 list-disc list-inside text-black-others">
-                {item}
-              </li>
+          {mockData.questionsForDoctor.length === 0 ? (
+            <p className="text-xs sm:text-sm leading-5 text-subtle-text">—</p>
+          ) : (
+            <ul className="space-y-4 list-disc list-inside">
+              {mockData.questionsForDoctor.map((item, index) => (
+                <li
+                  key={index}
+                  className="text-xs sm:text-sm leading-5 text-black-others"
+                >
+                  {item}
+                </li>
+              ))}
             </ul>
-          ))}
+          )}
         </MockPatientBorder>
       </MockCasesBorder>
     </>

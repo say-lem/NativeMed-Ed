@@ -13,7 +13,7 @@ Branding: purple primary `#5925B3` + navy secondary `#1C3967`, Fustat font.
 ## Tech stack
 
 - **Next.js 16** (App Router, Turbopack) + **React 19**
-- **TypeScript** (strict)
+- **TypeScript** (strict, target ES2017 — see "Gotchas")
 - **Tailwind CSS v4** with custom theme tokens in [src/app/globals.css](src/app/globals.css)
 - **shadcn/ui** (Radix Nova style, neutral base) — currently only Button is installed
 - **lucide-react** + **react-icons** for icons
@@ -34,29 +34,46 @@ Branding: purple primary `#5925B3` + navy secondary `#1C3967`, Fustat font.
     │   └── (marketplace)/  dashboard, courses, full-cases, subscriptions, settings
     │       ├── layout.tsx                Server Component, calls /me, redirects on 401
     │       ├── actions.ts                logout Server Action
-    │       └── _components/MarketplaceShell.tsx   client shell with sidebar state
+    │       ├── _components/MarketplaceShell.tsx   client shell with sidebar state
+    │       └── full-cases/
+    │           ├── page.tsx                       Server Component → specialty grid
+    │           ├── _components/MockBankCards.tsx  "All Cases" card + per-specialty cards
+    │           ├── [cases]/
+    │           │   ├── page.tsx                   Server Component → paginated case list
+    │           │   └── _components/
+    │           │       ├── DifferentMockCases.tsx Renders Case[] rows
+    │           │       └── Pagination.tsx         Prev/Next + numbered page links
+    │           └── [cases]/[id]/
+    │               ├── page.tsx                   Server Component → case detail + badges
+    │               └── _components/
+    │                   ├── adaptCase.ts           API → mock-shape adapter + parsers
+    │                   ├── MockCasesNavState.tsx  Tab switcher (Full/Patient/Doctor/Examiner/Resources)
+    │                   ├── FullCase.tsx Patient.tsx Doctor.tsx Examiner.tsx Resources.tsx
+    │                   └── (other render helpers)
     ├── components/
     │   ├── shared/         Header, NamedHeader, Footer, AuthForm (RHF+Zod), etc.
     │   └── ui/             shadcn primitives (Button only)
     ├── lib/
     │   ├── utils.ts        cn helper
-    │   ├── api.ts          axios instance + interceptors (request: cookie→Authorization, response: 401→refresh→retry)
+    │   ├── api.ts          axios instance + interceptors
     │   ├── session.ts      cookie helpers (httpOnly accessToken/refreshToken)
     │   ├── jwt.ts          decode JWT exp (base64, no signature verify, Edge-safe)
     │   ├── slug.ts         slugify() + findBySlug() — used for specialty URLs
     │   └── schemas/auth.ts Zod schemas: loginSchema, registerSchema
     ├── services/
     │   ├── auth.service.ts        login, register, refresh, logout, me
-    │   └── cases.service.ts       getSpecialties() (more pending — backend bug)
+    │   └── cases.service.ts       getSpecialties, getAllCases, getCasesBySpecialty, getCase
     ├── types/
-    │   ├── api.ts          ApiResponse<T>, User, AuthTokens, Specialty, FormActionResult, JwtPayload
-    │   └── MockCasesPresentationInterface.tsx
+    │   ├── api.ts          ApiResponse<T>, User, AuthTokens, Specialty, Case, CasesPage,
+    │   │                   CaseDetail, BloodTestRow (with isAbnormal), MarkingSchemeSection,
+    │   │                   FurtherResource, FormActionResult, JwtPayload
+    │   └── MockCasesPresentationInterface.tsx   tab-component data shape (what the UI consumes)
     └── hooks/              empty, for future custom hooks
 ```
 
 `proxy.ts` lives at the **project root** (next to `package.json`), not inside `src/`. Next.js 16 supports either location; we keep it at root.
 
-**Convention**: route-group-specific components live in `_components/` folders inside the route group (e.g. `src/app/(public)/_components/Hero.tsx`). Cross-cutting components live in `src/components/shared/`.
+**Convention**: route-group-specific components live in `_components/` folders inside the route group. Cross-cutting components live in `src/components/shared/`.
 
 ## Backend API
 
@@ -133,7 +150,7 @@ type ApiResponse<T> =
 
 ### Cases (`/api/v1/cases`)
 
-**`GET /cases/specialties`** ✅ CONFIRMED — used by `/full-cases` page:
+**`GET /cases/specialties`** ✅ — used by `/full-cases` page:
 ```ts
 {
   success: true,
@@ -141,11 +158,80 @@ type ApiResponse<T> =
   data: Array<{ specialty: string; count: number }>
 }
 ```
-16 specialties returned currently (Cardiology, Dermatology, ENT & Eye, Endocrinology, Ethics, Gastroenterology, General Practice, Genetics, Gynaecology, Infectious Disease, Men's Health, Mental Health, Neurology, Paediatrics, Respiratory, Rheumatology). Counts vary (1–41).
+16 specialties currently (Cardiology, Dermatology, ENT & Eye, Endocrinology, Ethics, Gastroenterology, General Practice, Genetics, Gynaecology, Infectious Disease, Men's Health, Mental Health, Neurology, Paediatrics, Respiratory, Rheumatology). Counts vary (1–41). **The API returns counts** — adapter uses them directly.
 
-**`GET /cases?page=1&limit=12`** ⛔ **BACKEND BUG (500)** — handler crashes regardless of query params (also fails with `?specialty=Cardiology`). Reported to backend dev. Blocks the case-list and case-detail page integration.
+**`GET /cases?page=1&limit=12`** ✅ — paginated list of all cases. Used by `/full-cases/all`:
+```ts
+{
+  success: true,
+  message: "Cases fetched",
+  data: {
+    items: Case[],
+    total: number,    // currently 239
+    page: number,
+    limit: number,
+    totalPages: number,
+  }
+}
+```
 
-**`GET /cases/:id`** ⛔ Untested but likely affected by same bug if it shares model code.
+**`GET /cases/specialty/:specialtyName`** ✅ — paginated list filtered by specialty. Used by `/full-cases/<slug>`:
+- Path segment is the **literal specialty name** (URL-encoded), not slug. Adapter does `encodeURIComponent`.
+- Same pagination shape as `/cases`.
+- Earlier we tried `?specialty=Cardiology` (didn't work) — the correct pattern is the path segment.
+
+**`GET /cases/:id`** ✅ — single case detail. Used by `/full-cases/<slug>/<id>`:
+```ts
+{
+  success: true,
+  message: "Case fetched",
+  data: CaseDetail   // see types/api.ts — extends Case with rich fields
+}
+```
+
+#### Case shape (list view)
+```ts
+{
+  _id, stationNumber, title, specialty,
+  difficulty: "easy" | "medium" | "hard",   // "medium" is the only value seen so far
+  patientData: { name, age, gender: "male" | "female" },
+  createdAt
+}
+```
+
+#### CaseDetail shape (extends Case)
+```ts
+{
+  ...Case,
+  consultationType: string,   // e.g. "Video Consultation", "Telephone Consultation"
+  isPublished: boolean,
+  patientStory: string,       // long freeform role-player script (see "patientStory parser")
+  exampleExplanation: string, // long ideal-doctor speech
+  learningPoints: string,     // long study notes
+  management: string[],       // numbered action plan; one item is a "Safety net:" prefix (extracted)
+  markingScheme: Array<{ heading: string; points: string[] }>,
+  furtherResources: Array<{ title: string; url: string }>,
+  patientData: {
+    name, age, gender,
+    pastMedicalHistory: string[],
+    drugHistory: string[],   // mixed: meds + "Allergic to X" + "No known drug allergy" + "Not on any current medication"
+    recentConsultation: { seenBy: string; notes: string },  // freeform text blobs
+    bloodTestResults: {
+      summary: string,
+      rows: Array<{ test, result, referenceRange, isAbnormal?: boolean }>,  // [] when not relevant
+    },
+  },
+  updatedAt
+}
+```
+
+#### Case data quirks (learned from sampling 4 cases)
+- **`consultationType`** values seen so far: `"Video Consultation"`, `"Telephone Consultation"`. Probably `"Face-to-Face"` exists too.
+- **`difficulty`** is `"medium"` for every case sampled. Easy/hard not yet observed.
+- **Paediatric cases**: the role-player is the parent — `patientData.name/age/gender` reflects the child being treated, but `patientStory` opens "You are [parent name], the mother of [child]…". Paediatric stories also have a labeled `PBIND:` block (Pregnancy, Birth, Immunisation, Nutrition, Development).
+- **`bloodTestResults.rows`** carries an undocumented `isAbnormal: boolean` flag — surfaced via [Doctor.tsx](src/app/(marketplace)/full-cases/[cases]/[id]/_components/Doctor.tsx) which renders the Result column **red + bold + ⚠** when `isAbnormal: true`.
+- **Safety-net advice** lives **inside the `management` array**, not as a top-level field. Three phrasings observed: `"Safety net:"`, `"Safety netting advice:"`, `"Provide clear safety-netting advice:"`. The adapter's `extractSafetyNet()` uses a flexible `/safety[-\s]?net/i` match to find the item, strips the prefix at the first colon, and removes it from `management` so it isn't shown twice.
+- **`patientStory` is a single freeform string** but contains consistent labeled sections that the adapter parses into the mock fields the UI expects (see "Patient story parser" below).
 
 ### `mustChangePassword` flag
 
@@ -160,8 +246,6 @@ type ApiResponse<T> =
 
 ### Endpoints NOT yet in the API (waiting on backend)
 
-These features exist in the frontend designs but have no backend endpoint yet:
-
 - **Cart** — endpoint coming, shape TBD
 - **Subscriptions / payments / checkout** — Stripe + PayPal mentioned in UI, no endpoints yet
 - **Newsletter signup** (footer)
@@ -175,7 +259,6 @@ These features exist in the frontend designs but have no backend endpoint yet:
 ### Pending questions for backend dev
 
 - **Refresh token TTL** — drives `REFRESH_TOKEN_MAX_AGE` in [src/lib/session.ts](src/lib/session.ts) (currently placeholder = 7 days)
-- **`GET /cases` 500 crash** — open bug, blocks case integration
 
 ## Architecture decisions for API integration
 
@@ -281,25 +364,60 @@ Real auth enforcement happens at the backend on every API call. The proxy + layo
 - `User` has all `/me` fields (`isActive`, `createdAt`, `updatedAt` optional since login's user is a subset)
 - `ApiResponse<T>` discriminated union for success vs failure
 - `Specialty = { specialty: string; count: number }`
-- `JwtPayload`, `AuthTokens`, `AuthSuccessData`, `FormActionResult`, `Role` also defined
+- `Case`, `CasesPage`, `CaseDetail`, `BloodTestRow`, `MarkingSchemeSection`, `FurtherResource`, `PatientData`, `PatientDataDetail`
+- `JwtPayload`, `AuthTokens`, `AuthSuccessData`, `FormActionResult`, `Role`
 
 ### Env vars
 
 - `API_URL` (server-only — NOT prefixed with `NEXT_PUBLIC_`) — backend base URL. Currently `https://nativemed.onrender.com`. `.env.local` is gitignored.
 
+## Case detail page architecture (A2 adapter pattern)
+
+The detail page renders into 5 existing tab components (`FullCase`, `Patient`, `Doctor`, `Examiner`, `Resources`) that were originally written against a hand-crafted mock shape ([MockCasesPresentationInterface.tsx](src/types/MockCasesPresentationInterface.tsx)). Rather than refactor all 5 components, we kept the mock-shape contract and built a **one-way adapter** ([adaptCase.ts](src/app/(marketplace)/full-cases/[cases]/[id]/_components/adaptCase.ts)) that maps the API's `CaseDetail` to the mock shape.
+
+### Why "A2" (placeholder fields, not hidden sections)
+
+Several mock fields don't exist as top-level fields in the API (e.g. `socialHistory`, `importantNote`, `safetyNet`, `patientsIdeaConcernExpectation`, `questionsForDoctor`). When the adapter can't fill them from API data, it falls back to em-dash (`"—"`) for strings and `[]` for arrays. The components keep rendering the section headings either way. This way:
+- UI structure stays consistent across cases (no "shorter on some, longer on others")
+- When the backend later adds a field, the adapter is the only file to update — no component rework
+- When we're sure a field will never come from backend, deletion is a localised one-line change
+
+### Patient story parser ([adaptCase.ts](src/app/(marketplace)/full-cases/[cases]/[id]/_components/adaptCase.ts))
+
+The API's `patientStory` is a single freeform text blob containing labeled sections. `parsePatientStory()` extracts them into the mock fields:
+
+| Mock field | Label patterns matched |
+|---|---|
+| `socialHistory` | `^Social\s+history\s*:` (case-insensitive) |
+| `patientsIdeaConcernExpectation` | `^Ideas?\s*:` / `^Concerns?\s*:` / `^Expectations?\s*:` (singular OR plural) |
+| `questionsForDoctor` | `^Questions?\s+for\s+the\s+[Dd]octor\s*[?:]?` (handles multi-paragraph content following the label) |
+| `importantNote` | `^Say\s+NO\s+to\s+any\s+other...` (whole paragraph) |
+
+Algorithm: split `patientStory` by blank lines, test each paragraph against the label regexes. For `questionsForDoctor`, paragraphs after the label without a competing label get appended (handles multi-paragraph instructions). When a label doesn't appear in a particular case, the corresponding mock field falls back to em-dash / `[]`.
+
+**ICE label inconsistency** — observed both singular (`"Idea:"`) and plural (`"Ideas:"`) across cases; regex handles both.
+
+### Safety-net extractor ([adaptCase.ts](src/app/(marketplace)/full-cases/[cases]/[id]/_components/adaptCase.ts))
+
+`extractSafetyNet()` scans the `management` array for any item containing `/safety[-\s]?net/i`. When found:
+- Strips the label prefix (everything up to the first colon) → goes into `safetyNet` field
+- Removes that item from the management array (so it doesn't render twice)
+
+Catches all 3 phrasings observed (`"Safety net:"`, `"Safety netting advice:"`, `"Provide clear safety-netting advice:"`).
+
 ## Pages — what's wired vs not
 
 | Page | Status | Notes |
 |---|---|---|
-| `/` (home) | static UI, no API | layout now fetches user for header |
+| `/` (home) | static UI, no API | layout fetches user for header |
 | `/about`, `/contact`, `/cart` | static UI, no API | cart UI is mock data |
 | `/products`, `/products/[id]` | static UI (mock data) | uses `ProductsCard` with hardcoded array — needs courses.service when backend `/courses` is wired |
 | `/login`, `/register` | ✅ FULLY WIRED | RHF + Zod + Server Actions + cookies + redirect |
 | `/dashboard` | wrapped by marketplace auth gate | page itself is mostly placeholder UI |
 | `/courses` | static UI (mock data) | needs `courses.service.getCourses()` |
-| `/full-cases` | ✅ WIRED (specialties grid) | server-side fetch via `getSpecialties()`, slugified URLs |
-| `/full-cases/[cases]` | ⛔ BLOCKED | needs `getCases({specialty})` — backend `/cases` returns 500 |
-| `/full-cases/[cases]/[id]` | ⛔ BLOCKED | needs `getCase(id)` — backend probably also 500 |
+| `/full-cases` | ✅ WIRED | `getSpecialties()` → 16 specialty cards + an "All Cases" card whose count = sum of all specialty counts |
+| `/full-cases/[cases]` | ✅ WIRED | Slug-based — `"all"` → `getAllCases(page)`, anything else → `findBySlug` against specialties → `getCasesBySpecialty(name, page)`. Pagination via `?page=N`. List shows specialty (purple) on All Cases view, difficulty (color-coded) on specialty pages. |
+| `/full-cases/[cases]/[id]` | ✅ WIRED | `getCase(id)` → adapter → 5 tabs. Banner shows case title + Station/Specialty/ConsultationType/Difficulty badges. |
 | `/subscriptions` | static UI, no endpoint exists | |
 | `/settings` | placeholder "Under Construction" | |
 
@@ -307,7 +425,8 @@ Real auth enforcement happens at the backend on every API call. The proxy + layo
 
 - `slugify(name)` in [src/lib/slug.ts](src/lib/slug.ts) turns `"ENT & Eye"` → `"ent-eye"`, `"Men's Health"` → `"mens-health"`
 - `findBySlug(slug, items, getName)` finds the original item by re-slugifying each candidate
-- Used to navigate from `/full-cases` → `/full-cases/<specialty-slug>` and (eventually) to look up the original specialty name on the destination page so we can hit the API filter
+- The detail page's path uses the original slug as `parentSlug` so back-links land on the correct specialty page
+- The "all" slug is reserved for the All Cases view (not derived from any specialty)
 
 ## Build order — current state
 
@@ -318,27 +437,39 @@ Real auth enforcement happens at the backend on every API call. The proxy + layo
 5. ✅ Logout: SideNav "Log Out" wired to Server Action via `<form action={logoutAction}>`
 6. ✅ Public layout fetches user → header shows NamedHeader (cart/avatar/name) when logged in
 7. ✅ Spinners on Sign In / Sign Up / Go to Dashboard buttons
-8. ✅ `cases.service.getSpecialties()` + `/full-cases` page wired to real specialties
-9. ⏳ `cases.service.getCases({specialty?, page, limit})` + wire `/full-cases/[cases]` — **BLOCKED on backend 500 bug**
-10. ⏳ `cases.service.getCase(id)` + wire `/full-cases/[cases]/[id]` — **BLOCKED on backend**
+8. ✅ `cases.service.getSpecialties()` + `/full-cases` page wired to real specialties (with "All Cases" total)
+9. ✅ `cases.service.getAllCases() + getCasesBySpecialty()` + wire `/full-cases/[cases]` with pagination
+10. ✅ `cases.service.getCase()` + adapter + parsers + wire `/full-cases/[cases]/[id]`
 11. ⏳ `courses.service.ts` → replace mock data on `/courses` and `/products`
 12. ⏳ Cart, payments, admin features (later, when endpoints exist)
 13. ⏳ Handle `mustChangePassword` flag (build `/change-password` page + redirect logic)
 
 ## Where we left off (for the next session)
 
-**Just completed:**
-- `/full-cases` page integration: 16 specialty cards from `/cases/specialties`, real counts, slugified URLs (`/full-cases/cardiology`, `/full-cases/ent-eye`, etc.)
-- Banner text changed from "Mock Cases" → "Case Bank"
-- Fixed stale `/mock` and `mockCases` references in routes after user renamed folders to `/full-cases` and `[cases]`
+**Just completed — case detail integration polish:**
+- All 3 case pages wired end-to-end against the live Render backend.
+- Adapter parses `patientStory` into structured mock fields (socialHistory, ICE, questionsForDoctor, importantNote) — em-dashes appear only when a section is genuinely absent from a case.
+- `safetyNet` extracted from `management` array (flexible regex handles 3 phrasing variants).
+- Blood test rows render with `isAbnormal` red highlighting + ⚠ marker.
+- `furtherResources` rendered as clickable links opening in a new tab.
+- Patient.tsx cleanup: deleted hardcoded "If asked about periods/supplements" block (was wrong on every case), empty arrays now render an em-dash row instead of a heading floating with no content.
 
-**Currently blocked:**
-- Backend `GET /api/v1/cases` returns `500 Internal Server Error` ("Something went wrong"). Same with `?specialty=Cardiology`. Reported to backend dev. Until fixed, can't wire up the next two pages.
+**Sample IDs for testing** (from cases tested):
+- `69f5a432e6becd6b6ba0a5f2` (Gynaecology — Bleeding In Pregnancy)
+- `69f5a433e6becd6b6ba0a5f7` (Endocrinology — Abnormal Thyroid Function — has `isAbnormal` blood rows)
+- `69f5a433e6becd6b6ba0a5f6` (Respiratory — COPD Flare-Up — multiple PMH)
+- `69f5a432e6becd6b6ba0a5f4` (Paediatric ENT — Telephone Consultation, parent role-player)
+
+**A temporary `console.log` is still in `[cases]/page.tsx`** that prints the first case `_id` of each list page request. Useful for grabbing IDs to test in Postman; remove when done debugging.
 
 **Suggested next moves:**
-1. **Wait for backend fix** on `/cases` → resume case integration. Expected next: test the GET /cases response shape, add `Case` type, add `getCases()` and `getCase(id)` to cases.service, wire the two remaining pages.
-2. **OR pivot to courses** — test `GET /api/v1/courses` in Postman. If it works, wire `/products` and `/courses` pages similarly. The courses endpoint hasn't been exercised yet.
-3. **OR public site polish** — work on responsive issues, contact form, footer newsletter (skip the backend wiring, just collect inputs).
+1. **Courses integration** — test `GET /api/v1/courses` in Postman, build `courses.service.ts`, wire `/products` and `/courses` pages similarly to how cases were done.
+2. **Cart endpoint** when backend ships it.
+3. **`mustChangePassword`** flow — needs a `/change-password` page; redirect on login when flag is true.
+4. **Polish suggestions for case detail** (deferred from earlier discussion):
+   - Sticky "Start Consultation" CTA at top of detail page
+   - Move toward an exam-mode flow (timer + checklist for marking scheme + score)
+   - Refactor Resources component to take `{title, url}[]` directly (already done — type updated)
 
 ## Responsive design conventions
 
@@ -360,4 +491,8 @@ Mobile-first. Container padding pattern: `px-4 sm:px-8 md:px-10 lg:px-15` for `(
 - **`(public)` routes are dynamic now** because the layout reads cookies for the user fetch. If you ever need static caching back, isolate the user fetch in a Suspense boundary.
 - **Render free tier cold starts** — first request after idle takes 30–60s. The `useTransition` spinner on "Go to Dashboard" exists specifically for this.
 - **The Postman environment** auto-saves tokens to `pm.environment.set` (we updated the script from `collectionVariables`). Each login overwrites the env tokens — use the most recent.
+- **`tsconfig.json` targets ES2017** — the regex `s` flag (dot-matches-newline) is NOT available. Use `[\s\S]` instead of `.` in any multiline regex match. Also true for `?.flat()`-like newer methods if added.
+- **Adapter pattern (case detail)**: the existing tab components consume a hand-crafted "mock shape" not the API shape. Always go through `adaptCase()`. When you add a new field to the mock interface or the API, update the adapter — that's the only mapping layer.
+- **Patient story parser is heuristic** — relies on label patterns observed in 4 sampled cases. If a new case uses different labels, the corresponding mock field will fall back to em-dash. This is intentional (A2): visible em-dash signals "data not parseable here", which is better than silently dropping content.
+- **Case detail empty states**: when `getCase()` fails or returns `success: false`, the page renders a "Case not found" banner instead of crashing. Same defensive pattern in `[cases]/page.tsx` for the list endpoints.
 - **Do NOT fix unprompted UI/copy unless asked** — the user wants control over visual changes. Explain what you'd change, then ask.

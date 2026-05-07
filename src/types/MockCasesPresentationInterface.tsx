@@ -16,15 +16,27 @@ interface patientsIdeaConcernExpectation {
   desc: string;
 }
 
+interface FurtherResourceLink {
+  title: string;
+  url: string;
+}
+
+interface InvestigationRow {
+  test: string;
+  result: string;
+  referenceRange: string;
+  isAbnormal?: boolean;
+}
+
 export interface TypeMockCasesPresentation {
   name: string;
   gender: string;
   age: number;
   medicalHistory: string[];
   drugAndAllergyHistory: string[];
-  furtherReading: string[];
+  furtherReading: FurtherResourceLink[];
   investigationResults: {
-    tableData: { test: string; result: string; referenceRange: string }[];
+    tableData: InvestigationRow[];
     normalResults: string;
   };
   recentNotes: recentNotes[];
