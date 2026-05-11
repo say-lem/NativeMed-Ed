@@ -1,8 +1,13 @@
 import { TypeMockCasesPresentation } from "@/types/MockCasesPresentationInterface";
-import Resources from "./Resources";
-import Doctor from "./Doctor";
-import Examiner from "./Examiner";
-import Patient from "./Patient";
+import {
+  ExampleExplanationSection,
+  LearningPointsSection,
+  ManagementSection,
+  MarkingSchemeSection,
+  PatientBriefSection,
+  PatientDataSection,
+  ResourcesSection,
+} from "./sections";
 
 export default function FullCase({
   mockData,
@@ -11,10 +16,13 @@ export default function FullCase({
 }) {
   return (
     <div className="space-y-8">
-      <Doctor mockData={mockData} />
-      <Patient mockData={mockData} />
-      <Examiner mockData={mockData} />
-      <Resources mockData={mockData} />
+      <PatientDataSection mockData={mockData} />
+      <PatientBriefSection mockData={mockData} />
+      <MarkingSchemeSection mockData={mockData} />
+      <ManagementSection mockData={mockData} />
+      <ExampleExplanationSection mockData={mockData} />
+      <LearningPointsSection mockData={mockData} />
+      <ResourcesSection mockData={mockData} />
     </div>
   );
 }

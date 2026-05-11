@@ -11,11 +11,6 @@ interface dataGatheringAndDiagnosis {
   otherThings: string[];
 }
 
-interface patientsIdeaConcernExpectation {
-  tag: string;
-  desc: string;
-}
-
 interface FurtherResourceLink {
   title: string;
   url: string;
@@ -46,8 +41,4 @@ export interface TypeMockCasesPresentation {
   management: string[];
   safetyNet: string;
   patientBrief: string;
-  socialHistory: string;
-  importantNote: string;
-  questionsForDoctor: string[];
-  patientsIdeaConcernExpectation: patientsIdeaConcernExpectation[];
 }

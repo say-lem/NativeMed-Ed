@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import RotatingTagline from "./RotatingTagline";
 
 export default function HomeHero() {
   return (
@@ -24,8 +25,7 @@ export default function HomeHero() {
         />
 
         <h1 className="text-center font-semibold text-2xl sm:text-3xl md:text-5xl lg:text-7xl tracking-[-2%] leading-[1.2] lg:leading-21.25 text-black-others max-w-full px-4 sm:px-6">
-          Master Your Medical Exams with{" "}
-          <span className="text-primary-100">Expert</span> Guidance
+          Master Your Medical Exams with <RotatingTagline />
         </h1>
         <Image
           src="/Images/brain tile.png"

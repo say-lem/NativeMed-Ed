@@ -2,9 +2,7 @@ import axios from "axios";
 import MockHeaderBg from "./_components/MockHeaderBg";
 import BackIcon from "./_components/BackSvg";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
-import { IoSearchSharp } from "react-icons/io5";
-import DifferentMockCases from "./_components/DifferentMockCases";
-import Pagination from "./_components/Pagination";
+import CasesListClient from "./_components/CasesListClient";
 import {
   getAllCases,
   getCasesBySpecialty,
@@ -110,49 +108,32 @@ export default async function CasesBySpecialtyPage({
     );
   }
 
+  if (notFound || !data) {
+    return (
+      <>
+        <MockHeaderBg>
+          <div className="self-start">
+            <BackIcon />
+          </div>
+          <BannerTitleCase text={title || "Cases"} />
+        </MockHeaderBg>
+        <div className="px-4 sm:px-6 lg:px-8 py-12 text-center text-subtle-text">
+          {notFound
+            ? "We couldn't find that specialty. It may have been renamed or removed."
+            : "We couldn't load these cases. Please try again in a moment."}
+        </div>
+      </>
+    );
+  }
+
   return (
-    <>
-      <MockHeaderBg>
-        <div className="self-start">
-          <BackIcon />
-        </div>
-        <BannerTitleCase text={title || "Cases"} />
-
-        <div className="w-full sm:w-[80%] lg:w-[50%] rounded-[8px] flex gap-2.5 py-2.5 sm:py-3 px-3 sm:px-4 border-[0.5px] bg-[#FFFFFF12] text-[#B7B7B98C] border-[#D6D6D64F] items-center">
-          <IoSearchSharp className="size-5 sm:size-6 text-white" />
-          <input
-            type="text"
-            placeholder={`Search ${title || ""} cases...`}
-            className="border-0 outline-0 w-full text-sm sm:text-base text-white"
-          />
-        </div>
-      </MockHeaderBg>
-
-      <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-        {notFound ? (
-          <p className="text-center text-subtle-text py-12">
-            We couldn&apos;t find that specialty. It may have been renamed or
-            removed.
-          </p>
-        ) : !data ? (
-          <p className="text-center text-subtle-text py-12">
-            We couldn&apos;t load these cases. Please try again in a moment.
-          </p>
-        ) : (
-          <>
-            <DifferentMockCases
-              cases={data.items}
-              parentSlug={slug}
-              showSpecialty={showSpecialty}
-            />
-            <Pagination
-              currentPage={data.page}
-              totalPages={data.totalPages}
-              basePath={`/full-cases/${slug}`}
-            />
-          </>
-        )}
-      </div>
-    </>
+    <CasesListClient
+      title={title}
+      parentSlug={slug}
+      cases={data.items}
+      currentPage={data.page}
+      totalPages={data.totalPages}
+      showSpecialty={showSpecialty}
+    />
   );
 }

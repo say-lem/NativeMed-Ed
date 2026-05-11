@@ -1,7 +1,7 @@
 "use client";
 import ButtonTag from "@/components/shared/ButtonTag";
 import TitleCase from "@/components/shared/TitleCase";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
 interface Testimonial {
   id: number;
@@ -50,71 +50,121 @@ const testimonials: Testimonial[] = [
   },
 ];
 
+const SCROLL_PX_PER_SEC = 40;
+
 function Testimonial() {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const isDragging = useRef(false);
-  const startX = useRef(0);
-  const scrollLeftRef = useRef(0);
+  const hoverRef = useRef(false);
+  const interactRef = useRef(false);
+  const dragRef = useRef<{ startX: number; startScroll: number } | null>(null);
 
-  const updateActiveDot = useCallback(() => {
+  // Render the list twice. The track sits at the midpoint by default, so
+  // forward (rightward) drift can wrap from 0 → half and reverse swipes
+  // can wrap from half → 0 — both invisible because the halves are identical.
+  const loop = [...testimonials, ...testimonials];
+
+  useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    const trackLeft = track.getBoundingClientRect().left;
-    const cards = Array.from(
-      track.querySelectorAll<HTMLElement>("[data-card]"),
-    );
-    let closest = 0;
-    let minDist = Infinity;
-    cards.forEach((card, i) => {
-      const dist = Math.abs(card.getBoundingClientRect().left - trackLeft);
-      if (dist < minDist) {
-        minDist = dist;
-        closest = i;
+
+    const initPos = () => {
+      track.scrollLeft = track.scrollWidth / 2;
+    };
+    initPos();
+    window.addEventListener("resize", initPos);
+
+    const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let rafId = 0;
+    let lastTs: number | null = null;
+
+    const tick = (ts: number) => {
+      if (lastTs == null) lastTs = ts;
+      const dt = (ts - lastTs) / 1000;
+      lastTs = ts;
+
+      const paused = hoverRef.current || interactRef.current;
+      if (!paused && !mql.matches) {
+        // Increasing scrollLeft makes content slide leftward.
+        track.scrollLeft += SCROLL_PX_PER_SEC * dt;
       }
-    });
-    setActiveIndex(closest);
+
+      const half = track.scrollWidth / 2;
+      if (track.scrollLeft < 0) track.scrollLeft += half;
+      else if (track.scrollLeft >= half) track.scrollLeft -= half;
+
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", initPos);
+    };
   }, []);
 
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    track.addEventListener("scroll", updateActiveDot, { passive: true });
-    return () => track.removeEventListener("scroll", updateActiveDot);
-  }, [updateActiveDot]);
+    let pending = false;
 
-  const scrollToCard = (index: number) => {
-    const track = trackRef.current;
-    if (!track) return;
-    const cards = Array.from(
-      track.querySelectorAll<HTMLElement>("[data-card]"),
-    );
-    cards[index]?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "start",
-    });
+    const update = () => {
+      const cards = Array.from(
+        track.querySelectorAll<HTMLElement>("[data-card]"),
+      );
+      if (!cards.length) return;
+      const tr = track.getBoundingClientRect();
+      const center = tr.left + tr.width / 2;
+      let closest = 0;
+      let min = Infinity;
+      cards.forEach((card, i) => {
+        const cr = card.getBoundingClientRect();
+        const cardCenter = cr.left + cr.width / 2;
+        const d = Math.abs(cardCenter - center);
+        if (d < min) {
+          min = d;
+          closest = i;
+        }
+      });
+      setActiveIndex(closest % testimonials.length);
+    };
+
+    const onScroll = () => {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => {
+        pending = false;
+        update();
+      });
+    };
+
+    track.addEventListener("scroll", onScroll, { passive: true });
+    requestAnimationFrame(update);
+    return () => track.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    interactRef.current = true;
+    if (e.pointerType === "mouse") {
+      const track = trackRef.current;
+      if (!track) return;
+      dragRef.current = { startX: e.clientX, startScroll: track.scrollLeft };
+      track.setPointerCapture(e.pointerId);
+    }
   };
 
-  const onMouseDown = (e: React.MouseEvent) => {
-    const track = trackRef.current;
-    if (!track) return;
-    isDragging.current = true;
-    startX.current = e.pageX - track.offsetLeft;
-    scrollLeftRef.current = track.scrollLeft;
-    track.style.cursor = "grabbing";
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!dragRef.current || !trackRef.current) return;
+    const dx = e.clientX - dragRef.current.startX;
+    trackRef.current.scrollLeft = dragRef.current.startScroll - dx;
   };
 
-  const onMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging.current || !trackRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - trackRef.current.offsetLeft;
-    trackRef.current.scrollLeft = scrollLeftRef.current - (x - startX.current);
-  };
-
-  const onMouseUp = () => {
-    isDragging.current = false;
-    if (trackRef.current) trackRef.current.style.cursor = "grab";
+  const endInteraction = (e: React.PointerEvent<HTMLDivElement>) => {
+    interactRef.current = false;
+    if (dragRef.current && trackRef.current) {
+      trackRef.current.releasePointerCapture?.(e.pointerId);
+    }
+    dragRef.current = null;
   };
 
   return (
@@ -124,72 +174,65 @@ function Testimonial() {
         <TitleCase text="See what the community is saying about native medical Education" />
       </div>
 
-      {/* Outer wrapper clips the overflow so the half-card peeks but doesn't cause page scroll */}
-      <div className="overflow-hidden">
-        <div
-          ref={trackRef}
-          className="flex gap-3 sm:gap-4 lg:gap-5 overflow-x-auto scroll-smooth pb-4"
-          style={{
-            scrollSnapType: "x mandatory",
-            WebkitOverflowScrolling: "touch",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-            cursor: "grab",
-          }}
-          onMouseDown={onMouseDown}
-          onMouseMove={onMouseMove}
-          onMouseUp={onMouseUp}
-          onMouseLeave={onMouseUp}
-        >
-          {testimonials.map((t) => (
-            <div
-              key={t.id}
-              data-card
-              className="flex-none flex flex-col border-[rgba(155,124,209,1)] select-none py-4 px-4 sm:py-5 sm:px-6 lg:py-6 lg:px-8 border-[0.2px] rounded-[16px] bg-[rgba(245,239,255,1)] gap-2.5 sm:gap-3 lg:gap-4 w-[85%] sm:w-[70%] md:w-[45%] lg:w-[calc(100%/2.5)]"
-              style={{
-                scrollSnapAlign: "start",
-              }}
-            >
-              {/* Label */}
-              <p className="font-semibold text-sm sm:text-base lg:text-lg leading-[120%] tracking-[-2%] text-black-others">
-                {t.label}
-              </p>
+      <div
+        ref={trackRef}
+        onMouseEnter={() => {
+          hoverRef.current = true;
+        }}
+        onMouseLeave={() => {
+          hoverRef.current = false;
+        }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endInteraction}
+        onPointerCancel={endInteraction}
+        className="overflow-x-auto cursor-grab active:cursor-grabbing select-none [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div className="flex w-max gap-3 sm:gap-4 lg:gap-5 py-2">
+          {loop.map((t, i) => {
+            const orig = i % testimonials.length;
+            const isActive = orig === activeIndex;
+            return (
+              <div
+                key={`${t.id}-${i}`}
+                data-card
+                aria-hidden={i >= testimonials.length}
+                className={`flex-none flex flex-col py-4 px-4 sm:py-5 sm:px-6 lg:py-6 lg:px-8 rounded-[16px] gap-2.5 sm:gap-3 lg:gap-4 w-72 sm:w-88 md:w-104 lg:w-120 transition-[opacity,border-color,box-shadow] duration-300 ${
+                  isActive
+                    ? "bg-[rgba(245,239,255,1)] border-2 border-primary opacity-100 shadow-md"
+                    : "bg-[rgba(245,239,255,0.7)] border border-[rgba(155,124,209,0.4)] opacity-70"
+                }`}
+              >
+                <p className="font-semibold text-sm sm:text-base lg:text-lg leading-[120%] tracking-[-2%] text-black-others">
+                  {t.label}
+                </p>
 
-              {/* Quote */}
-              <p className="text-xs sm:text-sm lg:text-lg leading-[130%] tracking-[-2%] text-secondary-100">
-                <span>&ldquo;</span>
-                {t.quote}
-                <span>&rdquo;</span>
-              </p>
+                <p className="text-xs sm:text-sm lg:text-lg leading-[130%] tracking-[-2%] text-secondary-100">
+                  <span>&ldquo;</span>
+                  {t.quote}
+                  <span>&rdquo;</span>
+                </p>
 
-              {/* Author */}
-              <p className="font-semibold text-xs sm:text-sm lg:text-lg leading-[120%] tracking-[-2%] text-right">
-                — {t.author}
-              </p>
-            </div>
-          ))}
+                <p className="font-semibold text-xs sm:text-sm lg:text-lg leading-[120%] tracking-[-2%] text-right">
+                  — {t.author}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Dot Indicators */}
       <div className="flex justify-center gap-1.5 mt-4">
         {testimonials.map((_, i) => (
-          <button
+          <span
             key={i}
-            onClick={() => scrollToCard(i)}
-            aria-label={`Go to testimonial ${i + 1}`}
+            aria-hidden
             className={`h-1.5 rounded-full transition-all duration-200 ${
-              i === activeIndex ? "w-4 bg-[#7F77DD]" : "w-1.5 bg-[#D5D3EC]"
+              i === activeIndex ? "w-4 bg-primary" : "w-1.5 bg-[#D5D3EC]"
             }`}
           />
         ))}
       </div>
-
-      <style jsx>{`
-        div::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </section>
   );
 }

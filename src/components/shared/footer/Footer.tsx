@@ -8,11 +8,11 @@ export default function Footer() {
       <footer className="bg-black pt-16 sm:pt-24 md:pt-32 lg:pt-40 pb-10 sm:pb-16 md:pb-20 lg:pb-24 px-4 sm:px-8 md:px-10 lg:px-15 -mt-8 sm:-mt-12 md:-mt-16 lg:-mt-24">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-6 lg:gap-0">
           <Image
-            src={"/Images/nativeMedLogo.png"}
-            alt="nativeMedLogo"
+            src={"/Images/main_logo.png"}
+            alt="NativeMed Logo"
+            width={100}
             height={100}
-            width={98}
-            className="w-[50px] sm:w-[60px] lg:w-[98px] h-auto"
+            className="w-20 lg:w-28"
           />
 
           <nav className="flex flex-col gap-3 sm:gap-4 lg:gap-6">

@@ -16,17 +16,24 @@ export default function SideNav() {
 
   return (
     <div>
-      <aside className="flex gap-1 items-center px-5">
-        <Image
+      <aside className="flex items-center px-5 justify-center">
+        {/* <Image
           src={"/Images/nativeMedLogo.png"}
           alt="NativeMed Logo"
           width={45}
           height={45}
-        />
+        /> */}
 
-        <p className="font-semibold leading-[150%] text-black-others mt-5">
+        {/* <p className="font-semibold leading-[150%] text-black-others mt-5">
           Native Medical Education
-        </p>
+        </p> */}
+        <Image
+          src={"/Images/main_logo.png"}
+          alt="NativeMed Logo"
+          width={100}
+          height={100}
+          className="w-20 lg:w-28 mix-blend-multiply"
+        />
       </aside>
 
       <aside className="pt-7">

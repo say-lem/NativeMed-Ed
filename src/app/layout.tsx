@@ -11,7 +11,7 @@ const fustat = Fustat({
 export const metadata: Metadata = {
   title: "Native Med",
   icons: {
-    icon: "/Images/nativeMedLogo.png",
+    icon: "/Images/main_logo.png",
   },
 };
 

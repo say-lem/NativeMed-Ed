@@ -26,12 +26,6 @@ async function loadCase(id: string): Promise<CaseDetail | null> {
   }
 }
 
-const difficultyBadgeClass: Record<string, string> = {
-  easy: "bg-[#E6FEE9] text-[#00A63D] border-[#00A63D]",
-  medium: "bg-[#FFF6E5] text-[#D19E08] border-[#D19E08]",
-  hard: "bg-[#FBE5E7] text-[#D70117] border-[#D70117]",
-};
-
 function Badge({
   label,
   className = "",
@@ -71,9 +65,6 @@ export default async function ViewMockCases({ params }: PageProps) {
   }
 
   const mockData = adaptCase(detail);
-  const difficultyClass =
-    difficultyBadgeClass[detail.difficulty] ??
-    "bg-white text-black-others border-gray-2";
 
   return (
     <>
@@ -98,10 +89,6 @@ export default async function ViewMockCases({ params }: PageProps) {
               className="bg-white/15 text-white border-white/30"
             />
           )}
-          <Badge
-            label={detail.difficulty}
-            className={`capitalize ${difficultyClass}`}
-          />
         </div>
       </MockHeaderBg>
 

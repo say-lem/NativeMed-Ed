@@ -1,56 +1,52 @@
+import Image from "next/image";
 import Link from "next/link";
-import { FaRegHeart, FaUser } from "react-icons/fa";
-import { IoWaterOutline } from "react-icons/io5";
-import { MdApps, MdOutlineAir } from "react-icons/md";
-import { PiBoneLight } from "react-icons/pi";
-import { RiBrainFill } from "react-icons/ri";
+import { FaStethoscope } from "react-icons/fa";
+import { MdApps } from "react-icons/md";
 import { slugify } from "@/lib/slug";
 import type { Specialty } from "@/types/api";
 
-const cardIcons = [
-  <FaRegHeart key="heart" className="size-7 text-[#5E5E5E]" />,
-  <MdOutlineAir key="air" className="size-7 text-[#5E5E5E]" />,
-  <IoWaterOutline key="water" className="size-7 text-[#5E5E5E]" />,
-  <RiBrainFill key="brain" className="size-7 text-[#5E5E5E]" />,
-  <FaUser key="user" className="size-7 text-[#5E5E5E]" />,
-  <PiBoneLight key="bone" className="size-7 text-[#5E5E5E]" />,
-];
+const DEFAULT_FALLBACK_BG = "#F4F5F7";
 
-const cardIconColors = [
-  "#FFE6F5CC",
-  "#E6F3FFCC",
-  "#FDFCE5CC",
-  "#E6FEE9CC",
-  "#E6FBFDCC",
-  "#EFE6FFCC",
-  "#FFE6E6CC",
-  "#FFF4E6CC",
-];
+const SPECIALTY_IMAGES: Record<string, string> = {
+  cardiology: "/Images/Cardiology.jpeg",
+  dermatology: "/Images/Dermatology.jpeg",
+  "ent & eye": "/Images/Ent & Eye.jpeg",
+  endocrinology: "/Images/Endocrine and Nephrology.jpeg",
+  ethics: "/Images/medical ethics.jpeg",
+  gastroenterology: "/Images/Gastroenterology and haematology.jpeg",
+  genetics: "/Images/Genetics.jpeg",
+  gynaecology: "/Images/Gynaecology.jpeg",
+  "infectious disease": "/Images/Infectious Disease.jpeg",
+  "men's health": "/Images/men's health.jpeg",
+  "mental health": "/Images/mental Health.jpeg",
+  neurology: "/Images/Neurology.jpeg",
+  paediatrics: "/Images/Paediatrics.jpeg",
+  respiratory: "/Images/Respiratory.jpeg",
+  rheumatology: "/Images/Rheumatology & Musculoskeletal.jpeg",
+};
+
+function getSpecialtyImage(name: string): string | undefined {
+  return SPECIALTY_IMAGES[name.toLowerCase()];
+}
 
 const cardClass =
   "border-[0.2px] p-3 sm:p-4 rounded-[16px] gap-3 sm:gap-4 bg-white border-gray-2 questionBankShadow flex items-center hover:scale-105";
 
 export default function MockCasesCards({
   specialties,
+  totalCases,
+  emptyMessage,
 }: {
   specialties: Specialty[];
+  totalCases: number;
+  emptyMessage?: string;
 }) {
-  if (specialties.length === 0) {
-    return (
-      <p className="col-span-full text-center text-subtle-text py-12">
-        No specialties available right now. Please check back later.
-      </p>
-    );
-  }
-
-  const totalCases = specialties.reduce((sum, s) => sum + s.count, 0);
-
   return (
     <>
       <Link href="/full-cases/all" className={cardClass}>
         <aside
           style={{ backgroundColor: "#EEE9F7" }}
-          className="flex rounded-full p-4"
+          className="flex rounded-full p-4 shrink-0"
         >
           <MdApps className="size-7 text-primary-100" />
         </aside>
@@ -64,9 +60,14 @@ export default function MockCasesCards({
         </aside>
       </Link>
 
-      {specialties.map((item, idx) => {
-        const bg = cardIconColors[idx % cardIconColors.length];
-        const icon = cardIcons[idx % cardIcons.length];
+      {specialties.length === 0 && (
+        <p className="col-span-full sm:col-span-1 md:col-span-2 text-center text-subtle-text py-8">
+          {emptyMessage ?? "No specialties available right now."}
+        </p>
+      )}
+
+      {specialties.map((item) => {
+        const imagePath = getSpecialtyImage(item.specialty);
         const slug = slugify(item.specialty);
 
         return (
@@ -75,12 +76,25 @@ export default function MockCasesCards({
             key={item.specialty}
             className={cardClass}
           >
-            <aside
-              style={{ backgroundColor: bg }}
-              className="flex rounded-full p-4"
-            >
-              {icon}
-            </aside>
+            {imagePath ? (
+              <aside className="relative size-15 rounded-full overflow-hidden shrink-0">
+                <Image
+                  src={imagePath}
+                  alt={item.specialty}
+                  fill
+                  className="object-cover"
+                  sizes="60px"
+                />
+              </aside>
+            ) : (
+              <aside
+                style={{ backgroundColor: DEFAULT_FALLBACK_BG }}
+                className="flex rounded-full p-4 shrink-0"
+                aria-hidden
+              >
+                <FaStethoscope className="size-7 text-[#5E5E5E]" />
+              </aside>
+            )}
             <aside className="space-y-0.5">
               <p className="font-semibold text-base sm:text-lg leading-[120%] tracking-[-2%] text-black-others">
                 {item.specialty}
