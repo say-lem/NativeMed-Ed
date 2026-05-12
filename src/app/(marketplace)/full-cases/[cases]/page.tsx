@@ -15,7 +15,7 @@ const PAGE_LIMIT = 12;
 
 interface PageProps {
   params: Promise<{ cases: string }>;
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 interface Resolved {
@@ -25,9 +25,12 @@ interface Resolved {
   notFound: boolean;
 }
 
-async function loadAll(page: number): Promise<CasesPage | null> {
+async function loadAll(
+  page: number,
+  search?: string,
+): Promise<CasesPage | null> {
   try {
-    const res = await getAllCases(page, PAGE_LIMIT);
+    const res = await getAllCases(page, PAGE_LIMIT, search);
     return res.success ? res.data : null;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -42,9 +45,10 @@ async function loadAll(page: number): Promise<CasesPage | null> {
 async function loadBySpecialty(
   specialty: string,
   page: number,
+  search?: string,
 ): Promise<CasesPage | null> {
   try {
-    const res = await getCasesBySpecialty(specialty, page, PAGE_LIMIT);
+    const res = await getCasesBySpecialty(specialty, page, PAGE_LIMIT, search);
     return res.success ? res.data : null;
   } catch (err) {
     if (axios.isAxiosError(err)) {
@@ -60,11 +64,15 @@ async function loadBySpecialty(
   }
 }
 
-async function resolve(slug: string, page: number): Promise<Resolved> {
+async function resolve(
+  slug: string,
+  page: number,
+  search?: string,
+): Promise<Resolved> {
   if (slug === "all") {
     return {
       title: "All Cases",
-      page: await loadAll(page),
+      page: await loadAll(page, search),
       showSpecialty: true,
       notFound: false,
     };
@@ -82,7 +90,7 @@ async function resolve(slug: string, page: number): Promise<Resolved> {
 
   return {
     title: match.specialty,
-    page: await loadBySpecialty(match.specialty, page),
+    page: await loadBySpecialty(match.specialty, page, search),
     showSpecialty: false,
     notFound: false,
   };
@@ -93,12 +101,14 @@ export default async function CasesBySpecialtyPage({
   searchParams,
 }: PageProps) {
   const { cases: slug } = await params;
-  const { page: pageParam } = await searchParams;
+  const { page: pageParam, search: searchParam } = await searchParams;
   const page = Math.max(1, Number(pageParam) || 1);
+  const search = (searchParam ?? "").trim();
 
   const { title, page: data, showSpecialty, notFound } = await resolve(
     slug,
     page,
+    search,
   );
 
   if (data?.items[0]) {
@@ -133,7 +143,9 @@ export default async function CasesBySpecialtyPage({
       cases={data.items}
       currentPage={data.page}
       totalPages={data.totalPages}
+      totalResults={data.total}
       showSpecialty={showSpecialty}
+      initialSearch={search}
     />
   );
 }

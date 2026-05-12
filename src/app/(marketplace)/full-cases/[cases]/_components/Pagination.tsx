@@ -30,14 +30,23 @@ export default function Pagination({
   currentPage,
   totalPages,
   basePath,
+  searchQuery,
 }: {
   currentPage: number;
   totalPages: number;
   basePath: string;
+  searchQuery?: string;
 }) {
   if (totalPages <= 1) return null;
 
-  const linkFor = (p: number) => `${basePath}?page=${p}`;
+  const linkFor = (p: number) => {
+    const params = new URLSearchParams();
+    params.set("page", String(p));
+    if (searchQuery && searchQuery.trim()) {
+      params.set("search", searchQuery.trim());
+    }
+    return `${basePath}?${params.toString()}`;
+  };
   const prevDisabled = currentPage <= 1;
   const nextDisabled = currentPage >= totalPages;
   const pages = pageNumbers(currentPage, totalPages);
