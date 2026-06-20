@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { TypeMockCasesPresentation } from "@/types/MockCasesPresentationInterface";
 import MockCasesBorder, { MockCasesPurpleBg } from "./MockCasesBorder";
@@ -201,7 +202,50 @@ export function PatientDataSection({
           </div>
         )}
       </MockCasesBorder>
+
+      {(mockData.stationImageUrl || mockData.imageUrl) && (
+        <div className="flex flex-wrap items-start justify-center gap-4 sm:gap-6 py-6">
+          {mockData.stationImageUrl && (
+            <CaseImage
+              src={mockData.stationImageUrl}
+              alt={`${mockData.name} — station image`}
+              ratio="aspect-[4/3]"
+            />
+          )}
+          {mockData.imageUrl && (
+            <CaseImage
+              src={mockData.imageUrl}
+              alt={`${mockData.name} — case image`}
+              ratio="aspect-video"
+            />
+          )}
+        </div>
+      )}
     </>
+  );
+}
+
+function CaseImage({
+  src,
+  alt,
+  ratio,
+}: {
+  src: string;
+  alt: string;
+  ratio: string;
+}) {
+  return (
+    <div
+      className={`relative w-full sm:w-105 ${ratio} rounded-[8px] overflow-hidden bg-[#FAFAFA]`}
+    >
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        className="object-contain"
+        sizes="(max-width: 640px) 100vw, 420px"
+      />
+    </div>
   );
 }
 

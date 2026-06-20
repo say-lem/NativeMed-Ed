@@ -7,22 +7,26 @@ import type { Specialty } from "@/types/api";
 
 const DEFAULT_FALLBACK_BG = "#F4F5F7";
 
+// Keyed by the exact specialty string the backend returns (lowercased).
+// Source of truth is the live GET /cases/specialties (16 specialties as of 2026-06-20),
+// which is broader than the backend doc's list. See CLAUDE.md §4.
 const SPECIALTY_IMAGES: Record<string, string> = {
   cardiology: "/Images/Cardiology.jpeg",
-  dermatology: "/Images/Dermatology.jpeg",
+  "dermatology/allergy/immunology": "/Images/Dermatology.jpeg",
+  "elderly medicine/ palliative": "/Images/Elderly Medicine.jpeg",
+  "endocrine and nephrology": "/Images/Endocrine and Nephrology.jpeg",
   "ent & eye": "/Images/Ent & Eye.jpeg",
-  endocrinology: "/Images/Endocrine and Nephrology.jpeg",
   ethics: "/Images/medical ethics.jpeg",
-  gastroenterology: "/Images/Gastroenterology and haematology.jpeg",
+  "gastroenterology/ haematology": "/Images/Gastroenterology and haematology.jpeg",
   genetics: "/Images/Genetics.jpeg",
-  gynaecology: "/Images/Gynaecology.jpeg",
-  "infectious disease": "/Images/Infectious Disease.jpeg",
+  "gynaecology/ women's health": "/Images/Gynaecology.jpeg",
   "men's health": "/Images/men's health.jpeg",
   "mental health": "/Images/mental Health.jpeg",
   neurology: "/Images/Neurology.jpeg",
   paediatrics: "/Images/Paediatrics.jpeg",
   respiratory: "/Images/Respiratory.jpeg",
-  rheumatology: "/Images/Rheumatology & Musculoskeletal.jpeg",
+  "rheumatology/ musculoskeletal": "/Images/Rheumatology & Musculoskeletal.jpeg",
+  "travel health/ infectious disease": "/Images/Infectious Disease.jpeg",
 };
 
 function getSpecialtyImage(name: string): string | undefined {
@@ -50,7 +54,7 @@ export default function MockCasesCards({
         >
           <MdApps className="size-7 text-primary-100" />
         </aside>
-        <aside className="space-y-0.5">
+        <aside className="space-y-0.5 min-w-0">
           <p className="font-semibold text-base sm:text-lg leading-[120%] tracking-[-2%] text-black-others">
             All Cases
           </p>
@@ -95,8 +99,8 @@ export default function MockCasesCards({
                 <FaStethoscope className="size-7 text-[#5E5E5E]" />
               </aside>
             )}
-            <aside className="space-y-0.5">
-              <p className="font-semibold text-base sm:text-lg leading-[120%] tracking-[-2%] text-black-others">
+            <aside className="space-y-0.5 min-w-0">
+              <p className="font-semibold text-base sm:text-lg leading-[120%] tracking-[-2%] text-black-others wrap-break-word">
                 {item.specialty}
               </p>
               <p className="text-sm text-subtle-text leading-[150%]">

@@ -53,12 +53,19 @@ export interface Specialty {
 }
 
 export type Difficulty = "easy" | "medium" | "hard";
-export type Gender = "male" | "female";
+export type Gender = "male" | "female" | "other";
 
 export interface PatientData {
   name: string;
   age: number;
   gender: Gender;
+}
+
+/** Populated form of `createdBy` returned by admin routes. */
+export interface UserRef {
+  _id: string;
+  fullName: string;
+  email: string;
 }
 
 export interface Case {
@@ -67,6 +74,7 @@ export interface Case {
   title: string;
   specialty: string;
   difficulty: Difficulty;
+  imageUrl?: string;
   patientData: PatientData;
   createdAt: string;
 }
@@ -102,7 +110,9 @@ export interface BloodTestResults {
 }
 
 export interface RecentConsultation {
+  date?: string;
   seenBy: string;
+  role?: string;
   notes: string;
 }
 
@@ -116,6 +126,8 @@ export interface PatientDataDetail extends PatientData {
 export interface CaseDetail extends Case {
   consultationType: string;
   isPublished: boolean;
+  stationImageUrl?: string;
+  createdBy: string | UserRef;
   patientStory: string;
   exampleExplanation: string;
   learningPoints: string;

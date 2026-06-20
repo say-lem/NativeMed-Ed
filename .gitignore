@@ -42,4 +42,3 @@ next-env.d.ts
 
 # Claude Code (AI tooling — keep out of repo)
 .claude/
-CLAUDE.md

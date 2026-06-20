@@ -8,6 +8,17 @@ function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
 
+function formatConsultationDate(date?: string): string {
+  if (!date) return "Recent";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "Recent";
+  return parsed.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 const SAFETY_NET_REGEX = /safety[-\s]?net(?:ting)?(?:\s+advice)?\s*:\s*/i;
 
 export function extractSafetyNet(management: string[]): {
@@ -40,14 +51,19 @@ export function adaptCase(detail: CaseDetail): TypeMockCasesPresentation {
     gender: capitalize(patient.gender),
     age: patient.age,
 
+    imageUrl: detail.imageUrl,
+    stationImageUrl: detail.stationImageUrl,
+
     medicalHistory: patient.pastMedicalHistory ?? [],
     drugAndAllergyHistory: patient.drugHistory ?? [],
 
     recentNotes: consultation
       ? [
           {
-            time: "Recent",
-            doctor: consultation.seenBy || PLACEHOLDER,
+            time: formatConsultationDate(consultation.date),
+            doctor: consultation.role
+              ? `${consultation.seenBy || PLACEHOLDER} (${consultation.role})`
+              : consultation.seenBy || PLACEHOLDER,
             complaint: consultation.notes || PLACEHOLDER,
             examination: PLACEHOLDER,
             Plan: PLACEHOLDER,

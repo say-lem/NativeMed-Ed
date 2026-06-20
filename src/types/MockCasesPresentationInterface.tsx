@@ -27,6 +27,8 @@ export interface TypeMockCasesPresentation {
   name: string;
   gender: string;
   age: number;
+  imageUrl?: string;
+  stationImageUrl?: string;
   medicalHistory: string[];
   drugAndAllergyHistory: string[];
   furtherReading: FurtherResourceLink[];
