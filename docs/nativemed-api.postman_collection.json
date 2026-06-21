@@ -1,0 +1,341 @@
+{
+  "info": {
+    "_postman_id": "c7cf8264-6b5e-4f33-aef5-0d13c5bf0a90",
+    "name": "NativeMed API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl",      "value": "http://localhost:5000" },
+    { "key": "accessToken",  "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "courseId",     "value": "" },
+    { "key": "contentId",    "value": "" },
+    { "key": "caseId",       "value": "" },
+    { "key": "userId",       "value": "" },
+    { "key": "enrollmentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /api/v1/auth/register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"phone\": \"+1234567890\"\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/register"
+          }
+        },
+        {
+          "name": "POST /api/v1/auth/login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/login"
+          }
+        },
+        {
+          "name": "POST /api/v1/auth/refresh-token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/refresh-token"
+          }
+        },
+        {
+          "name": "POST /api/v1/auth/logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/logout"
+          }
+        },
+        {
+          "name": "POST /api/v1/auth/forgot-password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\"\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/forgot-password"
+          }
+        },
+        {
+          "name": "POST /api/v1/auth/reset-password",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"token\": \"PASTE_TOKEN_FROM_EMAIL\",\n  \"newPassword\": \"Password123!\",\n  \"confirmPassword\": \"Password123!\"\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/reset-password"
+          }
+        },
+        {
+          "name": "GET /api/v1/auth/me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/auth/me"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/auth/me",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Test User Updated\"\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/me"
+          }
+        },
+        {
+          "name": "POST /api/v1/auth/change-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmPassword\": \"NewPassword123!\"\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/change-password"
+          }
+        },
+        {
+          "name": "POST /api/v1/auth/logout-all",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/auth/logout-all"
+          }
+        },
+        {
+          "name": "POST /api/v1/auth/admin/users (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"phone\": \"+1234567890\"\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/admin/users"
+          }
+        },
+        {
+          "name": "GET /api/v1/auth/admin/users (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/auth/admin/users"
+          }
+        },
+        {
+          "name": "GET /api/v1/auth/admin/users/:userId (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/auth/admin/users/{{userId}}"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/auth/admin/users/:userId (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"isActive\": true\n}" },
+            "url": "{{baseUrl}}/api/v1/auth/admin/users/{{userId}}"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/auth/admin/users/:userId/toggle-status (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/auth/admin/users/{{userId}}/toggle-status"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Courses",
+      "item": [
+        {
+          "name": "GET /api/v1/courses",
+          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/courses" }
+        },
+        {
+          "name": "GET /api/v1/courses/:id (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}"
+          }
+        },
+        {
+          "name": "POST /api/v1/courses (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Course title\",\n  \"description\": \"A longer course description...\",\n  \"price\": 0\n}" },
+            "url": "{{baseUrl}}/api/v1/courses"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/courses/:id (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated title\"\n}" },
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/courses/:id/thumbnail (admin, multipart)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "body": { "mode": "formdata", "formdata": [{ "key": "thumbnail", "type": "file", "src": "" }] },
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/thumbnail"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/courses/:id/publish (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/publish"
+          }
+        },
+        {
+          "name": "DELETE /api/v1/courses/:id (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Course Content",
+      "item": [
+        {
+          "name": "GET /api/v1/courses/:courseId/content (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/content"
+          }
+        },
+        {
+          "name": "GET /api/v1/courses/:courseId/content/:id (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/content/{{contentId}}"
+          }
+        },
+        {
+          "name": "POST /api/v1/courses/:courseId/content (admin, multipart)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": "" },
+                { "key": "title", "type": "text", "value": "Lesson 1" },
+                { "key": "type", "type": "text", "value": "video" },
+                { "key": "order", "type": "text", "value": "0" },
+                { "key": "duration", "type": "text", "value": "0" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/content"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/courses/:courseId/content/:id (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated lesson title\"\n}" },
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/content/{{contentId}}"
+          }
+        },
+        {
+          "name": "DELETE /api/v1/courses/:courseId/content/:id (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/content/{{contentId}}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cases",
+      "item": [
+        { "name": "GET /api/v1/cases/specialties (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/specialties" } },
+        { "name": "GET /api/v1/cases (auth, query)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/cases?page=1&limit=12", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "12" }, { "key": "specialty", "value": "", "disabled": true }, { "key": "difficulty", "value": "", "disabled": true }, { "key": "search", "value": "", "disabled": true } ] } } },
+        { "name": "GET /api/v1/cases/specialty/:specialty (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/cases/specialty/Elderly Medicine/ Palliative?page=1&limit=12", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "12" } ] } } },
+        { "name": "GET /api/v1/cases/:id (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/{{caseId}}" } },
+        { "name": "GET /api/v1/cases/admin/all (admin, query)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/cases/admin/all?page=1&limit=12", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "12" }, { "key": "specialty", "value": "", "disabled": true }, { "key": "difficulty", "value": "", "disabled": true }, { "key": "search", "value": "", "disabled": true } ] } } },
+        { "name": "GET /api/v1/cases/admin/:id (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/admin/{{caseId}}" } },
+        { "name": "POST /api/v1/cases - JSON body (admin)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"stationNumber\": 1,\n  \"title\": \"Case title\",\n  \"consultationType\": \"Consultation\",\n  \"specialty\": \"Elderly Medicine/ Palliative\",\n  \"difficulty\": \"medium\",\n  \"isPublished\": false,\n  \"patientData\": {\n    \"name\": \"Patient Name\",\n    \"age\": 30,\n    \"gender\": \"male\",\n    \"pastMedicalHistory\": [],\n    \"drugHistory\": [],\n    \"recentConsultation\": {\n      \"seenBy\": \"Clinician\",\n      \"role\": \"Doctor\",\n      \"notes\": \"Consultation notes\"\n    },\n    \"bloodTestResults\": {\n      \"summary\": \"Summary\",\n      \"rows\": []\n    }\n  },\n  \"patientStory\": \"Story\",\n  \"markingScheme\": [{\"heading\": \"Section\", \"points\": [\"Point 1\"]}],\n  \"exampleExplanation\": \"Explanation\",\n  \"management\": [\"Step 1\"],\n  \"learningPoints\": \"Learning\",\n  \"furtherResources\": [{\"title\": \"NICE CKS\", \"url\": \"https://cks.nice.org.uk\"}]\n}" }, "url": "{{baseUrl}}/api/v1/cases" } },
+        { "name": "POST /api/v1/cases - multipart with images (admin)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "formdata", "formdata": [ { "key": "payload", "type": "text", "value": "{\n  \"stationNumber\": 1,\n  \"title\": \"Case title\",\n  \"consultationType\": \"Consultation\",\n  \"specialty\": \"Elderly Medicine/ Palliative\",\n  \"difficulty\": \"medium\",\n  \"isPublished\": false,\n  \"patientData\": { \"name\": \"Patient Name\", \"age\": 30, \"gender\": \"male\", \"pastMedicalHistory\": [], \"drugHistory\": [], \"recentConsultation\": { \"seenBy\": \"Clinician\", \"role\": \"Doctor\", \"notes\": \"Consultation notes\" }, \"bloodTestResults\": { \"summary\": \"Summary\", \"rows\": [] } },\n  \"patientStory\": \"Story\",\n  \"markingScheme\": [{\"heading\": \"Section\", \"points\": [\"Point 1\"]}],\n  \"exampleExplanation\": \"Explanation\",\n  \"management\": [\"Step 1\"],\n  \"learningPoints\": \"Learning\",\n  \"furtherResources\": [{\"title\": \"NICE CKS\", \"url\": \"https://cks.nice.org.uk\"}]\n}" }, { "key": "image", "type": "file", "src": "", "description": "Cover image (jpg/png/webp, max 5 MB)" }, { "key": "stationImage", "type": "file", "src": "", "description": "Station image (jpg/png/webp, max 5 MB)" } ] }, "url": "{{baseUrl}}/api/v1/cases" } },
+        { "name": "PATCH /api/v1/cases/:id (admin)", "request": { "method": "PATCH", "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated case title\"\n}" }, "url": "{{baseUrl}}/api/v1/cases/{{caseId}}" } },
+        { "name": "PATCH /api/v1/cases/:id/image (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file", "src": "", "description": "Cover image (jpg/png/webp, max 5 MB)" } ] }, "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/image" } },
+        { "name": "PATCH /api/v1/cases/:id/station-image (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "formdata", "formdata": [ { "key": "stationImage", "type": "file", "src": "", "description": "Station image (jpg/png/webp, max 5 MB)" } ] }, "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/station-image" } },
+        { "name": "PATCH /api/v1/cases/:id/publish (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/publish" } },
+        { "name": "POST /api/v1/cases/:id/duplicate (admin)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/duplicate" } },
+        { "name": "DELETE /api/v1/cases/:id (admin)", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/{{caseId}}" } }
+      ]
+    },
+    {
+      "name": "Enrollments",
+      "item": [
+        { "name": "GET /api/v1/enrollments/me (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/enrollments/me" } },
+        { "name": "GET /api/v1/enrollments/check/:courseId (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/enrollments/check/{{courseId}}" } },
+        { "name": "GET /api/v1/enrollments (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/enrollments?page=1&limit=20", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "20" } ] } } },
+        { "name": "GET /api/v1/enrollments/course/:courseId (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/enrollments/course/{{courseId}}?page=1&limit=20", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "20" } ] } } },
+        { "name": "GET /api/v1/enrollments/user/:userId (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/enrollments/user/{{userId}}" } },
+        { "name": "POST /api/v1/enrollments/manual (admin)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"courseId\": \"{{courseId}}\"\n}" }, "url": "{{baseUrl}}/api/v1/enrollments/manual" } },
+        { "name": "POST /api/v1/enrollments/revoke (admin)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"courseId\": \"{{courseId}}\"\n}" }, "url": "{{baseUrl}}/api/v1/enrollments/revoke" } },
+        { "name": "PATCH /api/v1/enrollments/:enrollmentId/restore (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/enrollments/{{enrollmentId}}/restore" } }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        { "name": "GET /api/v1/admin/dashboard (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/admin/dashboard" } },
+        { "name": "GET /api/v1/admin/users (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/admin/users?page=1&limit=20", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "20" } ] } } },
+        { "name": "GET /api/v1/admin/users/:userId (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/admin/users/{{userId}}" } },
+        { "name": "PATCH /api/v1/admin/users/:userId/toggle-status (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/admin/users/{{userId}}/toggle-status" } }
+      ]
+    }
+  ]
+}

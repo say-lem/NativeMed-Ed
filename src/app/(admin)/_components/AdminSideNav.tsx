@@ -1,0 +1,69 @@
+"use client";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import AdminSideNavLink from "./AdminSideNavLink";
+import {
+  CoursesIcon,
+  DashboardIcon,
+  QuestionBankIcon,
+  SettingsIcon,
+  SubscriptionsIcon,
+  LogoutIcon,
+} from "@/app/(marketplace)/_components/Icons";
+
+const ACTIVE = "#5925B3";
+const INACTIVE = "#373737";
+
+export default function AdminSideNav() {
+  const pathName = usePathname();
+  const color = (href: string) =>
+    pathName.startsWith(href) ? ACTIVE : INACTIVE;
+
+  return (
+    <div>
+      <aside className="flex items-center px-5 justify-center">
+        <Image
+          src={"/Images/main_logo.png"}
+          alt="NativeMed Logo"
+          width={100}
+          height={100}
+          className="w-20 lg:w-28 mix-blend-multiply"
+        />
+      </aside>
+
+      <aside className="pt-7">
+        <AdminSideNavLink
+          icon={<DashboardIcon color={color("/admin-dashboard")} />}
+          href="/admin-dashboard"
+          label="Dashboard"
+        />
+        <AdminSideNavLink
+          icon={<SubscriptionsIcon color={color("/admin-subscribers")} />}
+          href="/admin-subscribers"
+          label="Subscribers"
+        />
+        <AdminSideNavLink
+          icon={<QuestionBankIcon color={color("/admin-casebank")} />}
+          href="/admin-casebank"
+          label="Casebank"
+        />
+        <AdminSideNavLink
+          icon={<CoursesIcon color={color("/admin-courses")} />}
+          href="/admin-courses"
+          label="Courses"
+        />
+
+        <AdminSideNavLink
+          icon={<SettingsIcon color={color("/admin-settings")} />}
+          href="/admin-settings"
+          label="Settings"
+        />
+        <AdminSideNavLink
+          icon={<LogoutIcon color={INACTIVE} />}
+          href="/logout"
+          label="Log Out"
+        />
+      </aside>
+    </div>
+  );
+}

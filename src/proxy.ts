@@ -48,26 +48,30 @@ function redirectToLogin(request: NextRequest): NextResponse {
   return response;
 }
 
+// Next.js 16 proxy (formerly "middleware"). Runs on every matched route.
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
 
-  if (accessToken) {
-    const payload = decodeJwt(accessToken);
-    if (!isExpired(payload, 30)) {
-      return NextResponse.next();
-    }
+  // Access token still valid (30s leeway) → let the request through untouched.
+  if (accessToken && !isExpired(decodeJwt(accessToken), 30)) {
+    return NextResponse.next();
   }
 
+  // Access token missing/expired. Without a refresh token we can't recover.
   if (!refreshToken) {
     return redirectToLogin(request);
   }
 
+  // Refresh proactively here — the proxy CAN write cookies, so the rotated
+  // refresh token is persisted (Server Components cannot, which is the bug
+  // this fixes). The backend rotates + invalidates the old refresh token.
   const refreshed = await tryRefresh(refreshToken);
   if (!refreshed) {
     return redirectToLogin(request);
   }
 
+  // Forward the new access token to the downstream render in this same request.
   request.cookies.set(ACCESS_TOKEN_COOKIE, refreshed.accessToken);
   request.cookies.set(REFRESH_TOKEN_COOKIE, refreshed.refreshToken);
 
@@ -87,6 +91,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
 export const config = {
   matcher: [
+    // Member (marketplace) area
     "/dashboard",
     "/dashboard/:path*",
     "/courses",
@@ -97,5 +102,18 @@ export const config = {
     "/subscriptions/:path*",
     "/settings",
     "/settings/:path*",
+    // Admin area
+    "/admin-dashboard",
+    "/admin-dashboard/:path*",
+    "/admin-subscribers",
+    "/admin-subscribers/:path*",
+    "/admin-casebank",
+    "/admin-casebank/:path*",
+    "/admin-courses",
+    "/admin-courses/:path*",
+    "/admin-settings",
+    "/admin-settings/:path*",
+    "/admin-users",
+    "/admin-users/:path*",
   ],
 };

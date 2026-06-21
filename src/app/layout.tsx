@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fustat } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 
 const fustat = Fustat({
@@ -22,7 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fustat.className} h-full antialiased`}>
-      <body className="min-h-full">{children}</body>
+      <body className="min-h-full">
+        {children}
+        <Toaster position="top-center" richColors />
+      </body>
     </html>
   );
 }

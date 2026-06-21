@@ -6,9 +6,36 @@ update the code, then update this file.
 
 ---
 
+## 0. API source of truth & full surface
+
+- Canonical API reference: [docs/nativemed-api.postman_collection.json](docs/nativemed-api.postman_collection.json)
+  (exported NativeMed Postman collection). It is BROADER than the Cases doc — trust it + the live API
+  over any prose doc. The collection has request shapes but NOT response schemas; confirm response
+  shapes against the live API when integrating a new endpoint.
+- The backend has these modules (verified 2026-06-20). Only **Cases (read)** + **auth login/register**
+  are integrated in the frontend so far; everything else exists on the backend but is NOT yet wired.
+
+| Module | Key endpoints | Auth | Notes |
+|---|---|---|---|
+| Health | `GET /health` | none | |
+| Auth | `POST /auth/{register,login,refresh-token,logout,forgot-password,reset-password,change-password,logout-all}`, `GET/PATCH /auth/me` | mixed | register/login/refresh/forgot/reset are public; me/change-password/logout-all need token |
+| Auth admin | `POST/GET /auth/admin/users`, `GET/PATCH /auth/admin/users/:userId`, `PATCH /auth/admin/users/:userId/toggle-status` | admin | user management (note: also duplicated under `/admin/users`) |
+| Courses | `GET /courses` (PUBLIC, returns `data: []` plain array — NOT paginated), `GET /courses/:id` (auth), `POST/PATCH/DELETE /courses/:id` (admin), `PATCH /courses/:id/{thumbnail,publish}` (admin) | mixed | `POST` body: `{ title, description, price }`. thumbnail = multipart field `thumbnail`. |
+| Course Content | `GET /courses/:courseId/content[/:id]` (auth), `POST` (admin, multipart: `file,title,type,order,duration`), `PATCH/DELETE .../content/:id` (admin) | mixed | lesson `type` e.g. `"video"` |
+| Cases | see §4 | mixed | only module with a written integration doc + frontend integration |
+| Enrollments | `GET /enrollments/me` (auth, `data: []` array), `GET /enrollments/check/:courseId` (auth), `GET /enrollments` + `/course/:courseId` + `/user/:userId` (admin), `POST /enrollments/{manual,revoke}` (admin, `{ userId, courseId }`), `PATCH /enrollments/:id/restore` (admin) | mixed | course access grants; likely backs "Subscriptions"/"My Courses" |
+| Admin | `GET /admin/dashboard`, `GET /admin/users[/:userId]`, `PATCH /admin/users/:userId/toggle-status` | admin | dashboard stats + user mgmt |
+
+- Frontend pages currently **static / not connected**: Courses, Subscriptions, Dashboard, Settings.
+  Backend endpoints DO exist for Courses (Courses + Course Content + Enrollments) and Dashboard
+  (`/admin/dashboard`) — so these are integratable now; they were just absent from the Cases doc.
+- No per-module response-schema doc exists yet for Courses/Enrollments/Admin. As of 2026-06-20 the
+  Courses and Enrollments collections are empty in prod (`data: []`), so item shapes can't be inferred
+  from live data — ask backend for a Courses doc or a sample record before building those UIs.
+
 ## 1. Environment & API base URL
 
-- API base URL is built in [src/lib/api.ts](src/lib/api.ts) and [proxy.ts](proxy.ts) as:
+- API base URL is built in [src/lib/api.ts](src/lib/api.ts) and [src/proxy.ts](src/proxy.ts) as:
   ```ts
   const baseURL = `${process.env.API_URL ?? "http://localhost:5000"}/api/v1`;
   ```
@@ -33,6 +60,18 @@ update the code, then update this file.
     (`/auth/login`, `/auth/register`, `/auth/refresh-token`) are excluded from the retry.
   - In a Server Component, refreshed tokens can't be written back to cookies (cookies are read-only
     there) — the code retries in-memory and swallows the cookie-write error.
+- **Token refresh + rotation is handled in [src/proxy.ts](src/proxy.ts)** (runs on every matched
+  route). NOTE on convention: this is Next.js **16**, where the old `middleware.ts` is DEPRECATED —
+  the file is `proxy.ts`, exports a `proxy` function (+ `config`), and lives at **`src/proxy.ts`**
+  (next to `src/app`, NOT repo root — a root-level file is not picked up when the app is in `src/`).
+  Do not rename it back to `middleware.ts`.
+  The backend **rotates** the refresh token and invalidates the old one on each refresh; the proxy is
+  the only place that can both refresh AND persist the rotated cookies (Server Components can't write
+  cookies). On a matched request: if the access token is valid (30s leeway) it passes through; if
+  expired/missing it refreshes via `/auth/refresh-token`, writes the new access+refresh cookies on
+  the response, and forwards the new access token to the render. If refresh fails it clears cookies
+  and redirects to `/login`. The axios interceptor remains a fallback for 401s during an in-render
+  API call. **The matcher must list every protected route** (marketplace + admin).
 - Every case endpoint requires `Authorization: Bearer <accessToken>`.
 - Standard envelope on **every** response:
   ```ts
@@ -220,6 +259,26 @@ fd.append("stationImage", stationFile); // optional
 - Slug helpers: [src/lib/slug.ts](src/lib/slug.ts) — `/full-cases/[slug]` resolves the slug back to a
   real specialty by fetching `GET /cases/specialties` and slug-matching the name (robust; keep this).
 
+### Route groups & layouts
+- **`(marketplace)`** — member area. Layout [src/app/(marketplace)/layout.tsx](src/app/(marketplace)/layout.tsx)
+  loads the user via `GET /auth/me`, redirects to `/login` if unauthenticated, renders `MarketplaceShell`
+  (responsive sidebar drawer + `NamedHeader`). Pages: `dashboard`, `courses`, `full-cases`,
+  `subscriptions`, `settings`.
+- **`(admin)`** — admin area. Layout [src/app/(admin)/layout.tsx](src/app/(admin)/layout.tsx) loads the
+  user, redirects to `/login` if unauthenticated and to `/dashboard` if `role !== "admin"`, renders
+  `AdminShell`. **Admin routes are flat `/admin-*`** (NOT nested under `/admin`): `admin-dashboard`,
+  `admin-subscribers`, `admin-casebank` (+ `upload-casebank`), `admin-courses` (+ `upload-course`),
+  `admin-settings`. The proxy matcher (§2) must include each.
+- **Login role redirect**: [login/actions.ts](src/app/(auth)/login/actions.ts) sends `admin` →
+  `/admin-dashboard`, everyone else → `/dashboard`. There is ONE shared login; no separate admin login.
+
+### Shared infra
+- Toasts: **sonner**. `<Toaster position="top-center" richColors />` is mounted in
+  [src/app/layout.tsx](src/app/layout.tsx); call `toast(...)` anywhere (client).
+- JWT helpers: [src/lib/jwt.ts](src/lib/jwt.ts) (Edge-safe `decodeJwt`/`isExpired`, used by the proxy).
+- Password show/hide: shared `PasswordField` in [src/components/shared/AuthForm.tsx](src/components/shared/AuthForm.tsx).
+- Cloudinary images whitelisted in [next.config.ts](next.config.ts) (`images.remotePatterns`).
+
 ## 7. Discrepancies reconciled with backend doc (fixed 2026-06-20)
 
 All five type/data mismatches are now fixed (typecheck clean):
@@ -245,8 +304,27 @@ so the new image block is invisible until a case is created/updated with an imag
 
 ## 8. Current state / plan
 
-- User-facing case read flow (list → specialty → detail) is integrated and matches the backend.
-- Production DB currently has **0 published cases**, so the Case Bank is correctly empty.
-- Next: build the **admin UI**, then wire admin write flows (create/edit/publish/duplicate/delete +
-  image uploads) fully in line with the backend contract above, fixing the §7 discrepancies along the way.
-- No admin write services exist yet in [src/services/cases.service.ts](src/services/cases.service.ts).
+**Integrated (wired to live backend):**
+- User-facing case read flow (list → specialty → detail) — matches the backend.
+- Auth: login/register/logout, role-based redirect, and proactive token refresh + rotation in the proxy.
+
+**Built but UI-only / mock data (NOT yet wired to the backend):**
+- **Admin UI** scaffolding — all pages exist with the designed layouts and mock data:
+  dashboard (stats + creation buttons + recent subscribers), subscribers table (tabs/search),
+  casebank list (+ `Add Case` → multi-step upload form), courses grid (+ upload-course form).
+- **Marketplace dashboard** — welcome + stat cards + subscriptions/courses variant cards +
+  GoPremium/Calendar/UpcomingClasses (all mock).
+- **Upload forms**: course upload ([UploadCourseForm](src/app/(admin)/admin-courses/upload-course/_components/UploadCourseForm.tsx))
+  and the 4-step case upload ([upload-casebank/_components/](src/app/(admin)/admin-casebank/upload-casebank/_components/));
+  inputs carry backend-aligned `name`s but no submit handler yet.
+- Admin "Schedule Live Class" / "Create Video" buttons are stubs (toast "Coming soon" / placeholder).
+
+**Next:**
+- Add admin **write services** to [src/services/cases.service.ts](src/services/cases.service.ts)
+  (none exist yet) and wire the case upload form → `POST /cases` (+ image multipart), publish,
+  duplicate, delete, edit. NOTE: the case form's step-2 has extra fields (Social History, Idea,
+  Concern, etc.) the backend model doesn't have — decide whether to compose into `patientStory` or
+  request backend fields.
+- Wire **Courses / Enrollments / Admin dashboard** once response schemas are available (see §0; those
+  collections are empty in prod so shapes can't be inferred from live data yet).
+- Needs an **admin account** (`role: "admin"`) to actually test the admin area end-to-end.

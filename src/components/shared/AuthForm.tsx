@@ -1,8 +1,13 @@
 "use client";
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
-import { useForm, type FieldErrors, type UseFormRegister } from "react-hook-form";
+import { Eye, EyeOff, Loader2 } from "lucide-react";
+import {
+  useForm,
+  type FieldErrors,
+  type UseFormRegister,
+  type UseFormRegisterReturn,
+} from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import TitleCase from "./TitleCase";
 import SubtleText from "./SubtleText";
@@ -37,6 +42,37 @@ function FieldError({ message }: { message?: string }) {
 
 const inputClass =
   "border-[0.5px] rounded-[8px] px-3 sm:px-4 py-2.5 sm:py-3 border-secondary-20 w-full focus:outline-none focus:border-primary-100";
+
+function PasswordField({
+  id,
+  autoComplete,
+  registration,
+}: {
+  id: string;
+  autoComplete: string;
+  registration: UseFormRegisterReturn;
+}) {
+  const [show, setShow] = useState(false);
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        type={show ? "text" : "password"}
+        autoComplete={autoComplete}
+        className={`${inputClass} pr-11`}
+        {...registration}
+      />
+      <button
+        type="button"
+        onClick={() => setShow((s) => !s)}
+        aria-label={show ? "Hide password" : "Show password"}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-subtle-text hover:text-black-others cursor-pointer"
+      >
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  );
+}
 
 function applyServerErrors<T extends Record<string, unknown>>(
   result: FormActionResult,
@@ -175,12 +211,10 @@ function LoginFields({
       </div>
       <div className="space-y-2">
         <Label text="Password" htmlFor="password" />
-        <input
+        <PasswordField
           id="password"
-          type="password"
           autoComplete="current-password"
-          className={inputClass}
-          {...register("password")}
+          registration={register("password")}
         />
         <FieldError message={errors.password?.message} />
       </div>
@@ -302,12 +336,10 @@ function RegisterFields({
       </div>
       <div className="space-y-2">
         <Label text="Password" htmlFor="password" />
-        <input
+        <PasswordField
           id="password"
-          type="password"
           autoComplete="new-password"
-          className={inputClass}
-          {...register("password")}
+          registration={register("password")}
         />
         <FieldError message={errors.password?.message} />
       </div>

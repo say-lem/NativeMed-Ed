@@ -17,6 +17,10 @@ export async function loginAction(values: LoginValues): Promise<FormActionResult
     };
   }
 
+  // Where to send the user after a successful login (set inside the try,
+  // used after it — redirect() throws, so it must run outside try/catch).
+  let destination = "/dashboard";
+
   try {
     const response = await login(parsed.data);
     if (!response.success) {
@@ -30,6 +34,9 @@ export async function loginAction(values: LoginValues): Promise<FormActionResult
       accessToken: response.data.accessToken,
       refreshToken: response.data.refreshToken,
     });
+    if (response.data.user.role === "admin") {
+      destination = "/admin-dashboard";
+    }
   } catch (err) {
     if (axios.isAxiosError(err)) {
       const data = err.response?.data as ApiFailure | undefined;
@@ -43,5 +50,5 @@ export async function loginAction(values: LoginValues): Promise<FormActionResult
     return { ok: false, message: "Network error. Please try again." };
   }
 
-  redirect("/dashboard");
+  redirect(destination);
 }

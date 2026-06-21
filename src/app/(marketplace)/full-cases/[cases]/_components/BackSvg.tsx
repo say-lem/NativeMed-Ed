@@ -11,6 +11,7 @@ export default function BackIcon() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       onClick={() => router.back()}
+      className="cursor-pointer"
     >
       <path
         d="M20 8.75H4.7875L11.775 1.7625L10 0L0 10L10 20L11.7625 18.2375L4.7875 11.25H20V8.75Z"
