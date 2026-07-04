@@ -52,6 +52,19 @@ export interface Specialty {
   count: number;
 }
 
+/** GET /admin/dashboard → data. `recent*` item shapes unknown (empty in prod). */
+export interface AdminDashboardStats {
+  totalUsers: number;
+  activeSubscriptions: number;
+  totalCourses: number;
+  totalEnrollments: number;
+  paidEnrollments: number;
+  manualEnrollments: number;
+  totalRevenue: number;
+  recentPayments: unknown[];
+  recentEnrollments: unknown[];
+}
+
 export type Difficulty = "easy" | "medium" | "hard";
 export type Gender = "male" | "female" | "other";
 
@@ -136,4 +149,85 @@ export interface CaseDetail extends Case {
   furtherResources: FurtherResource[];
   patientData: PatientDataDetail;
   updatedAt: string;
+}
+
+/** Generic pagination envelope returned by list endpoints. */
+export interface Paginated<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+/** Admin case list projection (GET /cases/admin/all) — user list + admin fields. */
+export interface AdminCase extends Case {
+  consultationType: string;
+  isPublished: boolean;
+  stationImageUrl?: string;
+  createdBy: UserRef;
+  updatedAt: string;
+}
+
+/** Row from GET /subscriptions/subscribers (admin) — plain array, NOT paginated. */
+export interface Subscriber {
+  name: string;
+  email: string;
+  subscriptionPlan: string;
+  subscribedTo: string;
+  expiryDate: string;
+  status: string; // "active" | "expired" | ...
+}
+
+/** Payload for POST /cases (create) and PATCH /cases/:id (partial update). */
+export interface CaseInput {
+  stationNumber: number;
+  title: string;
+  specialty: string;
+  consultationType?: string;
+  difficulty?: Difficulty;
+  isPublished?: boolean;
+  patientData: {
+    name: string;
+    age: number;
+    gender: Gender;
+    pastMedicalHistory: string[];
+    drugHistory: string[];
+    recentConsultation: {
+      date?: string;
+      seenBy: string;
+      role?: string;
+      notes: string;
+    };
+    bloodTestResults: {
+      summary: string;
+      rows: BloodTestRow[];
+    };
+  };
+  patientStory: string;
+  markingScheme: MarkingSchemeSection[];
+  exampleExplanation: string;
+  management: string[];
+  learningPoints: string;
+  furtherResources: FurtherResource[];
+}
+
+/** Course (GET /courses). Shape verified against live data 2026-06-25. */
+export interface Course {
+  _id: string;
+  title: string;
+  description?: string;
+  price?: number;
+  thumbnailUrl?: string;
+  isPublished?: boolean;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Payload for POST /courses (create) and PATCH /courses/:id (partial update). */
+export interface CourseInput {
+  title: string;
+  description?: string;
+  price?: number;
 }

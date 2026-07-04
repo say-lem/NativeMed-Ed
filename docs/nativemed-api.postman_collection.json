@@ -2,6 +2,7 @@
   "info": {
     "_postman_id": "c7cf8264-6b5e-4f33-aef5-0d13c5bf0a90",
     "name": "NativeMed API",
+    "description": "Native Med REST API (v1). Import `NativeMed.postman_environment.json` and run **Auth — Login** first to populate `accessToken` / `refreshToken`. Collection variables: `courseId`, `contentId`, `caseId`, `userId`, `enrollmentId`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -20,7 +21,10 @@
       "item": [
         {
           "name": "GET /health",
-          "request": { "method": "GET", "url": "{{baseUrl}}/health" }
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/health"
+          }
         }
       ]
     },
@@ -32,7 +36,10 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"phone\": \"+1234567890\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"phone\": \"+1234567890\"\n}"
+            },
             "url": "{{baseUrl}}/api/v1/auth/register"
           }
         },
@@ -41,9 +48,29 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\"\n}"
+            },
             "url": "{{baseUrl}}/api/v1/auth/login"
-          }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const json = pm.response.json();",
+                  "  const token = json?.data?.accessToken || json?.accessToken;",
+                  "  const rt = json?.data?.refreshToken || json?.refreshToken;",
+                  "  if (token) pm.collectionVariables.set('accessToken', token);",
+                  "  if (rt) pm.collectionVariables.set('refreshToken', rt);",
+                  "} catch (e) {}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "POST /api/v1/auth/refresh-token",
@@ -77,7 +104,10 @@
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": { "mode": "raw", "raw": "{\n  \"token\": \"PASTE_TOKEN_FROM_EMAIL\",\n  \"newPassword\": \"Password123!\",\n  \"confirmPassword\": \"Password123!\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"PASTE_TOKEN_FROM_EMAIL\",\n  \"newPassword\": \"Password123!\",\n  \"confirmPassword\": \"Password123!\"\n}"
+            },
             "url": "{{baseUrl}}/api/v1/auth/reset-password"
           }
         },
@@ -109,7 +139,10 @@
               { "key": "Authorization", "value": "Bearer {{accessToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmPassword\": \"NewPassword123!\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"Password123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmPassword\": \"NewPassword123!\"\n}"
+            },
             "url": "{{baseUrl}}/api/v1/auth/change-password"
           }
         },
@@ -129,7 +162,10 @@
               { "key": "Authorization", "value": "Bearer {{accessToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"fullName\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"phone\": \"+1234567890\"\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"phone\": \"+1234567890\"\n}"
+            },
             "url": "{{baseUrl}}/api/v1/auth/admin/users"
           }
         },
@@ -176,13 +212,15 @@
       "item": [
         {
           "name": "GET /api/v1/courses",
-          "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/courses" }
-        },
-        {
-          "name": "GET /api/v1/courses/:id (auth)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/courses"
+          }
+        },
+        {
+          "name": "GET /api/v1/courses/:id",
+          "request": {
+            "method": "GET",
             "url": "{{baseUrl}}/api/v1/courses/{{courseId}}"
           }
         },
@@ -194,7 +232,10 @@
               { "key": "Authorization", "value": "Bearer {{accessToken}}" },
               { "key": "Content-Type", "value": "application/json" }
             ],
-            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Course title\",\n  \"description\": \"A longer course description...\",\n  \"price\": 0\n}" },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Course title\",\n  \"description\": \"A longer course description...\",\n  \"price\": 0\n}"
+            },
             "url": "{{baseUrl}}/api/v1/courses"
           }
         },
@@ -215,7 +256,10 @@
           "request": {
             "method": "PATCH",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
-            "body": { "mode": "formdata", "formdata": [{ "key": "thumbnail", "type": "file", "src": "" }] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "thumbnail", "type": "file", "src": "" }]
+            },
             "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/thumbnail"
           }
         },
@@ -257,21 +301,35 @@
           }
         },
         {
-          "name": "POST /api/v1/courses/:courseId/content (admin, multipart)",
+          "name": "POST /api/v1/courses/:courseId/content/upload-pdf (admin, multipart)",
           "request": {
             "method": "POST",
             "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
             "body": {
               "mode": "formdata",
               "formdata": [
-                { "key": "file", "type": "file", "src": "" },
-                { "key": "title", "type": "text", "value": "Lesson 1" },
-                { "key": "type", "type": "text", "value": "video" },
+                { "key": "file", "type": "file", "src": "", "description": "PDF file (uploaded to Cloudinary)" },
+                { "key": "title", "type": "text", "value": "Lesson 1 PDF" },
                 { "key": "order", "type": "text", "value": "0" },
-                { "key": "duration", "type": "text", "value": "0" }
+                { "key": "type", "type": "text", "value": "pdf" }
               ]
             },
-            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/content"
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/content/upload-pdf"
+          }
+        },
+        {
+          "name": "POST /api/v1/courses/:courseId/content/drive-link (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Lecture 1\",\n  \"type\": \"video\",\n  \"fileUrl\": \"https://drive.google.com/file/d/EXAMPLE/view\",\n  \"order\": 0,\n  \"duration\": 3600\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/courses/{{courseId}}/content/drive-link"
           }
         },
         {
@@ -299,42 +357,461 @@
     {
       "name": "Cases",
       "item": [
-        { "name": "GET /api/v1/cases/specialties (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/specialties" } },
-        { "name": "GET /api/v1/cases (auth, query)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/cases?page=1&limit=12", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "12" }, { "key": "specialty", "value": "", "disabled": true }, { "key": "difficulty", "value": "", "disabled": true }, { "key": "search", "value": "", "disabled": true } ] } } },
-        { "name": "GET /api/v1/cases/specialty/:specialty (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/cases/specialty/Elderly Medicine/ Palliative?page=1&limit=12", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "12" } ] } } },
-        { "name": "GET /api/v1/cases/:id (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/{{caseId}}" } },
-        { "name": "GET /api/v1/cases/admin/all (admin, query)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/cases/admin/all?page=1&limit=12", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "12" }, { "key": "specialty", "value": "", "disabled": true }, { "key": "difficulty", "value": "", "disabled": true }, { "key": "search", "value": "", "disabled": true } ] } } },
-        { "name": "GET /api/v1/cases/admin/:id (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/admin/{{caseId}}" } },
-        { "name": "POST /api/v1/cases - JSON body (admin)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"stationNumber\": 1,\n  \"title\": \"Case title\",\n  \"consultationType\": \"Consultation\",\n  \"specialty\": \"Elderly Medicine/ Palliative\",\n  \"difficulty\": \"medium\",\n  \"isPublished\": false,\n  \"patientData\": {\n    \"name\": \"Patient Name\",\n    \"age\": 30,\n    \"gender\": \"male\",\n    \"pastMedicalHistory\": [],\n    \"drugHistory\": [],\n    \"recentConsultation\": {\n      \"seenBy\": \"Clinician\",\n      \"role\": \"Doctor\",\n      \"notes\": \"Consultation notes\"\n    },\n    \"bloodTestResults\": {\n      \"summary\": \"Summary\",\n      \"rows\": []\n    }\n  },\n  \"patientStory\": \"Story\",\n  \"markingScheme\": [{\"heading\": \"Section\", \"points\": [\"Point 1\"]}],\n  \"exampleExplanation\": \"Explanation\",\n  \"management\": [\"Step 1\"],\n  \"learningPoints\": \"Learning\",\n  \"furtherResources\": [{\"title\": \"NICE CKS\", \"url\": \"https://cks.nice.org.uk\"}]\n}" }, "url": "{{baseUrl}}/api/v1/cases" } },
-        { "name": "POST /api/v1/cases - multipart with images (admin)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "formdata", "formdata": [ { "key": "payload", "type": "text", "value": "{\n  \"stationNumber\": 1,\n  \"title\": \"Case title\",\n  \"consultationType\": \"Consultation\",\n  \"specialty\": \"Elderly Medicine/ Palliative\",\n  \"difficulty\": \"medium\",\n  \"isPublished\": false,\n  \"patientData\": { \"name\": \"Patient Name\", \"age\": 30, \"gender\": \"male\", \"pastMedicalHistory\": [], \"drugHistory\": [], \"recentConsultation\": { \"seenBy\": \"Clinician\", \"role\": \"Doctor\", \"notes\": \"Consultation notes\" }, \"bloodTestResults\": { \"summary\": \"Summary\", \"rows\": [] } },\n  \"patientStory\": \"Story\",\n  \"markingScheme\": [{\"heading\": \"Section\", \"points\": [\"Point 1\"]}],\n  \"exampleExplanation\": \"Explanation\",\n  \"management\": [\"Step 1\"],\n  \"learningPoints\": \"Learning\",\n  \"furtherResources\": [{\"title\": \"NICE CKS\", \"url\": \"https://cks.nice.org.uk\"}]\n}" }, { "key": "image", "type": "file", "src": "", "description": "Cover image (jpg/png/webp, max 5 MB)" }, { "key": "stationImage", "type": "file", "src": "", "description": "Station image (jpg/png/webp, max 5 MB)" } ] }, "url": "{{baseUrl}}/api/v1/cases" } },
-        { "name": "PATCH /api/v1/cases/:id (admin)", "request": { "method": "PATCH", "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated case title\"\n}" }, "url": "{{baseUrl}}/api/v1/cases/{{caseId}}" } },
-        { "name": "PATCH /api/v1/cases/:id/image (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "formdata", "formdata": [ { "key": "image", "type": "file", "src": "", "description": "Cover image (jpg/png/webp, max 5 MB)" } ] }, "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/image" } },
-        { "name": "PATCH /api/v1/cases/:id/station-image (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "body": { "mode": "formdata", "formdata": [ { "key": "stationImage", "type": "file", "src": "", "description": "Station image (jpg/png/webp, max 5 MB)" } ] }, "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/station-image" } },
-        { "name": "PATCH /api/v1/cases/:id/publish (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/publish" } },
-        { "name": "POST /api/v1/cases/:id/duplicate (admin)", "request": { "method": "POST", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/duplicate" } },
-        { "name": "DELETE /api/v1/cases/:id (admin)", "request": { "method": "DELETE", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/cases/{{caseId}}" } }
+        {
+          "name": "GET /api/v1/cases/specialties (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/cases/specialties"
+          }
+        },
+        {
+          "name": "GET /api/v1/cases (auth, query)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cases?page=1&limit=12",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" },
+                { "key": "specialty", "value": "", "disabled": true },
+                { "key": "difficulty", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/cases/specialty/:specialty (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cases/specialty/Elderly Medicine/ Palliative?page=1&limit=12",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/cases/:id (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/cases/{{caseId}}"
+          }
+        },
+        {
+          "name": "GET /api/v1/cases/admin/all (admin, query)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/cases/admin/all?page=1&limit=12",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "12" },
+                { "key": "specialty", "value": "", "disabled": true },
+                { "key": "difficulty", "value": "", "disabled": true },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/cases/admin/:id (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/cases/admin/{{caseId}}"
+          }
+        },
+        {
+          "name": "POST /api/v1/cases — JSON body (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"stationNumber\": 1,\n  \"title\": \"Case title\",\n  \"consultationType\": \"Consultation\",\n  \"specialty\": \"Elderly Medicine/ Palliative\",\n  \"difficulty\": \"medium\",\n  \"isPublished\": false,\n  \"patientData\": {\n    \"name\": \"Patient Name\",\n    \"age\": 30,\n    \"gender\": \"male\",\n    \"pastMedicalHistory\": [],\n    \"drugHistory\": [],\n    \"recentConsultation\": {\n      \"seenBy\": \"Clinician\",\n      \"role\": \"Doctor\",\n      \"notes\": \"Consultation notes\"\n    },\n    \"bloodTestResults\": {\n      \"summary\": \"Summary\",\n      \"rows\": []\n    }\n  },\n  \"patientStory\": \"Story\",\n  \"markingScheme\": [{\"heading\": \"Section\", \"points\": [\"Point 1\"]}],\n  \"exampleExplanation\": \"Explanation\",\n  \"management\": [\"Step 1\"],\n  \"learningPoints\": \"Learning\",\n  \"furtherResources\": [{\"title\": \"NICE CKS\", \"url\": \"https://cks.nice.org.uk\"}]\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/cases"
+          }
+        },
+        {
+          "name": "POST /api/v1/cases — multipart with images (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "payload",
+                  "type": "text",
+                  "value": "{\n  \"stationNumber\": 1,\n  \"title\": \"Case title\",\n  \"consultationType\": \"Consultation\",\n  \"specialty\": \"Elderly Medicine/ Palliative\",\n  \"difficulty\": \"medium\",\n  \"isPublished\": false,\n  \"patientData\": {\n    \"name\": \"Patient Name\",\n    \"age\": 30,\n    \"gender\": \"male\",\n    \"pastMedicalHistory\": [],\n    \"drugHistory\": [],\n    \"recentConsultation\": {\n      \"seenBy\": \"Clinician\",\n      \"role\": \"Doctor\",\n      \"notes\": \"Consultation notes\"\n    },\n    \"bloodTestResults\": {\n      \"summary\": \"Summary\",\n      \"rows\": []\n    }\n  },\n  \"patientStory\": \"Story\",\n  \"markingScheme\": [{\"heading\": \"Section\", \"points\": [\"Point 1\"]}],\n  \"exampleExplanation\": \"Explanation\",\n  \"management\": [\"Step 1\"],\n  \"learningPoints\": \"Learning\",\n  \"furtherResources\": [{\"title\": \"NICE CKS\", \"url\": \"https://cks.nice.org.uk\"}]\n}"
+                },
+                { "key": "image", "type": "file", "src": "", "description": "Cover image (jpg/png/webp, max 5 MB)" },
+                { "key": "stationImage", "type": "file", "src": "", "description": "Station image (jpg/png/webp, max 5 MB)" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/v1/cases"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/cases/:id (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Updated case title\"\n}" },
+            "url": "{{baseUrl}}/api/v1/cases/{{caseId}}"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/cases/:id/image (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "image", "type": "file", "src": "", "description": "Cover image (jpg/png/webp, max 5 MB)" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/image"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/cases/:id/station-image (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "stationImage", "type": "file", "src": "", "description": "Station image (jpg/png/webp, max 5 MB)" }
+              ]
+            },
+            "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/station-image"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/cases/:id/publish (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/publish"
+          }
+        },
+        {
+          "name": "POST /api/v1/cases/:id/duplicate (admin)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/cases/{{caseId}}/duplicate"
+          }
+        },
+        {
+          "name": "DELETE /api/v1/cases/:id (admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/cases/{{caseId}}"
+          }
+        }
       ]
     },
     {
       "name": "Enrollments",
       "item": [
-        { "name": "GET /api/v1/enrollments/me (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/enrollments/me" } },
-        { "name": "GET /api/v1/enrollments/check/:courseId (auth)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/enrollments/check/{{courseId}}" } },
-        { "name": "GET /api/v1/enrollments (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/enrollments?page=1&limit=20", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "20" } ] } } },
-        { "name": "GET /api/v1/enrollments/course/:courseId (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/enrollments/course/{{courseId}}?page=1&limit=20", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "20" } ] } } },
-        { "name": "GET /api/v1/enrollments/user/:userId (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/enrollments/user/{{userId}}" } },
-        { "name": "POST /api/v1/enrollments/manual (admin)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"courseId\": \"{{courseId}}\"\n}" }, "url": "{{baseUrl}}/api/v1/enrollments/manual" } },
-        { "name": "POST /api/v1/enrollments/revoke (admin)", "request": { "method": "POST", "header": [ { "key": "Authorization", "value": "Bearer {{accessToken}}" }, { "key": "Content-Type", "value": "application/json" } ], "body": { "mode": "raw", "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"courseId\": \"{{courseId}}\"\n}" }, "url": "{{baseUrl}}/api/v1/enrollments/revoke" } },
-        { "name": "PATCH /api/v1/enrollments/:enrollmentId/restore (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/enrollments/{{enrollmentId}}/restore" } }
+        {
+          "name": "GET /api/v1/enrollments/me (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/enrollments/me"
+          }
+        },
+        {
+          "name": "GET /api/v1/enrollments/check/:courseId (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/enrollments/check/{{courseId}}"
+          }
+        },
+        {
+          "name": "GET /api/v1/enrollments (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/enrollments?page=1&limit=20",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/enrollments/course/:courseId (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/enrollments/course/{{courseId}}?page=1&limit=20",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/enrollments/user/:userId (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/enrollments/user/{{userId}}"
+          }
+        },
+        {
+          "name": "POST /api/v1/enrollments/manual (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"courseId\": \"{{courseId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/enrollments/manual"
+          }
+        },
+        {
+          "name": "POST /api/v1/enrollments/revoke (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{userId}}\",\n  \"courseId\": \"{{courseId}}\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/enrollments/revoke"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/enrollments/:enrollmentId/restore (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/enrollments/{{enrollmentId}}/restore"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "GET /api/v1/payments/plans",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/payments/plans"
+          }
+        },
+        {
+          "name": "POST /api/v1/payments/checkout — Case Bank (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"case_bank\",\n  \"interval\": \"monthly\",\n  \"successUrl\": \"http://localhost:3000/payment/success\",\n  \"cancelUrl\": \"http://localhost:3000/payment/cancel\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/payments/checkout"
+          }
+        },
+        {
+          "name": "POST /api/v1/payments/checkout — Course PDF (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"course\",\n  \"tier\": \"pdf_only\",\n  \"interval\": \"monthly\",\n  \"courseId\": \"{{courseId}}\",\n  \"successUrl\": \"http://localhost:3000/payment/success\",\n  \"cancelUrl\": \"http://localhost:3000/payment/cancel\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/payments/checkout"
+          }
+        },
+        {
+          "name": "POST /api/v1/payments/checkout — Course PDF + Drive (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"course\",\n  \"tier\": \"pdf_drive\",\n  \"interval\": \"quarterly\",\n  \"courseId\": \"{{courseId}}\",\n  \"successUrl\": \"http://localhost:3000/payment/success\",\n  \"cancelUrl\": \"http://localhost:3000/payment/cancel\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/payments/checkout"
+          }
+        },
+        {
+          "name": "POST /api/v1/payments/billing-portal (auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"returnUrl\": \"http://localhost:3000/account/billing\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/payments/billing-portal"
+          }
+        },
+        {
+          "name": "GET /api/v1/payments/me (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/payments/me?page=1&limit=20",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "POST /api/v1/payments/webhook (Stripe)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Stripe-Signature", "value": "PASTE_STRIPE_SIGNATURE", "description": "Required — use Stripe CLI: stripe listen --forward-to localhost:5000/api/v1/payments/webhook" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_example\",\n  \"object\": \"event\",\n  \"type\": \"checkout.session.completed\"\n}"
+            },
+            "url": "{{baseUrl}}/api/v1/payments/webhook",
+            "description": "Stripe sends signed webhooks with a raw JSON body. For local testing, use the Stripe CLI to forward events rather than calling this request manually."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscriptions",
+      "item": [
+        {
+          "name": "GET /api/v1/subscriptions/plans",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/subscriptions/plans"
+          }
+        },
+        {
+          "name": "GET /api/v1/subscriptions/me (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/subscriptions/me"
+          }
+        },
+        {
+          "name": "GET /api/v1/subscriptions/case-bank/status (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/subscriptions/case-bank/status"
+          }
+        },
+        {
+          "name": "GET /api/v1/subscriptions/course/:courseId/status (auth)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/subscriptions/course/{{courseId}}/status"
+          }
+        },
+        {
+          "name": "GET /api/v1/subscriptions/subscribers (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/subscriptions/subscribers"
+          }
+        }
       ]
     },
     {
       "name": "Admin",
       "item": [
-        { "name": "GET /api/v1/admin/dashboard (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/admin/dashboard" } },
-        { "name": "GET /api/v1/admin/users (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": { "raw": "{{baseUrl}}/api/v1/admin/users?page=1&limit=20", "query": [ { "key": "page", "value": "1" }, { "key": "limit", "value": "20" } ] } } },
-        { "name": "GET /api/v1/admin/users/:userId (admin)", "request": { "method": "GET", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/admin/users/{{userId}}" } },
-        { "name": "PATCH /api/v1/admin/users/:userId/toggle-status (admin)", "request": { "method": "PATCH", "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }], "url": "{{baseUrl}}/api/v1/admin/users/{{userId}}/toggle-status" } }
+        {
+          "name": "GET /api/v1/admin/dashboard (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/admin/dashboard"
+          }
+        },
+        {
+          "name": "GET /api/v1/admin/users (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/admin/users?page=1&limit=20",
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/admin/users/:userId (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/admin/users/{{userId}}"
+          }
+        },
+        {
+          "name": "PATCH /api/v1/admin/users/:userId/toggle-status (admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/admin/users/{{userId}}/toggle-status"
+          }
+        }
       ]
     }
   ]

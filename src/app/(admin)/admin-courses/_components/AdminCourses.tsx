@@ -1,68 +1,68 @@
 "use client";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import { StatVideoIcon } from "../../admin-dashboard/_components/StatIcons";
 import Link from "next/link";
+import type { Course } from "@/types/api";
+import { useAdminList } from "../../_components/AdminListContext";
+import Pagination from "../../_components/Pagination";
+import { togglePublishCourseAction } from "../actions";
 
-type CourseTag = "Course" | "Session";
+const PAGE_SIZE = 6;
 
-type AdminCourse = {
-  id: number;
-  tag: CourseTag;
-  title: string;
-  description: string;
-  price: string;
-  img: string;
-};
+const FILTERS = ["All", "Published", "Draft"] as const;
+type Filter = (typeof FILTERS)[number];
 
-const courses: AdminCourse[] = [
-  {
-    id: 1,
-    tag: "Course",
-    title: "Native MRCGP SCA General Mock Experience – 100+ Cases",
-    description:
-      "Practice full case stations, observe in real time and get structured feedback.",
-    price: "£289.00",
-    img: "/Images/coursesImage.png",
-  },
-  {
-    id: 2,
-    tag: "Course",
-    title: "Native MRCGP SCA Extensive Course",
-    description:
-      "Our Flagship Extensive Course is a 4-5 week intensive revision programme.",
-    price: "£199.00",
-    img: "/Images/coursesImage.png",
-  },
-  {
-    id: 3,
-    tag: "Session",
-    title: "1-on-1 Sessions with Dr Native (6 Cases)",
-    description:
-      "Our Flagship Extensive Course is a 4-5 week intensive revision programme.",
-    price: "£300.00",
-    img: "/Images/coursesImage.png",
-  },
-  {
-    id: 4,
-    tag: "Session",
-    title: "1-on-1 Sessions with Dr Native (12 Cases)",
-    description:
-      "Our Flagship Extensive Course is a 4-5 week intensive revision programme.",
-    price: "£500.00",
-    img: "/Images/coursesImage.png",
-  },
-];
+function formatPrice(price?: number): string {
+  if (price == null) return "—";
+  return `£${price.toLocaleString("en-GB", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
 
-const FILTERS = ["All", "Course", "Session"];
+export default function AdminCourses({ courses }: { courses: Course[] }) {
+  const [filter, setFilter] = useState<Filter>("All");
+  const { query, page, setPage } = useAdminList();
+  const router = useRouter();
+  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [, startTransition] = useTransition();
 
-export default function AdminCourses() {
-  const [filter, setFilter] = useState("All");
+  const togglePublish = (id: string) => {
+    setPendingId(id);
+    startTransition(async () => {
+      const res = await togglePublishCourseAction(id);
+      if (res.ok) toast.success(res.message ?? "Updated");
+      else toast.error(res.message ?? "Something went wrong");
+      setPendingId(null);
+      router.refresh();
+    });
+  };
 
-  const rows = courses.filter((c) =>
-    filter === "All" ? true : c.tag === filter,
-  );
+  const q = query.trim().toLowerCase();
+  const filtered = courses.filter((c) => {
+    const byFilter =
+      filter === "All"
+        ? true
+        : filter === "Published"
+          ? c.isPublished
+          : !c.isPublished;
+    if (!byFilter) return false;
+    if (!q) return true;
+    return [c.title, c.description].some((f) => f?.toLowerCase().includes(q));
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const current = Math.min(page, totalPages);
+  const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+
+  const selectFilter = (f: Filter) => {
+    setFilter(f);
+    setPage(1);
+  };
 
   return (
     <section className="px-4 sm:px-6 lg:px-10 mt-8 mb-10">
@@ -71,7 +71,7 @@ export default function AdminCourses() {
         <div className="relative w-[190px]">
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value)}
+            onChange={(e) => selectFilter(e.target.value as Filter)}
             className="appearance-none w-full h-10 rounded-[4px] border-[0.5px] border-black px-4 py-2 pr-10 text-sm text-black bg-white cursor-pointer outline-none"
           >
             {FILTERS.map((f) => (
@@ -98,48 +98,75 @@ export default function AdminCourses() {
       </div>
 
       {/* Course cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mt-8">
-        {rows.map((course) => (
-          <div
-            key={course.id}
-            className="rounded-[16px] overflow-hidden courseBorder bg-white flex flex-col"
-          >
-            <aside className="relative w-full min-h-44 sm:min-h-48">
-              <Image
-                src={course.img}
-                alt={`image of ${course.title}`}
-                fill
-                className="object-cover object-center"
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
-              <span className="absolute top-3 left-3 rounded-[100px] py-1.5 px-3 bg-[#00000080] border-[0.2px] border-white/80 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
-                {course.tag}
-              </span>
-            </aside>
+      {rows.length === 0 ? (
+        <p className="text-center text-subtle-text py-16">
+          {q || filter !== "All"
+            ? "No courses match your search."
+            : "No courses yet. Create one to get started."}
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mt-8">
+          {rows.map((course) => (
+            <div
+              key={course._id}
+              className="rounded-[16px] overflow-hidden courseBorder bg-white flex flex-col"
+            >
+              <aside className="relative w-full min-h-44 sm:min-h-48">
+                <Image
+                  src={course.thumbnailUrl || "/Images/coursesImage.png"}
+                  alt={`image of ${course.title}`}
+                  fill
+                  className="object-cover object-center"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+                <span className="absolute top-3 left-3 rounded-[100px] py-1.5 px-3 bg-[#00000080] border-[0.2px] border-white/80 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
+                  {course.isPublished ? "Published" : "Draft"}
+                </span>
+              </aside>
 
-            <aside className="px-4 sm:px-5 py-4 flex flex-col gap-2 flex-1">
-              <p className="text-base sm:text-lg font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
-                {course.title}
-              </p>
-              <p className="text-xs sm:text-sm leading-[150%] text-subtle-text line-clamp-2">
-                {course.description}
-              </p>
-
-              <div className="mt-auto pt-3 flex items-center justify-between">
-                <p className="text-base font-semibold text-black-others">
-                  {course.price}
+              <aside className="px-4 sm:px-5 py-4 flex flex-col gap-2 flex-1">
+                <p className="text-base sm:text-lg font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
+                  {course.title}
                 </p>
-                <button
-                  type="button"
-                  className="rounded-[8px] bg-black text-white text-sm font-medium px-5 py-2 cursor-pointer hover:bg-black/85"
-                >
-                  Edit
-                </button>
-              </div>
-            </aside>
-          </div>
-        ))}
-      </div>
+                <p className="text-xs sm:text-sm leading-[150%] text-subtle-text line-clamp-2">
+                  {course.description}
+                </p>
+
+                <div className="mt-auto pt-3 flex items-center justify-between gap-2">
+                  <p className="text-base font-semibold text-black-others">
+                    {formatPrice(course.price)}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => togglePublish(course._id)}
+                      disabled={pendingId === course._id}
+                      className={`flex items-center gap-1.5 rounded-[8px] text-sm font-medium px-4 py-2 cursor-pointer disabled:opacity-60 ${
+                        course.isPublished
+                          ? "border border-gray-1 text-subtle-text hover:bg-gray-100"
+                          : "border border-primary-100 text-primary-100 hover:bg-primary-10"
+                      }`}
+                    >
+                      {pendingId === course._id && (
+                        <Loader2 size={14} className="animate-spin" />
+                      )}
+                      {course.isPublished ? "Unpublish" : "Publish"}
+                    </button>
+                    <Link
+                      href={`/admin-courses/upload-course?id=${course._id}`}
+                      className="rounded-[8px] bg-black text-white text-sm font-medium px-5 py-2 cursor-pointer hover:bg-black/85"
+                    >
+                      Edit
+                    </Link>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <Pagination totalPages={totalPages} />
     </section>
   );
 }

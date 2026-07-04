@@ -23,7 +23,7 @@ export default async function AdminLayout({
   const user = await loadUser();
   if (!user) redirect("/login");
   // Authenticated but not an admin → send back to the member area.
-  if (user.role !== "user") redirect("/dashboard");
+  if (user.role !== "admin") redirect("/dashboard");
 
   return <AdminShell user={user}>{children}</AdminShell>;
 }

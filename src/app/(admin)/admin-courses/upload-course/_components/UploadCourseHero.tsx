@@ -2,13 +2,19 @@ import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import BackIcon from "@/app/(marketplace)/full-cases/[cases]/_components/BackSvg";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 
-export default function UploadCourseHero() {
+export default function UploadCourseHero({
+  mode = "add",
+}: {
+  mode?: "add" | "edit";
+}) {
   return (
     <BannerBg color="#2D135C">
       <div className="absolute left-10">
         <BackIcon />
       </div>
-      <BannerTitleCase text="Upload New Course" />
+      <BannerTitleCase
+        text={mode === "edit" ? "Edit Course" : "Upload New Course"}
+      />
     </BannerBg>
   );
 }

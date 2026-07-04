@@ -12,26 +12,32 @@ update the code, then update this file.
   (exported NativeMed Postman collection). It is BROADER than the Cases doc — trust it + the live API
   over any prose doc. The collection has request shapes but NOT response schemas; confirm response
   shapes against the live API when integrating a new endpoint.
-- The backend has these modules (verified 2026-06-20). Only **Cases (read)** + **auth login/register**
-  are integrated in the frontend so far; everything else exists on the backend but is NOT yet wired.
+- The backend modules (Payments + Subscriptions added 2026-06-25). **Integrated so far:** Cases
+  (user read + admin list/create/edit), Auth (login/register/logout/me + token refresh), and the admin
+  **dashboard stats** + **users list** reads. Everything else exists on the backend but is NOT yet wired.
 
-| Module | Key endpoints | Auth | Notes |
-|---|---|---|---|
-| Health | `GET /health` | none | |
-| Auth | `POST /auth/{register,login,refresh-token,logout,forgot-password,reset-password,change-password,logout-all}`, `GET/PATCH /auth/me` | mixed | register/login/refresh/forgot/reset are public; me/change-password/logout-all need token |
-| Auth admin | `POST/GET /auth/admin/users`, `GET/PATCH /auth/admin/users/:userId`, `PATCH /auth/admin/users/:userId/toggle-status` | admin | user management (note: also duplicated under `/admin/users`) |
-| Courses | `GET /courses` (PUBLIC, returns `data: []` plain array — NOT paginated), `GET /courses/:id` (auth), `POST/PATCH/DELETE /courses/:id` (admin), `PATCH /courses/:id/{thumbnail,publish}` (admin) | mixed | `POST` body: `{ title, description, price }`. thumbnail = multipart field `thumbnail`. |
-| Course Content | `GET /courses/:courseId/content[/:id]` (auth), `POST` (admin, multipart: `file,title,type,order,duration`), `PATCH/DELETE .../content/:id` (admin) | mixed | lesson `type` e.g. `"video"` |
-| Cases | see §4 | mixed | only module with a written integration doc + frontend integration |
-| Enrollments | `GET /enrollments/me` (auth, `data: []` array), `GET /enrollments/check/:courseId` (auth), `GET /enrollments` + `/course/:courseId` + `/user/:userId` (admin), `POST /enrollments/{manual,revoke}` (admin, `{ userId, courseId }`), `PATCH /enrollments/:id/restore` (admin) | mixed | course access grants; likely backs "Subscriptions"/"My Courses" |
-| Admin | `GET /admin/dashboard`, `GET /admin/users[/:userId]`, `PATCH /admin/users/:userId/toggle-status` | admin | dashboard stats + user mgmt |
+| Module         | Key endpoints                                                                                                                                                                                                                                                                | Auth  | Notes                                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------- |
+| Health         | `GET /health`                                                                                                                                                                                                                                                                | none  |                                                                                          |
+| Auth           | `POST /auth/{register,login,refresh-token,logout,forgot-password,reset-password,change-password,logout-all}`, `GET/PATCH /auth/me`                                                                                                                                           | mixed | register/login/refresh/forgot/reset are public; me/change-password/logout-all need token |
+| Auth admin     | `POST/GET /auth/admin/users`, `GET/PATCH /auth/admin/users/:userId`, `PATCH /auth/admin/users/:userId/toggle-status`                                                                                                                                                         | admin | user management (note: also duplicated under `/admin/users`)                             |
+| Courses        | `GET /courses` (PUBLIC, returns `data: []` plain array — NOT paginated), `GET /courses/:id` (auth), `POST/PATCH/DELETE /courses/:id` (admin), `PATCH /courses/:id/{thumbnail,publish}` (admin)                                                                               | mixed | `POST` body: `{ title, description, price }`. thumbnail = multipart field `thumbnail`.   |
+| Course Content | `GET /courses/:courseId/content[/:id]` (auth); **two create endpoints** — `POST .../content/upload-pdf` (admin, multipart: `file,title,order,type=pdf`, Cloudinary) and `POST .../content/drive-link` (admin, JSON: `{title,type,fileUrl,order,duration}`); `PATCH/DELETE .../content/:id` (admin)                                                                                | mixed | PDF lessons are uploaded; video lessons are Google-Drive links. lesson `type` e.g. `"video"`/`"pdf"` |
+| Cases          | see §4                                                                                                                                                                                                                                                                       | mixed | only module with a written integration doc + frontend integration                        |
+| Enrollments    | `GET /enrollments/me` (auth, `data: []` array), `GET /enrollments/check/:courseId` (auth), `GET /enrollments` + `/course/:courseId` + `/user/:userId` (admin), `POST /enrollments/{manual,revoke}` (admin, `{ userId, courseId }`), `PATCH /enrollments/:id/restore` (admin) | mixed | course access grants; likely backs "Subscriptions"/"My Courses"                          |
+| Admin          | `GET /admin/dashboard`, `GET /admin/users[/:userId]`, `PATCH /admin/users/:userId/toggle-status`                                                                                                                                                                             | admin | dashboard stats + user mgmt                                                              |
+| Payments       | `GET /payments/plans` (public), `POST /payments/checkout` (auth; `{ type:"case_bank"\|"course", interval, tier?, courseId?, successUrl, cancelUrl }`), `POST /payments/billing-portal` (auth), `GET /payments/me` (auth, paginated), `POST /payments/webhook` (Stripe, raw body + `Stripe-Signature`)                                                                                | mixed | **Stripe** checkout. `type:"case_bank"` → Case Bank sub; `type:"course"` + `tier:"pdf_only"\|"pdf_drive"` → course. `interval`: `monthly`/`quarterly`/… |
+| Subscriptions  | `GET /subscriptions/plans` (public), `GET /subscriptions/me` (auth), `GET /subscriptions/case-bank/status` (auth), `GET /subscriptions/course/:courseId/status` (auth), `GET /subscriptions/subscribers` (admin)                                                              | mixed | **`/subscriptions/subscribers` is the REAL source for the admin Subscribers screen** — NOT `/admin/users`. A user ≠ a subscriber. `/subscriptions/me` + `…/status` back the marketplace "My Subscriptions"/access gating |
 
-- Frontend pages currently **static / not connected**: Courses, Subscriptions, Dashboard, Settings.
-  Backend endpoints DO exist for Courses (Courses + Course Content + Enrollments) and Dashboard
-  (`/admin/dashboard`) — so these are integratable now; they were just absent from the Cases doc.
-- No per-module response-schema doc exists yet for Courses/Enrollments/Admin. As of 2026-06-20 the
-  Courses and Enrollments collections are empty in prod (`data: []`), so item shapes can't be inferred
-  from live data — ask backend for a Courses doc or a sample record before building those UIs.
+- Admin **Subscribers** screen is wired to `GET /subscriptions/subscribers` (plain array; a user is NOT
+  a subscriber — do NOT back it with `/admin/users`). Row shape: `{ name, email, subscriptionPlan,
+  subscribedTo, expiryDate, status }`. Admin **casebank** + **courses** lists and the admin **dashboard**
+  stats are also wired; the dashboard's **Recent Subscribers** shows the top 5 from
+  `/subscriptions/subscribers`. Still **static / mock**: marketplace Courses/Subscriptions/Dashboard/Settings.
+- No per-module response-schema doc exists yet for Courses/Enrollments/Payments/Subscriptions. As of
+  2026-06-25 the Courses/Enrollments collections are empty in prod (`data: []`), so item shapes can't
+  be inferred from live data — get a sample record (or a schema) before building those UIs. The
+  **Subscriptions/Payments** modules are brand new and unverified against live data.
 
 ## 1. Environment & API base URL
 
@@ -84,17 +90,17 @@ update the code, then update this file.
 
 ## 3. Common status codes
 
-| Status | Meaning |
-|--------|---------|
-| 200 | OK |
-| 201 | Created |
-| 400 | Validation / bad request (see `errors[]`) |
-| 401 | No/expired token → refresh then retry, else redirect to login |
-| 403 | Authenticated but not admin |
-| 404 | Not found |
-| 413 | Image > 5 MB |
-| 429 | Rate limit (200 req / 15 min on cases endpoints) |
-| 500 | Server error |
+| Status | Meaning                                                       |
+| ------ | ------------------------------------------------------------- |
+| 200    | OK                                                            |
+| 201    | Created                                                       |
+| 400    | Validation / bad request (see `errors[]`)                     |
+| 401    | No/expired token → refresh then retry, else redirect to login |
+| 403    | Authenticated but not admin                                   |
+| 404    | Not found                                                     |
+| 413    | Image > 5 MB                                                  |
+| 429    | Rate limit (200 req / 15 min on cases endpoints)              |
+| 500    | Server error                                                  |
 
 Validation `errors` shape: `[{ field: "patientData.age", message: "..." }]` (array of field/message).
 
@@ -103,6 +109,7 @@ Validation `errors` shape: `[{ field: "patientData.age", message: "..." }]` (arr
 ## 4. Cases module — backend contract
 
 Base: `/api/v1/cases`. Two visibility states:
+
 - **Draft** (`isPublished: false`) — admins only.
 - **Published** (`isPublished: true`) — all authenticated users.
 
@@ -145,6 +152,7 @@ Base: `/api/v1/cases`. Two visibility states:
 ```ts
 { items: CaseListItem[], total, page, limit, totalPages }
 ```
+
 Query params: `page` (default 1), `limit` (default 12, **max 50**), `specialty` (case-insensitive),
 `difficulty`, `search` (full-text on title, specialty, patient name, learning points).
 
@@ -186,35 +194,39 @@ BloodTestRow { test: string; result: string; referenceRange: string; isAbnormal:
 ### List projections (lightweight — heavy fields excluded)
 
 User list (`GET /cases`):
+
 ```ts
 { _id, stationNumber, title, specialty, difficulty, imageUrl?,
   patientData: { name, age, gender }, createdAt }
 ```
+
 Admin list (`GET /cases/admin/all`) = user list **plus**:
+
 ```ts
 { consultationType, isPublished, stationImageUrl?,
   createdBy: { _id, fullName, email }, updatedAt }
 ```
+
 Always fetch full detail with `GET /cases/:id` when opening a case — do not render full detail
 from the list.
 
 ### Endpoints
 
-| Method & path | Auth | Notes |
-|---|---|---|
-| `GET /cases/specialties` | user | Published-only specialties + counts: `[{ specialty, count }]`. Build the filter from this. |
-| `GET /cases` | user | Paginated published list. Params: `page, limit, specialty, difficulty, search`. |
-| `GET /cases/specialty/:specialty` | user | Same as `?specialty=` but path param (URL-encode it). |
-| `GET /cases/:id` | user | Full published case. 404 if not found or not published. |
-| `GET /cases/admin/all` | admin | All cases incl. drafts; `createdBy` populated. |
-| `GET /cases/admin/:id` | admin | Full case incl. drafts; `createdBy` populated. |
-| `POST /cases` | admin | Create (draft unless `isPublished:true`). JSON or multipart — see below. |
-| `PATCH /cases/:id` | admin | Partial update. **Arrays replace, not merge** (see notes). |
-| `PATCH /cases/:id/image` | admin | Multipart field `image`. Replaces cover; resized 800×450. Returns `{ imageUrl }`. |
-| `PATCH /cases/:id/station-image` | admin | Multipart field `stationImage`. Resized 800×600. Returns `{ stationImageUrl }`. |
-| `PATCH /cases/:id/publish` | admin | Toggle publish; no body. Returns `{ _id, title, isPublished }`. |
-| `POST /cases/:id/duplicate` | admin | Draft copy: `"Copy of …"`, next stationNumber, no images, `isPublished:false`. |
-| `DELETE /cases/:id` | admin | Hard delete (+ Cloudinary images). `data: null`. |
+| Method & path                     | Auth  | Notes                                                                                      |
+| --------------------------------- | ----- | ------------------------------------------------------------------------------------------ |
+| `GET /cases/specialties`          | user  | Published-only specialties + counts: `[{ specialty, count }]`. Build the filter from this. |
+| `GET /cases`                      | user  | Paginated published list. Params: `page, limit, specialty, difficulty, search`.            |
+| `GET /cases/specialty/:specialty` | user  | Same as `?specialty=` but path param (URL-encode it).                                      |
+| `GET /cases/:id`                  | user  | Full published case. 404 if not found or not published.                                    |
+| `GET /cases/admin/all`            | admin | All cases incl. drafts; `createdBy` populated.                                             |
+| `GET /cases/admin/:id`            | admin | Full case incl. drafts; `createdBy` populated.                                             |
+| `POST /cases`                     | admin | Create (draft unless `isPublished:true`). JSON or multipart — see below.                   |
+| `PATCH /cases/:id`                | admin | Partial update. **Arrays replace, not merge** (see notes).                                 |
+| `PATCH /cases/:id/image`          | admin | Multipart field `image`. Replaces cover; resized 800×450. Returns `{ imageUrl }`.          |
+| `PATCH /cases/:id/station-image`  | admin | Multipart field `stationImage`. Resized 800×600. Returns `{ stationImageUrl }`.            |
+| `PATCH /cases/:id/publish`        | admin | Toggle publish; no body. Returns `{ _id, title, isPublished }`.                            |
+| `POST /cases/:id/duplicate`       | admin | Draft copy: `"Copy of …"`, next stationNumber, no images, `isPublished:false`.             |
+| `DELETE /cases/:id`               | admin | Hard delete (+ Cloudinary images). `data: null`.                                           |
 
 ### POST /cases — create field rules
 
@@ -227,10 +239,11 @@ Optional w/ defaults: `consultationType` ("Consultation"), `difficulty` ("medium
 **Multipart create (with images):** send the **entire JSON body as a string** in a `payload`
 field, plus optional `image` and `stationImage` files (jpg/png/webp, ≤5 MB). Do NOT split JSON into
 separate form fields. Never set `Content-Type` manually with `FormData` (browser sets the boundary).
+
 ```js
 const fd = new FormData();
 fd.append("payload", JSON.stringify(caseData));
-fd.append("image", coverFile);          // optional
+fd.append("image", coverFile); // optional
 fd.append("stationImage", stationFile); // optional
 ```
 
@@ -252,27 +265,52 @@ fd.append("stationImage", stationFile); // optional
 
 ## 6. Where things live (current frontend)
 
-- Types: [src/types/api.ts](src/types/api.ts)
-- Cases service: [src/services/cases.service.ts](src/services/cases.service.ts) (user reads only so far)
+- Types: [src/types/api.ts](src/types/api.ts) (incl. `CaseInput` = POST/PATCH payload)
+- Cases service: [src/services/cases.service.ts](src/services/cases.service.ts) — user reads + admin
+  `getAdminCases`/`getAdminCase`/`createCase`/`updateCase`.
+- Admin service: [src/services/admin.service.ts](src/services/admin.service.ts) — `getAdminDashboard`/`getAdminUsers`.
 - Auth service: [src/services/auth.service.ts](src/services/auth.service.ts)
-- Case Bank (specialty grid): [src/app/(marketplace)/full-cases/](src/app/(marketplace)/full-cases/)
+- Case Bank (specialty grid): [src/app/(marketplace)/full-cases/](<src/app/(marketplace)/full-cases/>)
 - Slug helpers: [src/lib/slug.ts](src/lib/slug.ts) — `/full-cases/[slug]` resolves the slug back to a
   real specialty by fetching `GET /cases/specialties` and slug-matching the name (robust; keep this).
 
 ### Route groups & layouts
-- **`(marketplace)`** — member area. Layout [src/app/(marketplace)/layout.tsx](src/app/(marketplace)/layout.tsx)
+
+- **`(marketplace)`** — member area. Layout [src/app/(marketplace)/layout.tsx](<src/app/(marketplace)/layout.tsx>)
   loads the user via `GET /auth/me`, redirects to `/login` if unauthenticated, renders `MarketplaceShell`
   (responsive sidebar drawer + `NamedHeader`). Pages: `dashboard`, `courses`, `full-cases`,
   `subscriptions`, `settings`.
-- **`(admin)`** — admin area. Layout [src/app/(admin)/layout.tsx](src/app/(admin)/layout.tsx) loads the
+- **`(admin)`** — admin area. Layout [src/app/(admin)/layout.tsx](<src/app/(admin)/layout.tsx>) loads the
   user, redirects to `/login` if unauthenticated and to `/dashboard` if `role !== "admin"`, renders
   `AdminShell`. **Admin routes are flat `/admin-*`** (NOT nested under `/admin`): `admin-dashboard`,
   `admin-subscribers`, `admin-casebank` (+ `upload-casebank`), `admin-courses` (+ `upload-course`),
   `admin-settings`. The proxy matcher (§2) must include each.
-- **Login role redirect**: [login/actions.ts](src/app/(auth)/login/actions.ts) sends `admin` →
+- **Login role redirect**: [login/actions.ts](<src/app/(auth)/login/actions.ts>) sends `admin` →
   `/admin-dashboard`, everyone else → `/dashboard`. There is ONE shared login; no separate admin login.
 
+### Admin case create/edit pipeline (built 2026-06-25)
+
+- Multi-step form at [upload-casebank/](<src/app/(admin)/admin-casebank/upload-casebank/>) is now a real
+  **React-Hook-Form + zod** form (FormProvider; `useFieldArray` for blood-test rows, management steps,
+  resources). Schema + `CaseFormValues` + `emptyCaseValues`: [src/lib/schemas/case.ts](src/lib/schemas/case.ts).
+- **`patientStory` round-trip**: the backend stores the whole patient narrative (story + social history,
+  ideas, concerns, expectations, etc.) in ONE markdown field with bold headings. The form splits it into
+  separate inputs. [src/lib/case-form.ts](src/lib/case-form.ts): `composePatientStory` (on save) ↔
+  `parsePatientStory` (on load, **lossless** — unmatched prose falls into "Background Story"), plus
+  `caseToFormValues` (prefill) and `buildCasePayload` (→ `CaseInput`).
+- **Edit** = `/admin-casebank/upload-casebank?id=<caseId>` → page fetches `GET /cases/admin/:id`, prefills,
+  hero says "Edit Case", submit → `PATCH /cases/:id`. **Create** (no id) → `POST /cases`. Both go through
+  Server Action [upload-casebank/actions.ts](<src/app/(admin)/admin-casebank/upload-casebank/actions.ts>).
+- Marking scheme: backend `[{heading, points[]}]` ↔ two textareas (one bullet per line); extra sections
+  reflow into "Data Gathering". **Form has no inputs** for `consultationType`/`difficulty`/`isPublished`/
+  `recentConsultation.seenBy` — on edit these are preserved (PATCH merge / carried from the fetched case);
+  on create the backend defaults apply and `seenBy` is sent empty (add inputs if create rejects it).
+- Admin list search/pagination is **client-side** over the fetched set (`limit=50`), shared via
+  [(admin)/_components/AdminListContext.tsx](<src/app/(admin)/_components/AdminListContext.tsx>) +
+  `AdminSearchInput` + `Pagination`. Switch to server-side paging if a list exceeds 50.
+
 ### Shared infra
+
 - Toasts: **sonner**. `<Toaster position="top-center" richColors />` is mounted in
   [src/app/layout.tsx](src/app/layout.tsx); call `toast(...)` anywhere (client).
 - JWT helpers: [src/lib/jwt.ts](src/lib/jwt.ts) (Edge-safe `decodeJwt`/`isExpired`, used by the proxy).
@@ -288,11 +326,12 @@ All five type/data mismatches are now fixed (typecheck clean):
 3. ✅ `CaseDetail` now has `imageUrl?`, `stationImageUrl?`, `createdBy: string | UserRef`.
    (UI wiring of detail images is still TODO.)
 4. ✅ `RecentConsultation` now has `date?` and `role?`; `adaptCase` uses the real date
-   (formatted) and appends `role` to the consulter. ([adaptCase.ts](src/app/(marketplace)/full-cases/[cases]/[id]/_components/adaptCase.ts))
+   (formatted) and appends `role` to the consulter. ([adaptCase.ts](<src/app/(marketplace)/full-cases/[cases]/[id]/_components/adaptCase.ts>))
 5. ✅ `SPECIALTY_IMAGES` is now keyed by the exact backend specialty strings (lowercased), so all 12
-   specialties resolve to an image. ([src/app/(marketplace)/full-cases/_components/MockBankCards.tsx](src/app/(marketplace)/full-cases/_components/MockBankCards.tsx))
+   specialties resolve to an image. ([src/app/(marketplace)/full-cases/\_components/MockBankCards.tsx](<src/app/(marketplace)/full-cases/_components/MockBankCards.tsx>))
 
 Remaining TODO (not a discrepancy, an enhancement):
+
 - ✅ Detail page now renders `stationImageUrl` + `imageUrl` (when present) below Patient Data,
   inside `PatientDataSection` (shared by the "Doctor" and "Full Case" tabs). Cloudinary host is
   whitelisted in [next.config.ts](next.config.ts) (`images.remotePatterns` → `res.cloudinary.com`).
@@ -305,26 +344,36 @@ so the new image block is invisible until a case is created/updated with an imag
 ## 8. Current state / plan
 
 **Integrated (wired to live backend):**
+
 - User-facing case read flow (list → specialty → detail) — matches the backend.
 - Auth: login/register/logout, role-based redirect, and proactive token refresh + rotation in the proxy.
+- **Admin dashboard** stat cards (`/admin/dashboard`); admin **casebank** list (`/cases/admin/all`),
+  **courses** list (`/courses`), and **subscribers** (`/subscriptions/subscribers`) — each with
+  client-side search + pagination (§6). Subscribers service: [src/services/subscriptions.service.ts](src/services/subscriptions.service.ts).
+- **Admin case create + edit + validation** — full RHF/zod pipeline → `POST /cases` / `PATCH /cases/:id`
+  with prefill from `GET /cases/admin/:id` (§6 "Admin case create/edit pipeline").
+- **Admin course create + edit** — [upload-course/](<src/app/(admin)/admin-courses/upload-course/>) RHF/zod
+  form (title/price/description) → `POST /courses` / `PATCH /courses/:id`; prefill from `GET /courses/:id`
+  (edit link `?id=`); cover via `PATCH /courses/:id/thumbnail` (multipart — **verify live**). Category /
+  Payment Type / Material / Course Link are UI-only (no Course field; Material/Link are course *content*).
+  Schema + mapping: [src/lib/schemas/course.ts](src/lib/schemas/course.ts).
 
-**Built but UI-only / mock data (NOT yet wired to the backend):**
-- **Admin UI** scaffolding — all pages exist with the designed layouts and mock data:
-  dashboard (stats + creation buttons + recent subscribers), subscribers table (tabs/search),
-  casebank list (+ `Add Case` → multi-step upload form), courses grid (+ upload-course form).
-- **Marketplace dashboard** — welcome + stat cards + subscriptions/courses variant cards +
-  GoPremium/Calendar/UpcomingClasses (all mock).
-- **Upload forms**: course upload ([UploadCourseForm](src/app/(admin)/admin-courses/upload-course/_components/UploadCourseForm.tsx))
-  and the 4-step case upload ([upload-casebank/_components/](src/app/(admin)/admin-casebank/upload-casebank/_components/));
-  inputs carry backend-aligned `name`s but no submit handler yet.
-- Admin "Schedule Live Class" / "Create Video" buttons are stubs (toast "Coming soon" / placeholder).
+**Built but UI-only / mock data (NOT yet wired):**
+
+- **Marketplace** dashboard / courses / subscriptions / settings — all mock.
+- **Course upload form** ([UploadCourseForm](<src/app/(admin)/admin-courses/upload-course/_components/UploadCourseForm.tsx>))
+  — inputs carry backend-aligned names but no submit handler; needs `POST /courses` (+ thumbnail, content
+  via `upload-pdf`/`drive-link`).
+- Admin "Schedule Live Class" button is a stub (toast "Coming soon").
 
 **Next:**
-- Add admin **write services** to [src/services/cases.service.ts](src/services/cases.service.ts)
-  (none exist yet) and wire the case upload form → `POST /cases` (+ image multipart), publish,
-  duplicate, delete, edit. NOTE: the case form's step-2 has extra fields (Social History, Idea,
-  Concern, etc.) the backend model doesn't have — decide whether to compose into `patientStory` or
-  request backend fields.
-- Wire **Courses / Enrollments / Admin dashboard** once response schemas are available (see §0; those
-  collections are empty in prod so shapes can't be inferred from live data yet).
-- Needs an **admin account** (`role: "admin"`) to actually test the admin area end-to-end.
+
+- Wire marketplace **Subscriptions** → `GET /subscriptions/me` + `…/status`; **Payments** checkout
+  (`POST /payments/checkout`) for Case Bank / course tiers; optionally the dashboard **Recent
+  Subscribers** → `GET /subscriptions/subscribers` (top N). Probe each shape first (§0).
+- Wire case **publish/duplicate/delete** (`PATCH /cases/:id/publish`, `POST /cases/:id/duplicate`,
+  `DELETE /cases/:id`) and case **images** (`PATCH /cases/:id/{image,station-image}`, multipart).
+- Wire **Course Content** (`upload-pdf` / `drive-link`), course publish/delete; verify course **thumbnail**
+  upload against live (Node multipart). (Course create/edit is done.)
+- Case form gaps to revisit: add inputs for `consultationType`/`difficulty`/`isPublished`/`seenBy` if
+  needed (currently preserved-on-edit / backend-default-on-create — §6).

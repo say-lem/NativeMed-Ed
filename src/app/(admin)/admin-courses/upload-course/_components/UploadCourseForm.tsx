@@ -1,13 +1,24 @@
-import { ChevronDown, ChevronUp, Upload } from "lucide-react";
+"use client";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { ChevronDown, ChevronUp, Loader2, Upload } from "lucide-react";
+import {
+  CATEGORIES,
+  PAYMENT_TYPES,
+  courseSchema,
+  emptyCourseValues,
+  buildCoursePayload,
+  type CourseFormValues,
+} from "@/lib/schemas/course";
+import { saveCourseAction, uploadCourseThumbnailAction } from "../actions";
 
 const fieldClass =
   "w-full rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 text-sm text-black-others placeholder:text-[#B7B7B9] outline-none focus:border-primary-100";
 
-// Cover image — only image formats.
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
-
-// Course material — document formats (pdf, doc/docx, ppt/pptx). Both file
-// extensions and MIME types are listed for cross-browser coverage.
 const DOC_ACCEPT = [
   ".pdf",
   ".doc",
@@ -30,29 +41,30 @@ function Label({ text, required }: { text: string; required?: boolean }) {
   );
 }
 
-function SelectField({
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="text-xs text-[#E5102E] mt-1 leading-[150%]">{message}</p>;
+}
+
+// Category / Payment Type have no Course field — UI-only (not persisted).
+function PlainSelect({
   placeholder,
   options,
-  required,
 }: {
   placeholder: string;
   options: string[];
-  required?: boolean;
 }) {
   return (
     <div className="relative">
       <select
         defaultValue=""
-        required={required}
-        className={`${fieldClass} appearance-none pr-10 cursor-pointer ${
-          required ? "text-[#B7B7B9] valid:text-black-others" : "text-black-others"
-        }`}
+        className={`${fieldClass} appearance-none pr-10 cursor-pointer text-black-others`}
       >
         <option value="" disabled>
           {placeholder}
         </option>
         {options.map((o) => (
-          <option key={o} value={o} className="text-black-others">
+          <option key={o} value={o}>
             {o}
           </option>
         ))}
@@ -65,19 +77,90 @@ function SelectField({
   );
 }
 
-export default function UploadCourseForm() {
+export default function UploadCourseForm({
+  courseId,
+  initialValues,
+  initialThumbnail,
+}: {
+  courseId?: string;
+  initialValues?: CourseFormValues;
+  initialThumbnail?: string;
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | undefined>(
+    initialThumbnail,
+  );
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CourseFormValues>({
+    resolver: zodResolver(courseSchema),
+    defaultValues: initialValues ?? emptyCourseValues,
+  });
+
+  const onCover = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      setCoverFile(f);
+      setCoverPreview(URL.createObjectURL(f));
+    }
+  };
+
+  const save = (publish: boolean) =>
+    handleSubmit((values: CourseFormValues) => {
+      const payload = buildCoursePayload(values);
+      startTransition(async () => {
+        const result = await saveCourseAction({ id: courseId, payload, publish });
+        if (!result.ok) {
+          toast.error(result.message ?? "Something went wrong");
+          return;
+        }
+        const id = courseId ?? result.courseId;
+        if (coverFile && id) {
+          const fd = new FormData();
+          fd.append("thumbnail", coverFile);
+          const up = await uploadCourseThumbnailAction(id, fd);
+          if (!up.ok) toast.warning(up.message ?? "Cover upload failed");
+        }
+        toast.success(result.message ?? "Saved");
+        router.push("/admin-courses");
+        router.refresh();
+      });
+    });
+
   return (
     <section className="sm:px-6 lg:px-10 mb-10 px-4">
-      <form className="mt-14 p-6 border-[#B7B7B9] border-[0.5px] rounded-[12px] flex flex-col gap-6">
+      <form
+        onSubmit={(e) => e.preventDefault()}
+        className="mt-14 p-6 border-[#B7B7B9] border-[0.5px] rounded-[12px] flex flex-col gap-6"
+      >
         {/* Cover */}
         <div className="space-y-2">
           <Label text="Cover" />
-          <label className="flex flex-col items-center justify-center gap-2 rounded-[8px] border-[0.5px] border-[#B7B7B9] py-10 cursor-pointer text-center">
-            <span className="size-12 rounded-full bg-primary-10 flex items-center justify-center">
+          <label className="relative flex flex-col items-center justify-center gap-2 rounded-[8px] border-[0.5px] border-[#B7B7B9] py-10 min-h-[160px] cursor-pointer text-center overflow-hidden">
+            {coverPreview && (
+              <span
+                aria-hidden
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${coverPreview})` }}
+              />
+            )}
+            <span className="relative z-10 size-12 rounded-full bg-primary-10 flex items-center justify-center">
               <Upload className="size-5 text-primary-100" />
             </span>
-            <span className="text-sm text-subtle-text">Upload or drag image</span>
-            <input type="file" accept={IMAGE_ACCEPT} className="hidden" />
+            <span className="relative z-10 text-sm text-subtle-text bg-white/80 px-2 rounded">
+              {coverPreview ? "Change image" : "Upload or drag image"}
+            </span>
+            <input
+              type="file"
+              accept={IMAGE_ACCEPT}
+              className="hidden"
+              onChange={onCover}
+            />
           </label>
         </div>
 
@@ -89,34 +172,38 @@ export default function UploadCourseForm() {
               type="text"
               placeholder="Eg. Native MRCGP SCA Extensive Course"
               className={fieldClass}
+              {...register("title")}
             />
+            <FieldError message={errors.title?.message} />
           </div>
           <div className="space-y-2">
-            <Label text="Category" required />
-            <SelectField
-              placeholder="Select Category"
-              required
-              options={["Course", "Session", "Webinar"]}
-            />
+            <Label text="Category" />
+            <PlainSelect placeholder="Select Category" options={CATEGORIES} />
           </div>
         </div>
 
         {/* Price + Payment Type */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label text="Price" />
-            <input type="text" placeholder="£19.99" className={fieldClass} />
+            <Label text="Price" required />
+            <input
+              type="text"
+              placeholder="£19.99"
+              className={fieldClass}
+              {...register("price")}
+            />
+            <FieldError message={errors.price?.message} />
           </div>
           <div className="space-y-2">
             <Label text="Payment Type" />
-            <SelectField
+            <PlainSelect
               placeholder="Select Payment Type"
-              options={["One-time", "Subscription", "Free"]}
+              options={PAYMENT_TYPES}
             />
           </div>
         </div>
 
-        {/* Material */}
+        {/* Material (course content — not part of the course record) */}
         <div className="space-y-2">
           <Label text="Material" />
           <label className="flex items-center justify-between gap-3 rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 cursor-pointer">
@@ -140,12 +227,35 @@ export default function UploadCourseForm() {
 
         {/* Description */}
         <div className="space-y-2">
-          <Label text="Description" />
+          <Label text="Description" required />
           <textarea
             rows={4}
             placeholder="Enter short description of course"
             className={`${fieldClass} resize-none`}
+            {...register("description")}
           />
+          <FieldError message={errors.description?.message} />
+        </div>
+
+        <div className="flex flex-wrap justify-end gap-3 pt-2">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={save(false)}
+            className="flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold border border-primary-100 text-primary-100 cursor-pointer disabled:opacity-60"
+          >
+            {pending && <Loader2 size={16} className="animate-spin" />}
+            Save as Draft
+          </button>
+          <button
+            type="button"
+            disabled={pending}
+            onClick={save(true)}
+            className="flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold bg-primary-100 text-white cursor-pointer disabled:opacity-60"
+          >
+            {pending && <Loader2 size={16} className="animate-spin" />}
+            Publish Now
+          </button>
         </div>
       </form>
     </section>

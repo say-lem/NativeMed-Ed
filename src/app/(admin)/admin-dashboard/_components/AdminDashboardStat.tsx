@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { toast } from "sonner";
 import { StatFolderIcon, StatPlusIcon, StatVideoIcon } from "./StatIcons";
+import type { AdminDashboardStats } from "@/types/api";
 
 const btnClass =
   "rounded-[8px] border border-gray-1 py-3 px-4 cursor-pointer flex items-center gap-2 hover:bg-[#2D135C] group";
@@ -23,30 +24,22 @@ function BtnInner({
   );
 }
 
-const stats = [
-  {
-    name: "Users",
-    count: 800,
-  },
-  {
-    name: "Subscribers",
-    count: 481,
-  },
-  {
-    name: "Questions",
-    count: 3058,
-  },
-  {
-    name: "Courses",
-    count: 8,
-  },
-];
+export default function AdminDashboardStat({
+  stats,
+}: {
+  stats?: AdminDashboardStats;
+}) {
+  const cards = [
+    { name: "Users", count: stats?.totalUsers ?? 0 },
+    { name: "Subscribers", count: stats?.activeSubscriptions ?? 0 },
+    { name: "Enrollments", count: stats?.totalEnrollments ?? 0 },
+    { name: "Courses", count: stats?.totalCourses ?? 0 },
+  ];
 
-export default function AdminDashboardStat() {
   return (
     <section className="px-4 sm:px-6 lg:px-10 mt-8">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
+        {cards.map((stat) => (
           <div
             key={stat.name}
             className="border-[0.5px] border-[#E0E0E0] p-5 rounded-[8px] adminCardShadow flex flex-col gap-1.5"
@@ -55,7 +48,7 @@ export default function AdminDashboardStat() {
               {stat.name}
             </p>
             <h3 className="text-black text-4xl tracking-[-2%] font-semibold leading-[130%]">
-              {stat.count}
+              {stat.count.toLocaleString()}
             </h3>
           </div>
         ))}

@@ -3,65 +3,16 @@ import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { StatPlusIcon } from "../../admin-dashboard/_components/StatIcons";
 import Link from "next/link";
+import type { AdminCase } from "@/types/api";
+import { useAdminList } from "../../_components/AdminListContext";
+import Pagination from "../../_components/Pagination";
 
-type AdminCase = {
-  stationNumber: number;
-  title: string;
-  specialty: string;
-};
-
-const cases: AdminCase[] = [
-  {
-    stationNumber: 3,
-    title: "Chest Pain in 57-year-old",
-    specialty: "Cardiology",
-  },
-  {
-    stationNumber: 3,
-    title: "Chest Pain in 57-year-old",
-    specialty: "Respiratory",
-  },
-  {
-    stationNumber: 3,
-    title: "Chest Pain in 57-year-old",
-    specialty: "Cardiology",
-  },
-  {
-    stationNumber: 3,
-    title: "Chest Pain in 57-year-old",
-    specialty: "Respiratory",
-  },
-  {
-    stationNumber: 3,
-    title: "Chest Pain in 57-year-old",
-    specialty: "Cardiology",
-  },
-  {
-    stationNumber: 3,
-    title: "Chest Pain in 57-year-old",
-    specialty: "Cardiology",
-  },
-  {
-    stationNumber: 3,
-    title: "Chest Pain in 57-year-old",
-    specialty: "Cardiology",
-  },
-  {
-    stationNumber: 3,
-    title: "Chest Pain in 57-year-old",
-    specialty: "Cardiology",
-  },
-];
+const PAGE_SIZE = 8;
 
 const SPECIALTY_DOT: Record<string, string> = {
   Cardiology: "#E5187A",
   Respiratory: "#2F80ED",
 };
-
-const SPECIALTIES = [
-  "All",
-  ...Array.from(new Set(cases.map((c) => c.specialty))),
-];
 
 function EditIcon() {
   return (
@@ -100,12 +51,32 @@ function EditIcon() {
   );
 }
 
-export default function AdminCases() {
+export default function AdminCases({ cases }: { cases: AdminCase[] }) {
   const [specialty, setSpecialty] = useState("All");
+  const { query, page, setPage } = useAdminList();
 
-  const rows = cases.filter((c) =>
-    specialty === "All" ? true : c.specialty === specialty,
-  );
+  const specialties = [
+    "All",
+    ...Array.from(new Set(cases.map((c) => c.specialty))).sort(),
+  ];
+
+  const q = query.trim().toLowerCase();
+  const filtered = cases.filter((c) => {
+    if (specialty !== "All" && c.specialty !== specialty) return false;
+    if (!q) return true;
+    return [c.title, c.specialty, c.patientData?.name, `station ${c.stationNumber}`].some(
+      (f) => f?.toLowerCase().includes(q),
+    );
+  });
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const current = Math.min(page, totalPages);
+  const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+
+  const selectSpecialty = (s: string) => {
+    setSpecialty(s);
+    setPage(1);
+  };
 
   return (
     <section className="px-4 sm:px-6 lg:px-10 mt-8 mb-10">
@@ -114,10 +85,10 @@ export default function AdminCases() {
         <div className="relative w-[190px]">
           <select
             value={specialty}
-            onChange={(e) => setSpecialty(e.target.value)}
+            onChange={(e) => selectSpecialty(e.target.value)}
             className="appearance-none w-full h-10 rounded-[4px] border-[0.5px] border-black px-4 py-2 pr-10 text-sm text-black bg-white cursor-pointer outline-none"
           >
-            {SPECIALTIES.map((s) => (
+            {specialties.map((s) => (
               <option key={s} value={s}>
                 {s}
               </option>
@@ -142,39 +113,54 @@ export default function AdminCases() {
 
       {/* Cases list */}
       <div className="mt-6">
-        {rows.map((c, idx) => (
-          <div
-            key={`${c.stationNumber}-${idx}`}
-            className="flex items-center justify-between gap-4 border-b border-[#EDEDED] py-5"
-          >
-            <div className="space-y-2 min-w-0">
-              <p className="text-base leading-[120%] tracking-[-0.02em] text-black-others truncate">
-                <span className="font-semibold">
-                  Station {c.stationNumber}:
-                </span>{" "}
-                <span className="font-medium">{c.title}</span>
-              </p>
-              <p className="flex items-center gap-2 text-sm leading-[150%] text-black-others">
-                <span
-                  className="size-2 rounded-full shrink-0"
-                  style={{
-                    backgroundColor: SPECIALTY_DOT[c.specialty] ?? "#6F6F6F",
-                  }}
-                />
-                {c.specialty}
-              </p>
-            </div>
-
-            <button
-              type="button"
-              aria-label="Edit case"
-              className="shrink-0 p-1.5 rounded-md hover:bg-gray-100 cursor-pointer"
+        {rows.length === 0 ? (
+          <p className="text-center text-subtle-text py-16">
+            {q || specialty !== "All"
+              ? "No cases match your search."
+              : "No cases yet. Add one to get started."}
+          </p>
+        ) : (
+          rows.map((c) => (
+            <div
+              key={c._id}
+              className="flex items-center justify-between gap-4 border-b border-[#EDEDED] py-5"
             >
-              <EditIcon />
-            </button>
-          </div>
-        ))}
+              <div className="space-y-2 min-w-0">
+                <p className="text-base leading-[120%] tracking-[-0.02em] text-black-others truncate">
+                  <span className="font-semibold">
+                    Station {c.stationNumber}:
+                  </span>{" "}
+                  <span className="font-medium">{c.title}</span>
+                  {!c.isPublished && (
+                    <span className="ml-2 inline-block align-middle rounded-full bg-[#FFF4E5] text-[#B25E09] text-xs font-semibold px-2 py-px">
+                      Draft
+                    </span>
+                  )}
+                </p>
+                <p className="flex items-center gap-2 text-sm leading-[150%] text-black-others">
+                  <span
+                    className="size-2 rounded-full shrink-0"
+                    style={{
+                      backgroundColor: SPECIALTY_DOT[c.specialty] ?? "#6F6F6F",
+                    }}
+                  />
+                  {c.specialty}
+                </p>
+              </div>
+
+              <Link
+                href={`/admin-casebank/upload-casebank?id=${c._id}`}
+                aria-label={`Edit ${c.title}`}
+                className="shrink-0 p-1.5 rounded-md hover:bg-gray-100 cursor-pointer"
+              >
+                <EditIcon />
+              </Link>
+            </div>
+          ))
+        )}
       </div>
+
+      <Pagination totalPages={totalPages} />
     </section>
   );
 }
