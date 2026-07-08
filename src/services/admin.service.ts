@@ -27,3 +27,13 @@ export async function getAdminUsers(
   });
   return res.data;
 }
+
+/** PATCH /admin/users/:userId/toggle-status — admin only. Activate/deactivate a user. */
+export async function toggleUserStatus(
+  userId: string,
+): Promise<ApiResponse<User>> {
+  const res = await api.patch<ApiResponse<User>>(
+    `/admin/users/${userId}/toggle-status`,
+  );
+  return res.data;
+}

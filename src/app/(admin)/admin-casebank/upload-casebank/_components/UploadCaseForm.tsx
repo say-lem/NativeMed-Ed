@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   FormProvider,
@@ -15,21 +15,25 @@ import DoctorStep from "./DoctorStep";
 import PatientStep from "./PatientStep";
 import ExaminerStep from "./ExaminerStep";
 import ResourcesStep from "./ResourcesStep";
+import MediaStep from "./MediaStep";
 import {
   caseSchema,
   emptyCaseValues,
   type CaseFormValues,
 } from "@/lib/schemas/case";
 import { buildCasePayload } from "@/lib/case-form";
-import { saveCaseAction } from "../actions";
+import { LogoLoaderOverlay } from "@/components/shared/LogoLoader";
+import { saveCaseAction, uploadCaseImagesAction } from "../actions";
 import type { CaseDetail } from "@/types/api";
 
-const STEPS = ["Doctor", "Patient", "Examiner", "Resources"];
+const STEPS = ["Doctor", "Patient", "Examiner", "Resources", "Media"];
 
 const STEP_FIELDS: Path<CaseFormValues>[][] = [
   [
     "title",
     "specialty",
+    "consultationType",
+    "difficulty",
     "stationNumber",
     "patientName",
     "gender",
@@ -37,7 +41,10 @@ const STEP_FIELDS: Path<CaseFormValues>[][] = [
     "pastMedicalHistory",
     "drugHistory",
     "seenBy",
+    "recentRole",
+    "recentDate",
     "recentNotes",
+    "bloodTestSummary",
     "bloodTests",
   ],
   [
@@ -58,6 +65,7 @@ const STEP_FIELDS: Path<CaseFormValues>[][] = [
     "learningPoints",
   ],
   ["resources"],
+  [], // Media — image files live outside RHF, nothing to validate.
 ];
 
 const navBtn =
@@ -74,8 +82,32 @@ export default function UploadCaseForm({
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [pending, startTransition] = useTransition();
+  const [saving, setSaving] = useState(false);
   const isLast = step === STEPS.length - 1;
+
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | undefined>(
+    initialCase?.imageUrl,
+  );
+  const [stationFile, setStationFile] = useState<File | null>(null);
+  const [stationPreview, setStationPreview] = useState<string | undefined>(
+    initialCase?.stationImageUrl,
+  );
+
+  const onCover = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      setCoverFile(f);
+      setCoverPreview(URL.createObjectURL(f));
+    }
+  };
+  const onStation = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      setStationFile(f);
+      setStationPreview(URL.createObjectURL(f));
+    }
+  };
 
   const methods = useForm<CaseFormValues>({
     resolver: zodResolver(caseSchema),
@@ -93,21 +125,33 @@ export default function UploadCaseForm({
   };
 
   const save = (publish: boolean) =>
-    methods.handleSubmit((values: CaseFormValues) => {
+    methods.handleSubmit(async (values: CaseFormValues) => {
       const payload = {
         ...buildCasePayload(values, initialCase),
         isPublished: publish,
       };
-      startTransition(async () => {
-        const result = await saveCaseAction({ id: caseId, payload });
-        if (result.ok) {
-          toast.success(result.message ?? "Saved");
-          router.push("/admin-casebank");
-          router.refresh();
-        } else {
-          toast.error(result.message ?? "Something went wrong");
-        }
-      });
+      setSaving(true);
+      const result = await saveCaseAction({ id: caseId, payload });
+      if (!result.ok) {
+        toast.error(result.message ?? "Something went wrong");
+        setSaving(false);
+        return;
+      }
+      const id = caseId ?? result.caseId;
+      if (id && (coverFile || stationFile)) {
+        const fd = new FormData();
+        if (coverFile) fd.append("image", coverFile);
+        if (stationFile) fd.append("stationImage", stationFile);
+        const up = await uploadCaseImagesAction(id, fd);
+        if (!up.ok) toast.warning(up.message ?? "Image upload failed");
+      }
+      toast.success(result.message ?? "Saved");
+      // Navigate + refresh so the list refetches (Router Cache is per-client;
+      // revalidatePath alone won't refetch a cached RSC on push). The overlay
+      // is driven by `saving`, not the router, so refresh no longer hangs it —
+      // navigation unmounts the form and clears it.
+      router.push("/admin-casebank");
+      router.refresh();
     }, onError);
 
   const goNext = async () => {
@@ -117,6 +161,12 @@ export default function UploadCaseForm({
 
   return (
     <FormProvider {...methods}>
+      {saving && (
+        <LogoLoaderOverlay
+          fixed
+          label={caseId ? "Saving changes…" : "Creating case…"}
+        />
+      )}
       <section className="px-4 sm:px-6 lg:px-10 mt-8 mb-12">
         <Stepper current={step} steps={STEPS} onSelect={setStep} />
 
@@ -133,6 +183,14 @@ export default function UploadCaseForm({
           </div>
           <div className={step === 3 ? "" : "hidden"}>
             <ResourcesStep />
+          </div>
+          <div className={step === 4 ? "" : "hidden"}>
+            <MediaStep
+              coverPreview={coverPreview}
+              stationPreview={stationPreview}
+              onCover={onCover}
+              onStation={onStation}
+            />
           </div>
 
           <div className="flex items-center justify-between pt-2">
@@ -152,22 +210,22 @@ export default function UploadCaseForm({
               <div className="flex flex-wrap items-center gap-3">
                 <button
                   type="button"
-                  disabled={pending}
+                  disabled={saving}
                   onClick={save(false)}
                   className={`${navBtn} border border-primary-100 text-primary-100`}
                 >
-                  {pending && <Loader2 size={16} className="animate-spin" />}
+                  {saving && <Loader2 size={16} className="animate-spin" />}
                   Save as Draft
                 </button>
                 <button
                   type="button"
-                  disabled={pending}
+                  disabled={saving}
                   onClick={save(true)}
                   className={`${navBtn} bg-primary-100 text-white`}
                 >
-                  {pending && <Loader2 size={16} className="animate-spin" />}
+                  {saving && <Loader2 size={16} className="animate-spin" />}
                   Publish Now
-                  {!pending && <Upload size={16} />}
+                  {!saving && <Upload size={16} />}
                 </button>
               </div>
             ) : (

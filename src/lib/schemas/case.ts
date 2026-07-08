@@ -21,10 +21,21 @@ export const SPECIALTIES = [
 
 export const GENDERS = ["male", "female", "other"];
 
+export const CONSULTATION_TYPES = [
+  "Consultation",
+  "Video Consultation",
+  "Telephone Consultation",
+  "Face-to-Face Consultation",
+];
+
+export const DIFFICULTIES = ["easy", "medium", "hard"];
+
 export const caseSchema = z.object({
   // Doctor step
   title: z.string().trim().min(1, "Title is required"),
   specialty: z.string().min(1, "Category is required"),
+  consultationType: z.string(),
+  difficulty: z.string(),
   stationNumber: z
     .string()
     .trim()
@@ -44,7 +55,10 @@ export const caseSchema = z.object({
   pastMedicalHistory: z.string(),
   drugHistory: z.string(),
   seenBy: z.string(),
+  recentRole: z.string(),
+  recentDate: z.string(),
   recentNotes: z.string(),
+  bloodTestSummary: z.string(),
   bloodTests: z.array(
     z.object({
       test: z.string(),
@@ -79,6 +93,8 @@ export type CaseFormValues = z.infer<typeof caseSchema>;
 export const emptyCaseValues: CaseFormValues = {
   title: "",
   specialty: "",
+  consultationType: "",
+  difficulty: "",
   stationNumber: "",
   patientName: "",
   gender: "",
@@ -86,7 +102,10 @@ export const emptyCaseValues: CaseFormValues = {
   pastMedicalHistory: "",
   drugHistory: "",
   seenBy: "",
+  recentRole: "",
+  recentDate: "",
   recentNotes: "",
+  bloodTestSummary: "",
   bloodTests: [
     { test: "", result: "", referenceRange: "", isAbnormal: false },
     { test: "", result: "", referenceRange: "", isAbnormal: false },

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fustat } from "next/font/google";
 import { Toaster } from "sonner";
+import { ConfirmProvider } from "@/components/shared/ConfirmDialog";
 import "./globals.css";
 
 const fustat = Fustat({
@@ -24,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${fustat.className} h-full antialiased`}>
       <body className="min-h-full">
-        {children}
+        <ConfirmProvider>{children}</ConfirmProvider>
         <Toaster position="top-center" richColors />
       </body>
     </html>

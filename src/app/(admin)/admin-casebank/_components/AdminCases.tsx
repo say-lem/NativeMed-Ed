@@ -1,11 +1,15 @@
 "use client";
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronDown, Copy, Loader2, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { StatPlusIcon } from "../../admin-dashboard/_components/StatIcons";
 import Link from "next/link";
 import type { AdminCase } from "@/types/api";
 import { useAdminList } from "../../_components/AdminListContext";
 import Pagination from "../../_components/Pagination";
+import { useConfirm } from "@/components/shared/ConfirmDialog";
+import { deleteCaseAction, duplicateCaseAction } from "../actions";
 
 const PAGE_SIZE = 8;
 
@@ -54,6 +58,46 @@ function EditIcon() {
 export default function AdminCases({ cases }: { cases: AdminCase[] }) {
   const [specialty, setSpecialty] = useState("All");
   const { query, page, setPage } = useAdminList();
+  const router = useRouter();
+  const confirm = useConfirm();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyAction, setBusyAction] = useState<"delete" | "duplicate" | null>(
+    null,
+  );
+  const [, startTransition] = useTransition();
+
+  const duplicate = (c: AdminCase) => {
+    setBusyId(c._id);
+    setBusyAction("duplicate");
+    startTransition(async () => {
+      const res = await duplicateCaseAction(c._id);
+      if (res.ok) toast.success(res.message ?? "Duplicated");
+      else toast.error(res.message ?? "Something went wrong");
+      setBusyId(null);
+      setBusyAction(null);
+      router.refresh();
+    });
+  };
+
+  const remove = async (c: AdminCase) => {
+    const ok = await confirm({
+      title: "Delete case?",
+      message: `"Station ${c.stationNumber}: ${c.title}" and its images will be permanently removed. This can't be undone.`,
+      confirmText: "Delete",
+      tone: "danger",
+    });
+    if (!ok) return;
+    setBusyId(c._id);
+    setBusyAction("delete");
+    startTransition(async () => {
+      const res = await deleteCaseAction(c._id);
+      if (res.ok) toast.success(res.message ?? "Deleted");
+      else toast.error(res.message ?? "Something went wrong");
+      setBusyId(null);
+      setBusyAction(null);
+      router.refresh();
+    });
+  };
 
   const specialties = [
     "All",
@@ -148,13 +192,44 @@ export default function AdminCases({ cases }: { cases: AdminCase[] }) {
                 </p>
               </div>
 
-              <Link
-                href={`/admin-casebank/upload-casebank?id=${c._id}`}
-                aria-label={`Edit ${c.title}`}
-                className="shrink-0 p-1.5 rounded-md hover:bg-gray-100 cursor-pointer"
-              >
-                <EditIcon />
-              </Link>
+              <div className="flex shrink-0 items-center gap-1">
+                <Link
+                  href={`/admin-casebank/upload-casebank?id=${c._id}`}
+                  aria-label={`Edit ${c.title}`}
+                  title="Edit"
+                  className="p-1.5 rounded-md hover:bg-gray-100 cursor-pointer"
+                >
+                  <EditIcon />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => duplicate(c)}
+                  disabled={busyId === c._id}
+                  aria-label={`Duplicate ${c.title}`}
+                  title="Duplicate as draft"
+                  className="p-1.5 rounded-md text-[#292D32] hover:bg-gray-100 cursor-pointer disabled:opacity-60"
+                >
+                  {busyId === c._id && busyAction === "duplicate" ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Copy size={18} />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(c)}
+                  disabled={busyId === c._id}
+                  aria-label={`Delete ${c.title}`}
+                  title="Delete"
+                  className="p-1.5 rounded-md text-red-600 hover:bg-red-50 cursor-pointer disabled:opacity-60"
+                >
+                  {busyId === c._id && busyAction === "delete" ? (
+                    <Loader2 size={18} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={18} />
+                  )}
+                </button>
+              </div>
             </div>
           ))
         )}

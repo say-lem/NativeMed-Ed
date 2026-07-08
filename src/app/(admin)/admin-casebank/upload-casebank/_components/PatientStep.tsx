@@ -1,6 +1,11 @@
 "use client";
 import { useFormContext } from "react-hook-form";
-import { FormCard, SectionHeading, TextArea, TextField } from "./fields";
+import {
+  FormCard,
+  MarkdownField,
+  SectionHeading,
+  TextField,
+} from "./fields";
 import type { CaseFormValues } from "@/lib/schemas/case";
 
 export default function PatientStep() {
@@ -13,23 +18,23 @@ export default function PatientStep() {
     <div className="space-y-4">
       <SectionHeading text="Patient Story (Role Player's Brief)" />
       <FormCard>
-        <TextArea
+        <MarkdownField
+          name="patientStory"
           label="Background Story"
           required
           placeholder="Patient story"
-          registration={register("patientStory")}
           error={errors.patientStory?.message}
         />
-        <TextArea
+        <MarkdownField
+          name="socialHistory"
           label="Social History"
           placeholder="Patient social history"
-          registration={register("socialHistory")}
           error={errors.socialHistory?.message}
         />
-        <TextArea
+        <MarkdownField
+          name="ifAsked"
           label="If Asked Scenarios"
           placeholder="Enter conditional information"
-          registration={register("ifAsked")}
           error={errors.ifAsked?.message}
         />
         <TextField
@@ -50,16 +55,16 @@ export default function PatientStep() {
           registration={register("expectation")}
           error={errors.expectation?.message}
         />
-        <TextArea
+        <MarkdownField
+          name="importantNote"
           label="Important Note"
           placeholder="What to say no to"
-          registration={register("importantNote")}
           error={errors.importantNote?.message}
         />
-        <TextArea
+        <MarkdownField
+          name="questionsForDoctor"
           label="Questions for the Doctor"
           placeholder="Questions for the Doctor"
-          registration={register("questionsForDoctor")}
           error={errors.questionsForDoctor?.message}
         />
       </FormCard>

@@ -1,13 +1,13 @@
 import axios from "axios";
 import UploadCourseForm from "./_components/UploadCourseForm";
 import UploadCourseHero from "./_components/UploadCourseHero";
-import { getCourse } from "@/services/courses.service";
+import { getAdminCourse } from "@/services/courses.service";
 import { courseToFormValues } from "@/lib/schemas/course";
 import type { Course } from "@/types/api";
 
 async function loadCourse(id: string): Promise<Course | undefined> {
   try {
-    const res = await getCourse(id);
+    const res = await getAdminCourse(id);
     return res.success ? res.data : undefined;
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;

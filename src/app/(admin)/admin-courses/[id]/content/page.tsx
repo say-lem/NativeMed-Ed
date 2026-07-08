@@ -1,0 +1,48 @@
+import axios from "axios";
+import { notFound } from "next/navigation";
+import AdminContentHero from "./_components/AdminContentHero";
+import ContentManager from "./_components/ContentManager";
+import {
+  getAdminCourse,
+  getCourseContent,
+} from "@/services/courses.service";
+import type { Course, Lesson } from "@/types/api";
+
+async function loadCourse(id: string): Promise<Course | undefined> {
+  try {
+    const res = await getAdminCourse(id);
+    return res.success ? res.data : undefined;
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    return undefined;
+  }
+}
+
+async function loadContent(id: string): Promise<Lesson[]> {
+  try {
+    const res = await getCourseContent(id);
+    return res.success ? res.data : [];
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    return [];
+  }
+}
+
+export default async function CourseContentPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const course = await loadCourse(id);
+  if (!course) notFound();
+
+  const lessons = await loadContent(id);
+
+  return (
+    <section>
+      <AdminContentHero title={course.title} />
+      <ContentManager courseId={id} lessons={lessons} />
+    </section>
+  );
+}

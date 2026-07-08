@@ -92,3 +92,47 @@ export async function updateCase(
   const res = await api.patch<ApiResponse<CaseDetail>>(`/cases/${id}`, payload);
   return res.data;
 }
+
+/** PATCH /cases/:id/image — admin. Multipart field `image`. Replaces the cover (resized 800×450). */
+export async function updateCaseImage(
+  id: string,
+  file: File,
+): Promise<ApiResponse<{ imageUrl: string }>> {
+  const fd = new FormData();
+  fd.append("image", file);
+  const res = await api.patch<ApiResponse<{ imageUrl: string }>>(
+    `/cases/${id}/image`,
+    fd,
+    { headers: { "Content-Type": undefined } },
+  );
+  return res.data;
+}
+
+/** PATCH /cases/:id/station-image — admin. Multipart field `stationImage` (resized 800×600). */
+export async function updateCaseStationImage(
+  id: string,
+  file: File,
+): Promise<ApiResponse<{ stationImageUrl: string }>> {
+  const fd = new FormData();
+  fd.append("stationImage", file);
+  const res = await api.patch<ApiResponse<{ stationImageUrl: string }>>(
+    `/cases/${id}/station-image`,
+    fd,
+    { headers: { "Content-Type": undefined } },
+  );
+  return res.data;
+}
+
+/** POST /cases/:id/duplicate — admin only. Draft copy ("Copy of …"), next stationNumber, no images. */
+export async function duplicateCase(
+  id: string,
+): Promise<ApiResponse<CaseDetail>> {
+  const res = await api.post<ApiResponse<CaseDetail>>(`/cases/${id}/duplicate`);
+  return res.data;
+}
+
+/** DELETE /cases/:id — admin only. Hard delete (+ Cloudinary images). `data: null`. */
+export async function deleteCase(id: string): Promise<ApiResponse<null>> {
+  const res = await api.delete<ApiResponse<null>>(`/cases/${id}`);
+  return res.data;
+}

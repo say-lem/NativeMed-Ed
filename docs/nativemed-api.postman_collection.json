@@ -225,6 +225,31 @@
           }
         },
         {
+          "name": "GET /api/v1/courses/admin/all (admin, query)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/courses/admin/all?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "courses", "admin", "all"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" },
+                { "key": "search", "value": "", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /api/v1/courses/admin/:id (admin)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/api/v1/courses/admin/{{courseId}}"
+          }
+        },
+        {
           "name": "POST /api/v1/courses (admin)",
           "request": {
             "method": "POST",

@@ -231,3 +231,34 @@ export interface CourseInput {
   description?: string;
   price?: number;
 }
+
+/** Enrollment (GET /enrollments, admin). `userId`/`courseId` come populated;
+ *  status is `isActive`; `source` is manual vs payment. Verified 2026-07-08. */
+export interface Enrollment {
+  _id: string;
+  userId?: UserRef | string;
+  courseId?: { _id: string; title?: string; price?: number } | string;
+  isActive?: boolean;
+  source?: string; // "manual" | "payment"
+  accessTier?: string; // "pdf_only" | "pdf_drive"
+  accessGrantedAt?: string;
+  grantedBy?: string;
+  subscriptionId?: string;
+  paymentId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type LessonType = "pdf" | "video";
+
+/** A course lesson (GET /courses/:courseId/content). Shape unverified — fields optional. */
+export interface Lesson {
+  _id: string;
+  title: string;
+  type: LessonType | string;
+  fileUrl?: string;
+  order?: number;
+  duration?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

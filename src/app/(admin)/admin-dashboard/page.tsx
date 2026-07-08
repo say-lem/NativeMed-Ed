@@ -14,7 +14,6 @@ const RECENT_LIMIT = 5;
 async function loadStats(): Promise<AdminDashboardStats | undefined> {
   try {
     const res = await getAdminDashboard();
-    console.log("[GET /admin/dashboard] raw response:", JSON.stringify(res, null, 2));
     return res.success ? res.data : undefined;
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;

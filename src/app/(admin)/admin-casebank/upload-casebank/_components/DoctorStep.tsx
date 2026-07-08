@@ -2,6 +2,7 @@
 import { useFormContext } from "react-hook-form";
 import {
   FormCard,
+  MarkdownField,
   NumberField,
   SectionHeading,
   SelectField,
@@ -9,7 +10,13 @@ import {
   TextField,
 } from "./fields";
 import TestResultsTable from "./TestResultsTable";
-import { GENDERS, SPECIALTIES, type CaseFormValues } from "@/lib/schemas/case";
+import {
+  CONSULTATION_TYPES,
+  DIFFICULTIES,
+  GENDERS,
+  SPECIALTIES,
+  type CaseFormValues,
+} from "@/lib/schemas/case";
 
 export default function DoctorStep() {
   const {
@@ -43,6 +50,23 @@ export default function DoctorStep() {
             required
             registration={register("stationNumber")}
             error={errors.stationNumber?.message}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <SelectField
+            label="Consultation Type"
+            placeholder="Select Consultation Type"
+            options={CONSULTATION_TYPES}
+            registration={register("consultationType")}
+            error={errors.consultationType?.message}
+          />
+          <SelectField
+            label="Difficulty"
+            placeholder="Select Difficulty"
+            options={DIFFICULTIES}
+            registration={register("difficulty")}
+            error={errors.difficulty?.message}
           />
         </div>
 
@@ -84,19 +108,40 @@ export default function DoctorStep() {
           registration={register("drugHistory")}
           error={errors.drugHistory?.message}
         />
-        <TextField
-          label="Seen By"
-          placeholder="e.g., GP Surgery / Practice Nurse"
-          registration={register("seenBy")}
-          error={errors.seenBy?.message}
-        />
-        <TextArea
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <TextField
+            label="Seen By"
+            placeholder="e.g., GP Surgery / Practice Nurse"
+            registration={register("seenBy")}
+            error={errors.seenBy?.message}
+          />
+          <TextField
+            label="Role"
+            placeholder="e.g., Doctor, Nurse, GP"
+            registration={register("recentRole")}
+            error={errors.recentRole?.message}
+          />
+          <TextField
+            label="Consultation Date"
+            type="date"
+            registration={register("recentDate")}
+            error={errors.recentDate?.message}
+          />
+        </div>
+        <MarkdownField
+          name="recentNotes"
           label="Recent Notes/Consultation"
           placeholder="Enter consultation notes, examination findings, plans, etc..."
-          registration={register("recentNotes")}
           error={errors.recentNotes?.message}
         />
 
+        <TextArea
+          label="Blood Test Summary"
+          rows={2}
+          placeholder="Short summary shown above the blood-test table"
+          registration={register("bloodTestSummary")}
+          error={errors.bloodTestSummary?.message}
+        />
         <TestResultsTable />
       </FormCard>
     </div>

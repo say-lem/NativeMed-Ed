@@ -2,14 +2,15 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ChevronDown, Loader2 } from "lucide-react";
+import { ChevronDown, ListVideo, Loader2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { StatVideoIcon } from "../../admin-dashboard/_components/StatIcons";
 import Link from "next/link";
 import type { Course } from "@/types/api";
 import { useAdminList } from "../../_components/AdminListContext";
 import Pagination from "../../_components/Pagination";
-import { togglePublishCourseAction } from "../actions";
+import { useConfirm } from "@/components/shared/ConfirmDialog";
+import { deleteCourseAction, togglePublishCourseAction } from "../actions";
 
 const PAGE_SIZE = 6;
 
@@ -28,7 +29,9 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
   const [filter, setFilter] = useState<Filter>("All");
   const { query, page, setPage } = useAdminList();
   const router = useRouter();
+  const confirm = useConfirm();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const togglePublish = (id: string) => {
@@ -38,6 +41,24 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
       if (res.ok) toast.success(res.message ?? "Updated");
       else toast.error(res.message ?? "Something went wrong");
       setPendingId(null);
+      router.refresh();
+    });
+  };
+
+  const remove = async (course: Course) => {
+    const ok = await confirm({
+      title: "Delete course?",
+      message: `"${course.title}" and its thumbnail will be permanently removed. This can't be undone.`,
+      confirmText: "Delete",
+      tone: "danger",
+    });
+    if (!ok) return;
+    setDeletingId(course._id);
+    startTransition(async () => {
+      const res = await deleteCourseAction(course._id);
+      if (res.ok) toast.success(res.message ?? "Course deleted");
+      else toast.error(res.message ?? "Something went wrong");
+      setDeletingId(null);
       router.refresh();
     });
   };
@@ -122,6 +143,20 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
                 <span className="absolute top-3 left-3 rounded-[100px] py-1.5 px-3 bg-[#00000080] border-[0.2px] border-white/80 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
                   {course.isPublished ? "Published" : "Draft"}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => remove(course)}
+                  disabled={deletingId === course._id}
+                  aria-label={`Delete ${course.title}`}
+                  title="Delete course"
+                  className="absolute top-3 right-3 grid place-items-center size-8 rounded-full bg-[#00000080] border-[0.2px] border-white/80 text-white cursor-pointer hover:bg-red-600 disabled:opacity-60"
+                >
+                  {deletingId === course._id ? (
+                    <Loader2 size={15} className="animate-spin" />
+                  ) : (
+                    <Trash2 size={15} />
+                  )}
+                </button>
               </aside>
 
               <aside className="px-4 sm:px-5 py-4 flex flex-col gap-2 flex-1">
@@ -160,6 +195,12 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
                     </Link>
                   </div>
                 </div>
+                <Link
+                  href={`/admin-courses/${course._id}/content`}
+                  className="mt-3 flex items-center justify-center gap-1.5 rounded-[8px] border border-gray-1 text-sm font-medium text-black-others py-2 cursor-pointer hover:bg-gray-100"
+                >
+                  <ListVideo size={15} /> Manage Content
+                </Link>
               </aside>
             </div>
           ))}

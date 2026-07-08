@@ -122,6 +122,8 @@ export function caseToFormValues(c: CaseDetail): CaseFormValues {
   return {
     title: c.title ?? "",
     specialty: c.specialty ?? "",
+    consultationType: c.consultationType ?? "",
+    difficulty: c.difficulty ?? "",
     stationNumber: c.stationNumber != null ? String(c.stationNumber) : "",
     patientName: c.patientData?.name ?? "",
     gender: c.patientData?.gender ?? "",
@@ -129,7 +131,11 @@ export function caseToFormValues(c: CaseDetail): CaseFormValues {
     pastMedicalHistory: arrayToLines(c.patientData?.pastMedicalHistory),
     drugHistory: arrayToLines(c.patientData?.drugHistory),
     seenBy: c.patientData?.recentConsultation?.seenBy ?? "",
+    recentRole: c.patientData?.recentConsultation?.role ?? "",
+    // Stored value may be a full ISO datetime; <input type="date"> needs YYYY-MM-DD.
+    recentDate: (c.patientData?.recentConsultation?.date ?? "").slice(0, 10),
     recentNotes: c.patientData?.recentConsultation?.notes ?? "",
+    bloodTestSummary: c.patientData?.bloodTestResults?.summary ?? "",
     bloodTests: (c.patientData?.bloodTestResults?.rows ?? []).map((r) => ({
       test: r.test ?? "",
       result: r.result ?? "",
@@ -186,6 +192,14 @@ export function buildCasePayload(
     stationNumber: Number(v.stationNumber),
     title: v.title.trim(),
     specialty: v.specialty,
+    // Only send when chosen — otherwise let the backend default ("Consultation").
+    ...(v.consultationType.trim()
+      ? { consultationType: v.consultationType.trim() }
+      : {}),
+    // Only send when chosen — otherwise let the backend default ("medium").
+    ...(v.difficulty.trim()
+      ? { difficulty: v.difficulty.trim() as CaseInput["difficulty"] }
+      : {}),
     patientData: {
       name: v.patientName.trim(),
       age: Number(v.age),
@@ -193,14 +207,14 @@ export function buildCasePayload(
       pastMedicalHistory: linesToArray(v.pastMedicalHistory),
       drugHistory: linesToArray(v.drugHistory),
       recentConsultation: {
-        date: baseConsult?.date,
-        role: baseConsult?.role,
+        date: v.recentDate.trim() || baseConsult?.date,
+        role: v.recentRole.trim() || baseConsult?.role,
         seenBy: v.seenBy.trim(),
         notes: v.recentNotes.trim(),
       },
       bloodTestResults: {
         summary:
-          initial?.patientData?.bloodTestResults?.summary ??
+          v.bloodTestSummary.trim() ||
           (rows.length ? "" : "No blood tests available"),
         rows,
       },

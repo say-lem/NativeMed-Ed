@@ -48,3 +48,31 @@ export async function me(): Promise<ApiResponse<User>> {
   const res = await api.get<ApiResponse<User>>("/auth/me");
   return res.data;
 }
+
+/** PATCH /auth/me — update the signed-in user's profile (fullName, phone). */
+export async function updateProfile(payload: {
+  fullName?: string;
+  phone?: string;
+}): Promise<ApiResponse<User>> {
+  const res = await api.patch<ApiResponse<User>>("/auth/me", payload);
+  return res.data;
+}
+
+/** POST /auth/change-password — change the signed-in user's password. */
+export async function changePassword(payload: {
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
+}): Promise<ApiResponse<null>> {
+  const res = await api.post<ApiResponse<null>>(
+    "/auth/change-password",
+    payload,
+  );
+  return res.data;
+}
+
+/** POST /auth/logout-all — invalidate every session/refresh token for the user. */
+export async function logoutAll(): Promise<ApiResponse<null>> {
+  const res = await api.post<ApiResponse<null>>("/auth/logout-all");
+  return res.data;
+}

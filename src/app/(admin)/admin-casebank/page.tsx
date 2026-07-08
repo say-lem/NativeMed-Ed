@@ -10,7 +10,6 @@ import type { AdminCase } from "@/types/api";
 async function loadCases(): Promise<AdminCase[]> {
   try {
     const res = await getAdminCases();
-    console.log("[GET /cases/admin/all] raw response:", JSON.stringify(res, null, 2));
     return res.success ? res.data.items : [];
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;

@@ -12,16 +12,15 @@ update the code, then update this file.
   (exported NativeMed Postman collection). It is BROADER than the Cases doc — trust it + the live API
   over any prose doc. The collection has request shapes but NOT response schemas; confirm response
   shapes against the live API when integrating a new endpoint.
-- The backend modules (Payments + Subscriptions added 2026-06-25). **Integrated so far:** Cases
-  (user read + admin list/create/edit), Auth (login/register/logout/me + token refresh), and the admin
-  **dashboard stats** + **users list** reads. Everything else exists on the backend but is NOT yet wired.
+- The backend exposes the modules below (Payments + Subscriptions added 2026-06-25). See §7 for the
+  current integration state (what's wired vs still mock).
 
 | Module         | Key endpoints                                                                                                                                                                                                                                                                | Auth  | Notes                                                                                    |
 | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ---------------------------------------------------------------------------------------- |
 | Health         | `GET /health`                                                                                                                                                                                                                                                                | none  |                                                                                          |
 | Auth           | `POST /auth/{register,login,refresh-token,logout,forgot-password,reset-password,change-password,logout-all}`, `GET/PATCH /auth/me`                                                                                                                                           | mixed | register/login/refresh/forgot/reset are public; me/change-password/logout-all need token |
 | Auth admin     | `POST/GET /auth/admin/users`, `GET/PATCH /auth/admin/users/:userId`, `PATCH /auth/admin/users/:userId/toggle-status`                                                                                                                                                         | admin | user management (note: also duplicated under `/admin/users`)                             |
-| Courses        | `GET /courses` (PUBLIC, returns `data: []` plain array — NOT paginated), `GET /courses/:id` (auth), `POST/PATCH/DELETE /courses/:id` (admin), `PATCH /courses/:id/{thumbnail,publish}` (admin)                                                                               | mixed | `POST` body: `{ title, description, price }`. thumbnail = multipart field `thumbnail`.   |
+| Courses        | `GET /courses` (PUBLIC, **published-only** plain array — NOT paginated), `GET /courses/:id` (auth, **published-only**), `GET /courses/admin/all` (admin, **paginated, incl. drafts**), `GET /courses/admin/:id` (admin, incl. drafts), `POST/PATCH/DELETE /courses/:id` (admin), `PATCH /courses/:id/{thumbnail,publish}` (admin)                                                             | mixed | `POST` body: `{ title, description, price }` (all required). thumbnail = multipart field `thumbnail`. **Admin must use `/courses/admin/*` to see drafts** — `/courses` + `/courses/:id` hide unpublished (mirrors Cases). |
 | Course Content | `GET /courses/:courseId/content[/:id]` (auth); **two create endpoints** — `POST .../content/upload-pdf` (admin, multipart: `file,title,order,type=pdf`, Cloudinary) and `POST .../content/drive-link` (admin, JSON: `{title,type,fileUrl,order,duration}`); `PATCH/DELETE .../content/:id` (admin)                                                                                | mixed | PDF lessons are uploaded; video lessons are Google-Drive links. lesson `type` e.g. `"video"`/`"pdf"` |
 | Cases          | see §4                                                                                                                                                                                                                                                                       | mixed | only module with a written integration doc + frontend integration                        |
 | Enrollments    | `GET /enrollments/me` (auth, `data: []` array), `GET /enrollments/check/:courseId` (auth), `GET /enrollments` + `/course/:courseId` + `/user/:userId` (admin), `POST /enrollments/{manual,revoke}` (admin, `{ userId, courseId }`), `PATCH /enrollments/:id/restore` (admin) | mixed | course access grants; likely backs "Subscriptions"/"My Courses"                          |
@@ -34,10 +33,9 @@ update the code, then update this file.
   subscribedTo, expiryDate, status }`. Admin **casebank** + **courses** lists and the admin **dashboard**
   stats are also wired; the dashboard's **Recent Subscribers** shows the top 5 from
   `/subscriptions/subscribers`. Still **static / mock**: marketplace Courses/Subscriptions/Dashboard/Settings.
-- No per-module response-schema doc exists yet for Courses/Enrollments/Payments/Subscriptions. As of
-  2026-06-25 the Courses/Enrollments collections are empty in prod (`data: []`), so item shapes can't
-  be inferred from live data — get a sample record (or a schema) before building those UIs. The
-  **Subscriptions/Payments** modules are brand new and unverified against live data.
+- Response shapes verified against live data: **Cases** (§4), **Courses**, and **Subscriptions**
+  (`subscribers` + `plans`). Still unverified: **Enrollments** (empty in prod, `data: []`) and
+  **Payments** — probe a real record before building those UIs.
 
 ## 1. Environment & API base URL
 
@@ -94,15 +92,14 @@ update the code, then update this file.
 | ------ | ------------------------------------------------------------- |
 | 200    | OK                                                            |
 | 201    | Created                                                       |
-| 400    | Validation / bad request (see `errors[]`)                     |
+| 400    | Bad request                                                   |
 | 401    | No/expired token → refresh then retry, else redirect to login |
 | 403    | Authenticated but not admin                                   |
 | 404    | Not found                                                     |
 | 413    | Image > 5 MB                                                  |
-| 429    | Rate limit (200 req / 15 min on cases endpoints)              |
+| 422    | Validation failed — `errors: Record<string, string[]>`        |
+| 429    | Rate limit (cases 200/15min; courses 150/15min)               |
 | 500    | Server error                                                  |
-
-Validation `errors` shape: `[{ field: "patientData.age", message: "..." }]` (array of field/message).
 
 ---
 
@@ -302,9 +299,9 @@ fd.append("stationImage", stationFile); // optional
   hero says "Edit Case", submit → `PATCH /cases/:id`. **Create** (no id) → `POST /cases`. Both go through
   Server Action [upload-casebank/actions.ts](<src/app/(admin)/admin-casebank/upload-casebank/actions.ts>).
 - Marking scheme: backend `[{heading, points[]}]` ↔ two textareas (one bullet per line); extra sections
-  reflow into "Data Gathering". **Form has no inputs** for `consultationType`/`difficulty`/`isPublished`/
-  `recentConsultation.seenBy` — on edit these are preserved (PATCH merge / carried from the fetched case);
-  on create the backend defaults apply and `seenBy` is sent empty (add inputs if create rejects it).
+  reflow into "Data Gathering". **Seen By** is an input; **isPublished** is set by the form's
+  **Save as Draft** / **Publish Now** buttons. Still **no inputs** for `consultationType`/`difficulty` —
+  on edit they're preserved (PATCH merge), on create the backend defaults apply.
 - Admin list search/pagination is **client-side** over the fetched set (`limit=50`), shared via
   [(admin)/_components/AdminListContext.tsx](<src/app/(admin)/_components/AdminListContext.tsx>) +
   `AdminSearchInput` + `Pagination`. Switch to server-side paging if a list exceeds 50.
@@ -317,31 +314,7 @@ fd.append("stationImage", stationFile); // optional
 - Password show/hide: shared `PasswordField` in [src/components/shared/AuthForm.tsx](src/components/shared/AuthForm.tsx).
 - Cloudinary images whitelisted in [next.config.ts](next.config.ts) (`images.remotePatterns`).
 
-## 7. Discrepancies reconciled with backend doc (fixed 2026-06-20)
-
-All five type/data mismatches are now fixed (typecheck clean):
-
-1. ✅ `Gender` now `"male"|"female"|"other"`. ([src/types/api.ts](src/types/api.ts))
-2. ✅ `Case` (list type) now has `imageUrl?`. (UI wiring of the cover image into list cards is still TODO.)
-3. ✅ `CaseDetail` now has `imageUrl?`, `stationImageUrl?`, `createdBy: string | UserRef`.
-   (UI wiring of detail images is still TODO.)
-4. ✅ `RecentConsultation` now has `date?` and `role?`; `adaptCase` uses the real date
-   (formatted) and appends `role` to the consulter. ([adaptCase.ts](<src/app/(marketplace)/full-cases/[cases]/[id]/_components/adaptCase.ts>))
-5. ✅ `SPECIALTY_IMAGES` is now keyed by the exact backend specialty strings (lowercased), so all 12
-   specialties resolve to an image. ([src/app/(marketplace)/full-cases/\_components/MockBankCards.tsx](<src/app/(marketplace)/full-cases/_components/MockBankCards.tsx>))
-
-Remaining TODO (not a discrepancy, an enhancement):
-
-- ✅ Detail page now renders `stationImageUrl` + `imageUrl` (when present) below Patient Data,
-  inside `PatientDataSection` (shared by the "Doctor" and "Full Case" tabs). Cloudinary host is
-  whitelisted in [next.config.ts](next.config.ts) (`images.remotePatterns` → `res.cloudinary.com`).
-  Restart `next dev` after editing next.config for image config to take effect.
-- TODO: render `imageUrl` on the case **list** cards.
-
-Note: as of 2026-06-20 none of the published cases actually carry images yet (verified via live API),
-so the new image block is invisible until a case is created/updated with an image via the admin flow.
-
-## 8. Current state / plan
+## 7. Current state / plan
 
 **Integrated (wired to live backend):**
 
@@ -352,18 +325,16 @@ so the new image block is invisible until a case is created/updated with an imag
   client-side search + pagination (§6). Subscribers service: [src/services/subscriptions.service.ts](src/services/subscriptions.service.ts).
 - **Admin case create + edit + validation** — full RHF/zod pipeline → `POST /cases` / `PATCH /cases/:id`
   with prefill from `GET /cases/admin/:id` (§6 "Admin case create/edit pipeline").
-- **Admin course create + edit** — [upload-course/](<src/app/(admin)/admin-courses/upload-course/>) RHF/zod
-  form (title/price/description) → `POST /courses` / `PATCH /courses/:id`; prefill from `GET /courses/:id`
-  (edit link `?id=`); cover via `PATCH /courses/:id/thumbnail` (multipart — **verify live**). Category /
-  Payment Type / Material / Course Link are UI-only (no Course field; Material/Link are course *content*).
-  Schema + mapping: [src/lib/schemas/course.ts](src/lib/schemas/course.ts).
+- **Admin course create + edit + publish** — [upload-course/](<src/app/(admin)/admin-courses/upload-course/>)
+  RHF/zod form (title/price/description) → `POST /courses` / `PATCH /courses/:id`; prefill from
+  `GET /courses/:id`; cover via `PATCH /courses/:id/thumbnail` (multipart — **verify live**); publish via
+  **Save as Draft** / **Publish Now** + per-card **Unpublish** (`PATCH /courses/:id/publish`). Category /
+  Payment Type / Material / Course Link are UI-only. Schema: [src/lib/schemas/course.ts](src/lib/schemas/course.ts).
+  ⚠️ list + prefill still read the **published-only** `/courses` — see the switch-to-`/courses/admin/*` item below.
 
 **Built but UI-only / mock data (NOT yet wired):**
 
 - **Marketplace** dashboard / courses / subscriptions / settings — all mock.
-- **Course upload form** ([UploadCourseForm](<src/app/(admin)/admin-courses/upload-course/_components/UploadCourseForm.tsx>))
-  — inputs carry backend-aligned names but no submit handler; needs `POST /courses` (+ thumbnail, content
-  via `upload-pdf`/`drive-link`).
 - Admin "Schedule Live Class" button is a stub (toast "Coming soon").
 
 **Next:**
@@ -371,9 +342,14 @@ so the new image block is invisible until a case is created/updated with an imag
 - Wire marketplace **Subscriptions** → `GET /subscriptions/me` + `…/status`; **Payments** checkout
   (`POST /payments/checkout`) for Case Bank / course tiers; optionally the dashboard **Recent
   Subscribers** → `GET /subscriptions/subscribers` (top N). Probe each shape first (§0).
-- Wire case **publish/duplicate/delete** (`PATCH /cases/:id/publish`, `POST /cases/:id/duplicate`,
-  `DELETE /cases/:id`) and case **images** (`PATCH /cases/:id/{image,station-image}`, multipart).
-- Wire **Course Content** (`upload-pdf` / `drive-link`), course publish/delete; verify course **thumbnail**
-  upload against live (Node multipart). (Course create/edit is done.)
-- Case form gaps to revisit: add inputs for `consultationType`/`difficulty`/`isPublished`/`seenBy` if
-  needed (currently preserved-on-edit / backend-default-on-create — §6).
+- Wire case **duplicate/delete** (`POST /cases/:id/duplicate`, `DELETE /cases/:id`) and case **images**
+  (`PATCH /cases/:id/{image,station-image}`, multipart). Case publish is done (form Save-as-Draft/Publish-Now).
+- **Switch admin course reads to `/courses/admin/all` + `/courses/admin/:id`** (added 2026-06-25). The
+  admin list + edit-prefill currently use `/courses` + `/courses/:id`, which are **published-only** — so
+  unpublishing a course (or saving one as draft) makes it vanish with no way back. Moving to the admin
+  routes makes drafts visible and the list **Unpublish** / form **Save-as-Draft** safe. Do this before
+  relying on course drafts.
+- Wire **Course Content** (`upload-pdf` / `drive-link`), course delete; verify course **thumbnail**
+  upload against live (Node multipart). (Course create/edit + publish is done.)
+- Case form gaps to revisit: add inputs for `consultationType`/`difficulty` if needed (currently
+  preserved-on-edit / backend-default-on-create — §6).

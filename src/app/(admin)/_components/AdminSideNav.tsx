@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import AdminSideNavLink from "./AdminSideNavLink";
+import { GraduationCap, Users as UsersIcon } from "lucide-react";
 import {
   CoursesIcon,
   DashboardIcon,
@@ -41,6 +42,17 @@ export default function AdminSideNav() {
           icon={<SubscriptionsIcon color={color("/admin-subscribers")} />}
           href="/admin-subscribers"
           label="Subscribers"
+        />
+        <AdminSideNavLink
+          icon={<UsersIcon size={22} color={color("/admin-users")} />}
+          href="/admin-users"
+          label="Users"
+        />
+
+        <AdminSideNavLink
+          icon={<GraduationCap size={22} color={color("/admin-enrollments")} />}
+          href="/admin-enrollments"
+          label="Enrollments"
         />
         <AdminSideNavLink
           icon={<QuestionBankIcon color={color("/admin-casebank")} />}

@@ -1,6 +1,7 @@
 "use server";
 
 import axios from "axios";
+import { revalidatePath } from "next/cache";
 import {
   createCourse,
   publishCourse,
@@ -36,6 +37,7 @@ export async function saveCourseAction(input: {
       }
     }
 
+    revalidatePath("/admin-courses");
     return {
       ok: true,
       message: input.id
@@ -69,9 +71,9 @@ export async function uploadCourseThumbnailAction(
     const file = formData.get("thumbnail");
     if (!(file instanceof File) || file.size === 0) return { ok: true };
     const res = await updateCourseThumbnail(id, file);
-    return res.success
-      ? { ok: true }
-      : { ok: false, message: res.message };
+    if (!res.success) return { ok: false, message: res.message };
+    revalidatePath("/admin-courses");
+    return { ok: true };
   } catch (err) {
     if (axios.isAxiosError(err)) {
       const data = err.response?.data as ApiFailure | undefined;

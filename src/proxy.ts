@@ -115,5 +115,7 @@ export const config = {
     "/admin-settings/:path*",
     "/admin-users",
     "/admin-users/:path*",
+    "/admin-enrollments",
+    "/admin-enrollments/:path*",
   ],
 };

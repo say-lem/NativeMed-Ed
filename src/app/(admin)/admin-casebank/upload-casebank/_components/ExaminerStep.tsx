@@ -1,6 +1,6 @@
 "use client";
 import { useFormContext } from "react-hook-form";
-import { FormCard, SectionHeading, TextArea } from "./fields";
+import { FormCard, MarkdownField, SectionHeading, TextArea } from "./fields";
 import ManagementSteps from "./ManagementSteps";
 import type { CaseFormValues } from "@/lib/schemas/case";
 
@@ -31,11 +31,11 @@ export default function ExaminerStep() {
       </FormCard>
 
       <FormCard>
-        <TextArea
+        <MarkdownField
+          name="exampleExplanation"
           label="Explanation to Patient"
           required
           placeholder="Explanation to Patient"
-          registration={register("exampleExplanation")}
           error={errors.exampleExplanation?.message}
         />
       </FormCard>
@@ -46,11 +46,11 @@ export default function ExaminerStep() {
       </FormCard>
 
       <FormCard>
-        <TextArea
+        <MarkdownField
+          name="learningPoints"
           label="Learning Points from this Station"
           required
           placeholder="Learning Points"
-          registration={register("learningPoints")}
           error={errors.learningPoints?.message}
         />
       </FormCard>

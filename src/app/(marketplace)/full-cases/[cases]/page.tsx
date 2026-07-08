@@ -111,13 +111,6 @@ export default async function CasesBySpecialtyPage({
     search,
   );
 
-  if (data?.items[0]) {
-    console.log(
-      `[full-cases] sample case _id from "${slug}" page ${page}:`,
-      data.items[0]._id,
-    );
-  }
-
   if (notFound || !data) {
     return (
       <>

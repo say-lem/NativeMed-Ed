@@ -1,7 +1,12 @@
 "use client";
 import { useRef } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
-import type { UseFormRegisterReturn } from "react-hook-form";
+import {
+  useController,
+  useFormContext,
+  type UseFormRegisterReturn,
+} from "react-hook-form";
+import RichTextEditor from "@/components/shared/RichTextEditor";
 
 export const fieldClass =
   "w-full rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 text-sm text-black-others placeholder:text-[#B7B7B9] outline-none focus:border-primary-100";
@@ -60,6 +65,35 @@ export function TextField({
         placeholder={placeholder}
         className={fieldClass}
         {...registration}
+      />
+      <FieldError message={error} />
+    </div>
+  );
+}
+
+/** Rich-text (Word-like) field bound to a RHF field by name; stores markdown. */
+export function MarkdownField({
+  name,
+  label,
+  error,
+  placeholder,
+  required,
+}: {
+  name: string;
+  label: string;
+  error?: string;
+  placeholder?: string;
+  required?: boolean;
+}) {
+  const { control } = useFormContext();
+  const { field } = useController({ name, control });
+  return (
+    <div className="space-y-2">
+      <Label text={label} required={required} />
+      <RichTextEditor
+        value={field.value ?? ""}
+        onChange={field.onChange}
+        placeholder={placeholder}
       />
       <FieldError message={error} />
     </div>

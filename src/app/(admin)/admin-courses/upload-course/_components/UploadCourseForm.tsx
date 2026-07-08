@@ -1,36 +1,24 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Loader2, Upload } from "lucide-react";
+import { ChevronDown, Loader2, Upload } from "lucide-react";
 import {
   CATEGORIES,
-  PAYMENT_TYPES,
   courseSchema,
   emptyCourseValues,
   buildCoursePayload,
   type CourseFormValues,
 } from "@/lib/schemas/course";
+import { LogoLoaderOverlay } from "@/components/shared/LogoLoader";
 import { saveCourseAction, uploadCourseThumbnailAction } from "../actions";
 
 const fieldClass =
   "w-full rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 text-sm text-black-others placeholder:text-[#B7B7B9] outline-none focus:border-primary-100";
 
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
-const DOC_ACCEPT = [
-  ".pdf",
-  ".doc",
-  ".docx",
-  ".ppt",
-  ".pptx",
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/vnd.ms-powerpoint",
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-].join(",");
 
 function Label({ text, required }: { text: string; required?: boolean }) {
   return (
@@ -87,7 +75,7 @@ export default function UploadCourseForm({
   initialThumbnail?: string;
 }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
+  const [saving, setSaving] = useState(false);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | undefined>(
     initialThumbnail,
@@ -111,29 +99,39 @@ export default function UploadCourseForm({
   };
 
   const save = (publish: boolean) =>
-    handleSubmit((values: CourseFormValues) => {
+    handleSubmit(async (values: CourseFormValues) => {
       const payload = buildCoursePayload(values);
-      startTransition(async () => {
-        const result = await saveCourseAction({ id: courseId, payload, publish });
-        if (!result.ok) {
-          toast.error(result.message ?? "Something went wrong");
-          return;
-        }
-        const id = courseId ?? result.courseId;
-        if (coverFile && id) {
-          const fd = new FormData();
-          fd.append("thumbnail", coverFile);
-          const up = await uploadCourseThumbnailAction(id, fd);
-          if (!up.ok) toast.warning(up.message ?? "Cover upload failed");
-        }
-        toast.success(result.message ?? "Saved");
-        router.push("/admin-courses");
-        router.refresh();
-      });
+      setSaving(true);
+      const result = await saveCourseAction({ id: courseId, payload, publish });
+      if (!result.ok) {
+        toast.error(result.message ?? "Something went wrong");
+        setSaving(false);
+        return;
+      }
+      const id = courseId ?? result.courseId;
+      if (coverFile && id) {
+        const fd = new FormData();
+        fd.append("thumbnail", coverFile);
+        const up = await uploadCourseThumbnailAction(id, fd);
+        if (!up.ok) toast.warning(up.message ?? "Cover upload failed");
+      }
+      toast.success(result.message ?? "Saved");
+      // Navigate + refresh so the list refetches (Router Cache is per-client;
+      // revalidatePath alone won't refetch a cached RSC on push). The overlay
+      // is driven by `saving`, not the router, so refresh no longer hangs it —
+      // navigation unmounts the form and clears it.
+      router.push("/admin-courses");
+      router.refresh();
     });
 
   return (
     <section className="sm:px-6 lg:px-10 mb-10 px-4">
+      {saving && (
+        <LogoLoaderOverlay
+          fixed
+          label={courseId ? "Saving changes…" : "Creating course…"}
+        />
+      )}
       <form
         onSubmit={(e) => e.preventDefault()}
         className="mt-14 p-6 border-[#B7B7B9] border-[0.5px] rounded-[12px] flex flex-col gap-6"
@@ -182,47 +180,16 @@ export default function UploadCourseForm({
           </div>
         </div>
 
-        {/* Price + Payment Type */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <Label text="Price" required />
-            <input
-              type="text"
-              placeholder="£19.99"
-              className={fieldClass}
-              {...register("price")}
-            />
-            <FieldError message={errors.price?.message} />
-          </div>
-          <div className="space-y-2">
-            <Label text="Payment Type" />
-            <PlainSelect
-              placeholder="Select Payment Type"
-              options={PAYMENT_TYPES}
-            />
-          </div>
-        </div>
-
-        {/* Material (course content — not part of the course record) */}
+        {/* Price */}
         <div className="space-y-2">
-          <Label text="Material" />
-          <label className="flex items-center justify-between gap-3 rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 cursor-pointer">
-            <span className="text-sm text-[#B7B7B9]">Attach pdf file</span>
-            <span className="size-6 rounded-[4px] border-[0.5px] border-[#B7B7B9] flex items-center justify-center shrink-0">
-              <ChevronUp size={14} className="text-black-others" />
-            </span>
-            <input type="file" accept={DOC_ACCEPT} className="hidden" />
-          </label>
-        </div>
-
-        {/* Course Link */}
-        <div className="space-y-2">
-          <Label text="Course Link" />
+          <Label text="Price" required />
           <input
-            type="url"
-            placeholder="Attach course link"
+            type="text"
+            placeholder="£19.99"
             className={fieldClass}
+            {...register("price")}
           />
+          <FieldError message={errors.price?.message} />
         </div>
 
         {/* Description */}
@@ -240,20 +207,20 @@ export default function UploadCourseForm({
         <div className="flex flex-wrap justify-end gap-3 pt-2">
           <button
             type="button"
-            disabled={pending}
+            disabled={saving}
             onClick={save(false)}
             className="flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold border border-primary-100 text-primary-100 cursor-pointer disabled:opacity-60"
           >
-            {pending && <Loader2 size={16} className="animate-spin" />}
+            {saving && <Loader2 size={16} className="animate-spin" />}
             Save as Draft
           </button>
           <button
             type="button"
-            disabled={pending}
+            disabled={saving}
             onClick={save(true)}
             className="flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold bg-primary-100 text-white cursor-pointer disabled:opacity-60"
           >
-            {pending && <Loader2 size={16} className="animate-spin" />}
+            {saving && <Loader2 size={16} className="animate-spin" />}
             Publish Now
           </button>
         </div>
