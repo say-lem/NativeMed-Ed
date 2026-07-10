@@ -1,77 +1,86 @@
-import CountDownToClass from "@/components/shared/Countdown";
-
+import axios from "axios";
+import Image from "next/image";
+import Link from "next/link";
+// import CountDownToClass from "@/components/shared/Countdown";
 import ProductsCard from "@/components/shared/ProductsCard";
 import TitleCase from "@/components/shared/TitleCase";
 import { Button } from "@/components/ui/button";
-import Image from "next/image";
-import { use } from "react";
-import { AiOutlineShoppingCart } from "react-icons/ai";
+import { getCourses } from "@/services/courses.service";
+import type { Course } from "@/types/api";
 
-export default function ProductByIdPage({
-  params,
-}: {
+interface PageProps {
   params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
-  console.log(id); //To be used for the get request
+}
 
-  //   mock data
-  const card = {
-    id: 4,
-    tag: "Subscription",
-    img: "/Images/card image.png",
-    title: "1-on-1 Sessions with Dr Native (6 Cases)",
-    desc: "Our Flagship Extensive Course is a 4-5 week intensive program. designed to equip you with the knowledge, skills, and confidence to excel in the MRCGP SCA exam.",
-    price: 199,
-  };
+/** The public course list is available unauthenticated; find the one by id
+ *  (the single-course endpoint requires auth). */
+async function loadCourse(id: string): Promise<Course | null> {
+  try {
+    const res = await getCourses();
+    if (!res.success) return null;
+    return res.data.find((c) => c._id === id) ?? null;
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    console.error("[product-detail] fetch error:", err.code, err.message);
+    return null;
+  }
+}
+
+export default async function ProductByIdPage({ params }: PageProps) {
+  const { id } = await params;
+  const course = await loadCourse(id);
+
+  if (!course) {
+    return (
+      <section className="px-4 sm:px-8 lg:px-15 py-24 text-center space-y-4">
+        <h1 className="text-2xl font-semibold text-black-others">
+          Product not found
+        </h1>
+        <p className="text-subtle-text">
+          This product may have been removed or is no longer available.
+        </p>
+        <Link
+          href="/products"
+          className="inline-block text-primary-100 font-semibold hover:underline"
+        >
+          Back to products
+        </Link>
+      </section>
+    );
+  }
+
   return (
     <>
-      {" "}
       <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-8 sm:pt-12 lg:pt-20 pb-16 sm:pb-24 lg:pb-36">
         <aside className="px-0 sm:px-4 lg:px-10">
           <div className="authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-5 md:gap-6 lg:gap-8 flex flex-col md:flex-row justify-center overflow-x-hidden">
             <aside className="relative w-full md:basis-1/2 min-h-[35vh] sm:min-h-[40vh] md:min-h-[50vh] lg:min-h-[60vh]">
               <Image
-                src={card.img}
-                alt={`image of ${card.title}`}
+                src={course.thumbnailUrl || "/Images/card image.png"}
+                alt={`image of ${course.title}`}
                 fill
                 className="object-cover object-center rounded-lg"
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
               />
-              <p className="absolute rounded-[100px] py-2 px-3 top-2 right-5 bg-[#00000080] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
-                {card.tag}
-              </p>
             </aside>
             <aside className="w-full md:basis-1/2 flex flex-col justify-between gap-4 sm:gap-5 md:gap-6 lg:gap-8">
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-semibold text-lg sm:text-xl lg:text-2xl leading-[130%] tracking-[-2%] text-black-others">
-                  MRCGP SCA Revision
+                  {course.title}
                 </h3>
-                <h4 className="font-semibold text-2xl sm:text-3xl lg:text-4xl leading-[130%] tracking-[-2%] text-black-others">
-                  £{card.price.toFixed(2)}
-                  <span className="text-base sm:text-lg leading-[120%]">
-                    /month
-                  </span>
-                </h4>
-                <p className="font-light text-sm sm:text-base lg:text-xl leading-[150%] text-[#373737]">
-                  Prepare effectively for the MRCGP Simulated Consultation
-                  Assessment (SCA) with our Online Monthly Subscription.
-                </p>
+                {course.description && (
+                  <p className="font-light text-sm sm:text-base lg:text-xl leading-[150%] text-[#373737] whitespace-pre-line">
+                    {course.description}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center sm:justify-end">
-                <Button
-                  className="text-black-others font-bold border text-sm sm:text-base border-black-others"
-                  variant="outline"
-                >
-                  <span>
-                    <AiOutlineShoppingCart className="text-black-others size-4 sm:size-5" />
-                  </span>
-                  <span>Add to Cart</span>
-                </Button>
-                <Button className="font-bold text-sm sm:text-base bg-black-others">
-                  Buy Now
-                </Button>
+                <Link href={`/courses/${course._id}`}>
+                  <Button className="font-bold text-sm sm:text-base bg-black-others w-full">
+                    Get this course
+                  </Button>
+                </Link>
               </div>
             </aside>
           </div>
@@ -83,7 +92,7 @@ export default function ProductByIdPage({
           </div>
         </aside>
       </section>
-      <CountDownToClass />
+      {/* <CountDownToClass /> */}
     </>
   );
 }

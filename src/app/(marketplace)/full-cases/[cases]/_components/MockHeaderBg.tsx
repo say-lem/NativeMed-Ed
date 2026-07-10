@@ -1,11 +1,13 @@
-import { GetRandomColor } from "../../_components/GetRandomColor";
+import { colorFromSeed } from "../../_components/GetRandomColor";
 
 export default function MockHeaderBg({
   children,
+  seed = "case",
 }: {
   children: React.ReactNode;
+  seed?: string;
 }) {
-  const color = GetRandomColor();
+  const color = colorFromSeed(seed);
   return (
     <div
       style={{ backgroundColor: color }}

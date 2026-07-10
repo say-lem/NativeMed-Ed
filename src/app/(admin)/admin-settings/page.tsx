@@ -1,7 +1,12 @@
 import axios from "axios";
 import { redirect } from "next/navigation";
 import AdminSettingsHero from "./_components/AdminSettingsHero";
-import SettingsForm from "./_components/SettingsForm";
+import SettingsForm from "@/components/shared/SettingsForm";
+import {
+  changePasswordAction,
+  logoutAllAction,
+  updateProfileAction,
+} from "./actions";
 import { me } from "@/services/auth.service";
 import type { User } from "@/types/api";
 
@@ -25,6 +30,11 @@ export default async function AdminSettingsPage() {
       <SettingsForm
         initialProfile={{ fullName: user.fullName, phone: user.phone }}
         email={user.email}
+        actions={{
+          updateProfileAction,
+          changePasswordAction,
+          logoutAllAction,
+        }}
       />
     </section>
   );

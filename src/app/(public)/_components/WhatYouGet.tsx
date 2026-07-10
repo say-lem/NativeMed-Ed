@@ -1,6 +1,7 @@
 import ButtonTag from "@/components/shared/ButtonTag";
 import SubtleText from "@/components/shared/SubtleText";
 import Image from "next/image";
+import Link from "next/link";
 import ProductsCard from "@/components/shared/ProductsCard";
 import TitleCase from "@/components/shared/TitleCase";
 
@@ -15,7 +16,10 @@ export default function WhatYouGet() {
 
       <ProductsCard cutBy={3} />
 
-      <p className="text-primary-100 leading-[150%] font-semibold flex items-center gap-2 justify-end cursor-pointer hover:underline underline-offset-2">
+      <Link
+        href="/products"
+        className="text-primary-100 leading-[150%] font-semibold flex items-center gap-2 justify-end cursor-pointer hover:underline underline-offset-2"
+      >
         <span>See more</span>
         <Image
           src={"/Images/arrow-foward-purple.png"}
@@ -23,7 +27,7 @@ export default function WhatYouGet() {
           height={13.33}
           width={13.33}
         />
-      </p>
+      </Link>
     </section>
   );
 }

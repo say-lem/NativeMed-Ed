@@ -1,9 +1,10 @@
 import AuthForm from "@/components/shared/AuthForm";
 
-export default function Register() {
-  return (
-    <>
-      <AuthForm mode="register" />
-    </>
-  );
+export default async function Register({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect?: string }>;
+}) {
+  const { redirect } = await searchParams;
+  return <AuthForm mode="register" redirectTo={redirect} />;
 }

@@ -43,6 +43,11 @@ function FieldError({ message }: { message?: string }) {
 const inputClass =
   "border-[0.5px] rounded-[8px] px-3 sm:px-4 py-2.5 sm:py-3 border-secondary-20 w-full focus:outline-none focus:border-primary-100";
 
+/** Carry the post-login `redirect` target across the login ↔ register links. */
+function withRedirect(href: string, redirectTo?: string): string {
+  return redirectTo ? `${href}?redirect=${encodeURIComponent(redirectTo)}` : href;
+}
+
 function PasswordField({
   id,
   autoComplete,
@@ -121,7 +126,7 @@ function AuthCard({
   );
 }
 
-function LoginForm() {
+function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const {
@@ -137,7 +142,7 @@ function LoginForm() {
   const onSubmit = (values: LoginValues) => {
     setServerError(null);
     startTransition(async () => {
-      const result = await loginAction(values);
+      const result = await loginAction(values, redirectTo);
       if (!result.ok) {
         applyServerErrors<LoginValues>(result, setError);
         if (result.message) setServerError(result.message);
@@ -150,7 +155,7 @@ function LoginForm() {
       title="Welcome Back"
       subtitle="Sign in to access your courses"
       footer={
-        <Link href="/register">
+        <Link href={withRedirect("/register", redirectTo)}>
           <span className="font-light text-sm md:text-base leading-[150%] text-subtle-text">
             Don&apos;t have an account?
             <span className="text-primary-100 font-bold"> Sign Up</span>
@@ -222,7 +227,7 @@ function LoginFields({
   );
 }
 
-function RegisterForm() {
+function RegisterForm({ redirectTo }: { redirectTo?: string }) {
   const [serverError, setServerError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const {
@@ -238,7 +243,7 @@ function RegisterForm() {
   const onSubmit = (values: RegisterValues) => {
     setServerError(null);
     startTransition(async () => {
-      const result = await registerAction(values);
+      const result = await registerAction(values, redirectTo);
       if (!result.ok) {
         applyServerErrors<RegisterValues>(result, setError);
         if (result.message) setServerError(result.message);
@@ -251,7 +256,7 @@ function RegisterForm() {
       title="Get Started"
       subtitle="Sign up to start learning"
       footer={
-        <Link href="/login">
+        <Link href={withRedirect("/login", redirectTo)}>
           <span className="font-light text-sm md:text-base leading-[150%] text-subtle-text">
             Already have an account?{" "}
             <span className="text-primary-100 font-bold">Sign In</span>
@@ -347,6 +352,16 @@ function RegisterFields({
   );
 }
 
-export default function AuthForm({ mode }: { mode: "login" | "register" }) {
-  return mode === "register" ? <RegisterForm /> : <LoginForm />;
+export default function AuthForm({
+  mode,
+  redirectTo,
+}: {
+  mode: "login" | "register";
+  redirectTo?: string;
+}) {
+  return mode === "register" ? (
+    <RegisterForm redirectTo={redirectTo} />
+  ) : (
+    <LoginForm redirectTo={redirectTo} />
+  );
 }

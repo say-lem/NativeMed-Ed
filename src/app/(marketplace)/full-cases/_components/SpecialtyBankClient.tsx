@@ -4,12 +4,15 @@ import { IoSearchSharp } from "react-icons/io5";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import BannerBg from "../../_components/BannerBg";
 import MockCasesCards from "./MockBankCards";
+import CaseBankUpsell from "./CaseBankUpsell";
 import type { Specialty } from "@/types/api";
 
 export default function SpecialtyBankClient({
   specialties,
+  upsellPriceLabel = null,
 }: {
   specialties: Specialty[];
+  upsellPriceLabel?: string | null;
 }) {
   const [query, setQuery] = useState("");
 
@@ -41,6 +44,10 @@ export default function SpecialtyBankClient({
           />
         </div>
       </BannerBg>
+
+      {upsellPriceLabel !== null && (
+        <CaseBankUpsell priceLabel={upsellPriceLabel || undefined} />
+      )}
 
       <div className="px-4 sm:px-6 lg:px-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6 py-6 sm:py-8">
         <MockCasesCards

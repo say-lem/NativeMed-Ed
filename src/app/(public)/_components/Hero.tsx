@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
 import RotatingTagline from "./RotatingTagline";
 
-export default function HomeHero() {
+export default function HomeHero({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   return (
     <section className="radialBgGradient min-h-[70vh] sm:min-h-[80vh] md:min-h-screen lg:min-h-[120vh] overflow-hidden relative">
       <div className="flex items-center justify-center px-4 sm:px-8 lg:px-15 pt-6 sm:pt-8 lg:pt-16">
@@ -41,15 +42,17 @@ export default function HomeHero() {
       </p>
 
       <div className="mt-5 sm:mt-6 lg:mt-10 text-center">
-        <Button className="bg-primary-100 font-bold tracking-[-1%] leading-[120%] space-x-1">
-          <span>Start Learning</span>
-          <Image
-            src="/Images/arrow_forward.png"
-            alt="Arrow forward"
-            width={13.33}
-            height={13.33}
-          />
-        </Button>
+        <Link href={isLoggedIn ? "/dashboard" : "/register"}>
+          <Button className="bg-primary-100 font-bold tracking-[-1%] leading-[120%] space-x-1">
+            <span>{isLoggedIn ? "Go to Dashboard" : "Start Learning"}</span>
+            <Image
+              src="/Images/arrow_forward.png"
+              alt="Arrow forward"
+              width={13.33}
+              height={13.33}
+            />
+          </Button>
+        </Link>
       </div>
 
       <div className="relative w-full h-[30vh] sm:h-[35vh] md:h-[60vh] lg:h-screen -mt-[20vh] sm:-mt-[25vh] md:-mt-[45vh] lg:-mt-[65vh]">

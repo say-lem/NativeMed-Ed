@@ -1,8 +1,55 @@
+import axios from "axios";
 import {
   CoursesIllustration,
   QuestionIllustration,
   SubscriptionsIllustration,
 } from "./StatIllustrations";
+import { getMyEnrollments } from "@/services/enrollments.service";
+import {
+  getMySubscriptions,
+  getCaseBankStatus,
+} from "@/services/subscriptions.service";
+import { getSpecialties } from "@/services/cases.service";
+
+async function loadEnrolledCount(): Promise<number> {
+  try {
+    const res = await getMyEnrollments();
+    return res.success
+      ? res.data.filter((e) => e.isActive !== false).length
+      : 0;
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    return 0;
+  }
+}
+
+async function loadActiveSubs(): Promise<number> {
+  try {
+    const res = await getMySubscriptions();
+    return res.success && Array.isArray(res.data) ? res.data.length : 0;
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    return 0;
+  }
+}
+
+async function loadCaseBank(): Promise<{ active: boolean; total: number }> {
+  try {
+    const [status, specialties] = await Promise.all([
+      getCaseBankStatus(),
+      getSpecialties(),
+    ]);
+    return {
+      active: status.success ? status.data.active : false,
+      total: specialties.success
+        ? specialties.data.reduce((sum, s) => sum + s.count, 0)
+        : 0,
+    };
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    return { active: false, total: 0 };
+  }
+}
 
 type Stat = {
   label: string;
@@ -12,29 +59,34 @@ type Stat = {
   Illustration: (props: { className?: string }) => React.JSX.Element;
 };
 
-const stats: Stat[] = [
-  {
-    label: "Question Bank",
-    value: "200",
-    suffix: "/800",
-    caption: "Cases attempted",
-    Illustration: QuestionIllustration,
-  },
-  {
-    label: "Courses",
-    value: "4",
-    caption: "Enrolled",
-    Illustration: CoursesIllustration,
-  },
-  {
-    label: "Subscriptions",
-    value: "2",
-    caption: "Active",
-    Illustration: SubscriptionsIllustration,
-  },
-];
+export default async function StatCards() {
+  const [enrolled, activeSubs, caseBank] = await Promise.all([
+    loadEnrolledCount(),
+    loadActiveSubs(),
+    loadCaseBank(),
+  ]);
 
-export default function StatCards() {
+  const stats: Stat[] = [
+    {
+      label: "Case Bank",
+      value: String(caseBank.total),
+      caption: caseBank.active ? "Unlocked" : "Cases available",
+      Illustration: QuestionIllustration,
+    },
+    {
+      label: "Courses",
+      value: String(enrolled),
+      caption: "Enrolled",
+      Illustration: CoursesIllustration,
+    },
+    {
+      label: "Subscriptions",
+      value: String(activeSubs),
+      caption: "Active",
+      Illustration: SubscriptionsIllustration,
+    },
+  ];
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
       {stats.map((stat) => (
@@ -44,7 +96,9 @@ export default function StatCards() {
         >
           <stat.Illustration className="absolute right-0 bottom-0 w-24 h-24 pointer-events-none" />
           <div className="relative space-y-1.5">
-            <p className="text-subtle-text text-sm leading-[130%]">{stat.label}</p>
+            <p className="text-subtle-text text-sm leading-[130%]">
+              {stat.label}
+            </p>
             <h3 className="text-black text-3xl sm:text-4xl font-semibold tracking-[-2%] leading-[130%]">
               {stat.value}
               {stat.suffix && (
@@ -53,7 +107,9 @@ export default function StatCards() {
                 </span>
               )}
             </h3>
-            <p className="text-subtle-text text-sm leading-[130%]">{stat.caption}</p>
+            <p className="text-subtle-text text-sm leading-[130%]">
+              {stat.caption}
+            </p>
           </div>
         </div>
       ))}

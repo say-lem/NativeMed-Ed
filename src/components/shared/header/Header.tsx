@@ -39,6 +39,11 @@ export default function PublicHeader({ user }: { user?: User | null }) {
 
       {isLoggedIn ? (
         <div className="flex items-center gap-2 sm:gap-4">
+          <Link href="/dashboard" className="hidden sm:inline-flex">
+            <Button className="bg-primary-100 font-semibold text-xs">
+              Go to Dashboard
+            </Button>
+          </Link>
           <NamedHeader user={user} />
           <button
             className="lg:hidden text-black"

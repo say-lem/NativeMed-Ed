@@ -3,12 +3,14 @@
 import axios from "axios";
 import { redirect } from "next/navigation";
 import { setSession } from "@/lib/session";
+import { safeRedirect } from "@/lib/redirect";
 import { registerSchema, type RegisterValues } from "@/lib/schemas/auth";
 import { register } from "@/services/auth.service";
 import type { ApiFailure, FormActionResult } from "@/types/api";
 
 export async function registerAction(
   values: RegisterValues,
+  redirectTo?: string,
 ): Promise<FormActionResult> {
   const parsed = registerSchema.safeParse(values);
   if (!parsed.success) {
@@ -45,5 +47,5 @@ export async function registerAction(
     return { ok: false, message: "Network error. Please try again." };
   }
 
-  redirect("/dashboard");
+  redirect(safeRedirect(redirectTo, "/dashboard"));
 }

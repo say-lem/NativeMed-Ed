@@ -55,7 +55,7 @@ export default function CasesListClient({
 
   return (
     <>
-      <MockHeaderBg>
+      <MockHeaderBg seed={title}>
         <div className="self-start">
           <BackIcon />
         </div>

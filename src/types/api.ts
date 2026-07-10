@@ -237,7 +237,15 @@ export interface CourseInput {
 export interface Enrollment {
   _id: string;
   userId?: UserRef | string;
-  courseId?: { _id: string; title?: string; price?: number } | string;
+  courseId?:
+    | {
+        _id: string;
+        title?: string;
+        description?: string;
+        price?: number;
+        thumbnailUrl?: string;
+      }
+    | string;
   isActive?: boolean;
   source?: string; // "manual" | "payment"
   accessTier?: string; // "pdf_only" | "pdf_drive"
@@ -251,9 +259,11 @@ export interface Enrollment {
 
 export type LessonType = "pdf" | "video";
 
-/** A course lesson (GET /courses/:courseId/content). Shape unverified — fields optional. */
+/** A course lesson (GET /courses/:courseId/content). Verified 2026-07-10:
+ *  PDF lessons carry a Cloudinary `fileUrl`; video lessons a Google-Drive link. */
 export interface Lesson {
   _id: string;
+  courseId?: string;
   title: string;
   type: LessonType | string;
   fileUrl?: string;
@@ -261,4 +271,63 @@ export interface Lesson {
   duration?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** A single price option within a payment plan (GET /payments/plans).
+ *  `amount` is in minor units (pence). Verified 2026-07-10. */
+export interface PlanPrice {
+  amount: number;
+  currency: string; // e.g. "gbp"
+  interval: string; // "monthly" | "quarterly"
+  stripePriceId: string;
+  label: string; // pre-formatted, e.g. "£69.99 / month"
+}
+
+/** A payment plan group (GET /payments/plans). `tier` is present only for
+ *  `type: "course"` plans. Verified 2026-07-10. */
+export interface PaymentPlan {
+  type: "case_bank" | "course";
+  tier?: "pdf_only" | "pdf_drive";
+  name: string;
+  description: string;
+  prices: PlanPrice[];
+}
+
+/** GET /subscriptions/course/:courseId/status — access via a live subscription.
+ *  Verified 2026-07-10. */
+export interface CourseSubStatus {
+  active: boolean;
+}
+
+/** GET /subscriptions/case-bank/status — one subscription unlocks ALL cases.
+ *  Verified 2026-07-10. */
+export interface CaseBankStatus {
+  active: boolean;
+}
+
+/** GET /subscriptions/me — a user's Stripe subscription. `courseId` (populated)
+ *  and `tier` are present only for `type: "course"`. Verified 2026-07-10. */
+export interface Subscription {
+  _id: string;
+  type: "case_bank" | "course";
+  userId: string;
+  courseId?: { _id: string; title?: string; thumbnailUrl?: string };
+  tier?: "pdf_only" | "pdf_drive";
+  billingInterval: string; // "monthly" | "quarterly" | …
+  status: string; // "active" | "canceled" | …
+  cancelAtPeriodEnd: boolean;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** GET /enrollments/check/:courseId — access via an enrollment (manual grant or
+ *  a past payment). `accessTier` is the level granted. Verified 2026-07-10. */
+export interface EnrollmentCheck {
+  enrolled: boolean;
+  accessTier?: "pdf_only" | "pdf_drive";
+  accessGrantedAt?: string;
 }

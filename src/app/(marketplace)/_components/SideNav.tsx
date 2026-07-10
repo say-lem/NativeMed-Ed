@@ -9,7 +9,7 @@ import {
   SubscriptionsIcon,
 } from "./Icons";
 import { usePathname } from "next/navigation";
-import { LogOutIcon } from "lucide-react";
+import { GraduationCap, LogOutIcon } from "lucide-react";
 
 export default function SideNav() {
   const pathName = usePathname();
@@ -55,6 +55,16 @@ export default function SideNav() {
           }
           href="/courses"
           label="Courses"
+        />
+        <SideNavLink
+          icon={
+            <GraduationCap
+              size={20}
+              color={pathName === "/my-courses" ? "#5925B3" : "#373737"}
+            />
+          }
+          href="/my-courses"
+          label="My Courses"
         />
         <SideNavLink
           icon={

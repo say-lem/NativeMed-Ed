@@ -3,7 +3,7 @@ import MockHeaderBg from "../_components/MockHeaderBg";
 import BackIcon from "../_components/BackSvg";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import MocKCasesNavState from "./_components/MockCasesNavState";
-import { GetRandomColor } from "../../_components/GetRandomColor";
+import { colorFromSeed } from "../../_components/GetRandomColor";
 import { adaptCase } from "./_components/adaptCase";
 import { getCase } from "@/services/cases.service";
 import type { CaseDetail } from "@/types/api";
@@ -45,20 +45,26 @@ function Badge({
 export default async function ViewMockCases({ params }: PageProps) {
   const { id } = await params;
   const detail = await loadCase(id);
-  const color = GetRandomColor();
+  const color = colorFromSeed(id);
 
+  // Case access is enforced by the backend: `GET /cases` returns the 5 free
+  // cases to unsubscribed users (or all to subscribers), and `GET /cases/:id`
+  // only returns cases the user may view. So there's no paywall here — a case
+  // that reaches this page is fully viewable. A locked case (direct URL by an
+  // unsubscribed user) comes back as "not found".
   if (!detail) {
     return (
       <>
-        <MockHeaderBg>
+        <MockHeaderBg seed={id}>
           <div className="self-start">
             <BackIcon />
           </div>
-          <BannerTitleCase text="Case not found" />
+          <BannerTitleCase text="Case not available" />
         </MockHeaderBg>
         <section className="px-4 sm:px-6 lg:px-8 py-12 text-center text-subtle-text">
-          We couldn&apos;t load this case. It may have been removed, or the
-          backend is unavailable.
+          We couldn&apos;t load this case. It may have been removed, or it&apos;s
+          part of the full Case Bank — subscribe from the Case Bank page to
+          unlock every case.
         </section>
       </>
     );
@@ -68,7 +74,7 @@ export default async function ViewMockCases({ params }: PageProps) {
 
   return (
     <>
-      <MockHeaderBg>
+      <MockHeaderBg seed={id}>
         <div className="self-start">
           <BackIcon />
         </div>

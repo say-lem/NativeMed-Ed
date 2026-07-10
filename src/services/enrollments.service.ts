@@ -1,6 +1,11 @@
 import "server-only";
 import { api } from "@/lib/api";
-import type { ApiResponse, Enrollment, Paginated } from "@/types/api";
+import type {
+  ApiResponse,
+  Enrollment,
+  EnrollmentCheck,
+  Paginated,
+} from "@/types/api";
 
 /** GET /enrollments — admin. May be a plain array or a paginated envelope (unverified). */
 export async function getEnrollments(
@@ -10,6 +15,24 @@ export async function getEnrollments(
   const res = await api.get<ApiResponse<Enrollment[] | Paginated<Enrollment>>>(
     "/enrollments",
     { params: { page, limit } },
+  );
+  return res.data;
+}
+
+/** GET /enrollments/me — auth. The signed-in user's enrollments (course access);
+ *  `courseId` comes populated (title/thumbnail/price). Verified 2026-07-10. */
+export async function getMyEnrollments(): Promise<ApiResponse<Enrollment[]>> {
+  const res = await api.get<ApiResponse<Enrollment[]>>("/enrollments/me");
+  return res.data;
+}
+
+/** GET /enrollments/check/:courseId — auth. Is the signed-in user enrolled in
+ *  this course (manual grant or past payment)? Verified 2026-07-10. */
+export async function checkEnrollment(
+  courseId: string,
+): Promise<ApiResponse<EnrollmentCheck>> {
+  const res = await api.get<ApiResponse<EnrollmentCheck>>(
+    `/enrollments/check/${courseId}`,
   );
   return res.data;
 }

@@ -1,11 +1,8 @@
 import axios from "axios";
 import DashboardHero from "./_components/Hero";
 import StatCards from "./_components/StatCards";
-import GoPremium from "./_components/GoPremium";
-import CalendarCard from "./_components/CalendarCard";
-import UpcomingClasses from "./_components/UpcomingClasses";
 import SubscriptionsSection from "./_components/SubscriptionsSection";
-import CoursesSection from "./_components/CoursesSection";
+import MyCoursesSection from "./_components/MyCoursesSection";
 import { me } from "@/services/auth.service";
 
 async function loadName(): Promise<string | undefined> {
@@ -30,14 +27,7 @@ export default async function DashboardPage() {
       </div>
 
       <SubscriptionsSection />
-      <CoursesSection />
-
-      {/* Premium / Calendar / Upcoming — 3-column row at the bottom */}
-      <section className="px-4 sm:px-6 lg:px-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <GoPremium />
-        <CalendarCard />
-        <UpcomingClasses />
-      </section>
+      <MyCoursesSection />
     </div>
   );
 }

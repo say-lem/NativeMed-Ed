@@ -12,11 +12,14 @@ import {
   type ProfileValues,
 } from "@/lib/schemas/settings";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
-import {
-  changePasswordAction,
-  logoutAllAction,
-  updateProfileAction,
-} from "../actions";
+import type { FormActionResult } from "@/types/api";
+
+/** Server actions injected by the page so this form works for both admin and members. */
+export interface SettingsActions {
+  updateProfileAction: (payload: ProfileValues) => Promise<FormActionResult>;
+  changePasswordAction: (payload: PasswordValues) => Promise<FormActionResult>;
+  logoutAllAction: () => Promise<void>;
+}
 
 const fieldClass =
   "w-full rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 text-sm text-black-others placeholder:text-[#B7B7B9] outline-none focus:border-primary-100";
@@ -90,9 +93,11 @@ const btnPrimary =
 export default function SettingsForm({
   initialProfile,
   email,
+  actions,
 }: {
   initialProfile: ProfileValues;
   email: string;
+  actions: SettingsActions;
 }) {
   const router = useRouter();
   const confirm = useConfirm();
@@ -118,7 +123,7 @@ export default function SettingsForm({
 
   const onSaveProfile = (values: ProfileValues) => {
     startProfile(async () => {
-      const res = await updateProfileAction(values);
+      const res = await actions.updateProfileAction(values);
       if (res.ok) {
         toast.success(res.message ?? "Profile updated");
         router.refresh(); // reflect the new name in the shell header
@@ -130,7 +135,7 @@ export default function SettingsForm({
 
   const onChangePassword = (values: PasswordValues) => {
     startPassword(async () => {
-      const res = await changePasswordAction(values);
+      const res = await actions.changePasswordAction(values);
       if (res.ok) {
         toast.success(res.message ?? "Password changed");
         passwordForm.reset();
@@ -160,7 +165,7 @@ export default function SettingsForm({
     });
     if (!ok) return;
     startLogout(async () => {
-      await logoutAllAction();
+      await actions.logoutAllAction();
     });
   };
 

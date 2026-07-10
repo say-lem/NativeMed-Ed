@@ -39,9 +39,14 @@ async function tryRefresh(refreshToken: string): Promise<RefreshSuccess | null> 
 }
 
 function redirectToLogin(request: NextRequest): NextResponse {
+  // Remember where the user was headed so login can send them back.
+  const target = `${request.nextUrl.pathname}${request.nextUrl.search}`;
   const url = request.nextUrl.clone();
   url.pathname = "/login";
   url.search = "";
+  if (target && target !== "/") {
+    url.searchParams.set("redirect", target);
+  }
   const response = NextResponse.redirect(url);
   response.cookies.delete(ACCESS_TOKEN_COOKIE);
   response.cookies.delete(REFRESH_TOKEN_COOKIE);
@@ -96,12 +101,16 @@ export const config = {
     "/dashboard/:path*",
     "/courses",
     "/courses/:path*",
+    "/my-courses",
+    "/my-courses/:path*",
     "/full-cases",
     "/full-cases/:path*",
     "/subscriptions",
     "/subscriptions/:path*",
     "/settings",
     "/settings/:path*",
+    "/payment",
+    "/payment/:path*",
     // Admin area
     "/admin-dashboard",
     "/admin-dashboard/:path*",

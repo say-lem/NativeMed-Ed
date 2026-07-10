@@ -23,19 +23,26 @@ update the code, then update this file.
 | Courses        | `GET /courses` (PUBLIC, **published-only** plain array — NOT paginated), `GET /courses/:id` (auth, **published-only**), `GET /courses/admin/all` (admin, **paginated, incl. drafts**), `GET /courses/admin/:id` (admin, incl. drafts), `POST/PATCH/DELETE /courses/:id` (admin), `PATCH /courses/:id/{thumbnail,publish}` (admin)                                                             | mixed | `POST` body: `{ title, description, price }` (all required). thumbnail = multipart field `thumbnail`. **Admin must use `/courses/admin/*` to see drafts** — `/courses` + `/courses/:id` hide unpublished (mirrors Cases). |
 | Course Content | `GET /courses/:courseId/content[/:id]` (auth); **two create endpoints** — `POST .../content/upload-pdf` (admin, multipart: `file,title,order,type=pdf`, Cloudinary) and `POST .../content/drive-link` (admin, JSON: `{title,type,fileUrl,order,duration}`); `PATCH/DELETE .../content/:id` (admin)                                                                                | mixed | PDF lessons are uploaded; video lessons are Google-Drive links. lesson `type` e.g. `"video"`/`"pdf"` |
 | Cases          | see §4                                                                                                                                                                                                                                                                       | mixed | only module with a written integration doc + frontend integration                        |
-| Enrollments    | `GET /enrollments/me` (auth, `data: []` array), `GET /enrollments/check/:courseId` (auth), `GET /enrollments` + `/course/:courseId` + `/user/:userId` (admin), `POST /enrollments/{manual,revoke}` (admin, `{ userId, courseId }`), `PATCH /enrollments/:id/restore` (admin) | mixed | course access grants; likely backs "Subscriptions"/"My Courses"                          |
+| Enrollments    | `GET /enrollments/me` (auth, array; `courseId` **populated**), `GET /enrollments/check/:courseId` (auth), `GET /enrollments` + `/course/:courseId` + `/user/:userId` (admin), `POST /enrollments/{manual,revoke}` (admin, `{ userId, courseId }`), `PATCH /enrollments/:id/restore` (admin) | mixed | course access grants; backs the member **My Courses**. An enrollment = access to a course (via payment OR admin grant); ≠ a subscription (§7) |
 | Admin          | `GET /admin/dashboard`, `GET /admin/users[/:userId]`, `PATCH /admin/users/:userId/toggle-status`                                                                                                                                                                             | admin | dashboard stats + user mgmt                                                              |
 | Payments       | `GET /payments/plans` (public), `POST /payments/checkout` (auth; `{ type:"case_bank"\|"course", interval, tier?, courseId?, successUrl, cancelUrl }`), `POST /payments/billing-portal` (auth), `GET /payments/me` (auth, paginated), `POST /payments/webhook` (Stripe, raw body + `Stripe-Signature`)                                                                                | mixed | **Stripe** checkout. `type:"case_bank"` → Case Bank sub; `type:"course"` + `tier:"pdf_only"\|"pdf_drive"` → course. `interval`: `monthly`/`quarterly`/… |
 | Subscriptions  | `GET /subscriptions/plans` (public), `GET /subscriptions/me` (auth), `GET /subscriptions/case-bank/status` (auth), `GET /subscriptions/course/:courseId/status` (auth), `GET /subscriptions/subscribers` (admin)                                                              | mixed | **`/subscriptions/subscribers` is the REAL source for the admin Subscribers screen** — NOT `/admin/users`. A user ≠ a subscriber. `/subscriptions/me` + `…/status` back the marketplace "My Subscriptions"/access gating |
 
 - Admin **Subscribers** screen is wired to `GET /subscriptions/subscribers` (plain array; a user is NOT
   a subscriber — do NOT back it with `/admin/users`). Row shape: `{ name, email, subscriptionPlan,
-  subscribedTo, expiryDate, status }`. Admin **casebank** + **courses** lists and the admin **dashboard**
-  stats are also wired; the dashboard's **Recent Subscribers** shows the top 5 from
-  `/subscriptions/subscribers`. Still **static / mock**: marketplace Courses/Subscriptions/Dashboard/Settings.
-- Response shapes verified against live data: **Cases** (§4), **Courses**, and **Subscriptions**
-  (`subscribers` + `plans`). Still unverified: **Enrollments** (empty in prod, `data: []`) and
-  **Payments** — probe a real record before building those UIs.
+  subscribedTo, expiryDate, status }`. Admin **casebank**, **courses** (via `/courses/admin/all`),
+  **subscribers**, **users** (`/admin/users`), and **enrollments** (`/enrollments`) lists + the admin
+  **dashboard** stats are all wired.
+- **Response shapes verified against live data (as of 2026-07-10):** Cases (§4), Courses (list + detail),
+  Payments **plans** (§8), Subscriptions (**subscribers**, **plans**, **`/me`**, **course/case-bank
+  `status`** = `{ active: boolean }`), Enrollments (**`/enrollments/me`** + **`/check/:id`**, §8), Course
+  Content (§8). **Still unverified:** `POST /payments/checkout` response, `POST /payments/billing-portal`
+  response, `GET /payments/me`.
+- **Two backend blockers** the frontend is waiting on (both built client-side, both fail at the backend):
+  1. **Stripe checkout** — `/payments/plans` returns dummy price IDs (`price_dummy_*`), so
+     `POST /payments/checkout` 500s ("Something went wrong"). Needs real Stripe prices.
+  2. **Course PDF delivery** — lesson `fileUrl`s are **private Cloudinary** assets (`401 deny or ACL
+     failure`), so our proxy can't stream them. Needs a signed URL or a backend stream endpoint. See §7.
 
 ## 1. Environment & API base URL
 
@@ -74,8 +81,17 @@ update the code, then update this file.
   cookies). On a matched request: if the access token is valid (30s leeway) it passes through; if
   expired/missing it refreshes via `/auth/refresh-token`, writes the new access+refresh cookies on
   the response, and forwards the new access token to the render. If refresh fails it clears cookies
-  and redirects to `/login`. The axios interceptor remains a fallback for 401s during an in-render
-  API call. **The matcher must list every protected route** (marketplace + admin).
+  and redirects to `/login?redirect=<original-path+query>` (so login can send the user back — see
+  the return-to-page note below). The axios interceptor remains a fallback for 401s during an
+  in-render API call. **The matcher must list every protected route** (marketplace + admin).
+- **Return-to-page-after-login**: `redirectToLogin` (proxy) appends `?redirect=<path>` with the
+  originally-requested path+query. `login`/`register` actions take an optional `redirectTo` and route
+  there via [src/lib/redirect.ts](src/lib/redirect.ts) `safeRedirect(target, fallback)` — which only
+  allows **internal absolute paths** (rejects `//host`, `/\host`, absolute URLs → open-redirect guard),
+  falling back to the role default (admin `/admin-dashboard`, else `/dashboard`). `AuthForm` reads
+  `redirect` from `searchParams` (server-side, in the page — no `useSearchParams`) and preserves it
+  across the login↔register footer links. So a logged-out "Get this course" → `/courses/:id` bounces
+  through login and lands back on the course.
 - Every case endpoint requires `Authorization: Bearer <accessToken>`.
 - Standard envelope on **every** response:
   ```ts
@@ -113,6 +129,11 @@ Base: `/api/v1/cases`. Two visibility states:
 > IMPORTANT: `GET /cases` and `GET /cases/specialties` return **only published** cases. If the DB has
 > no published cases, the user-facing Case Bank is correctly empty. Admins create via `POST /cases`
 > then publish via `PATCH /cases/:id/publish`. To see drafts use the admin routes.
+>
+> **Case Bank subscription (5 free):** the backend gates `GET /cases` by subscription — an unsubscribed
+> user gets **5 cases**; a subscribed user gets **all**. `GET /cases/:id` only returns a case the user
+> may view. This is enforced backend-side, so the frontend does NOT paywall the case detail; it shows a
+> subscribe **upsell** on the Case Bank list instead (§7).
 
 ### Enums / allowed values
 
@@ -262,11 +283,23 @@ fd.append("stationImage", stationFile); // optional
 
 ## 6. Where things live (current frontend)
 
-- Types: [src/types/api.ts](src/types/api.ts) (incl. `CaseInput` = POST/PATCH payload)
-- Cases service: [src/services/cases.service.ts](src/services/cases.service.ts) — user reads + admin
-  `getAdminCases`/`getAdminCase`/`createCase`/`updateCase`.
-- Admin service: [src/services/admin.service.ts](src/services/admin.service.ts) — `getAdminDashboard`/`getAdminUsers`.
-- Auth service: [src/services/auth.service.ts](src/services/auth.service.ts)
+- Types: [src/types/api.ts](src/types/api.ts) (incl. `CaseInput`, `Course`, `PaymentPlan`/`PlanPrice`,
+  `CourseSubStatus`/`CaseBankStatus`, `EnrollmentCheck`, `Enrollment`, `Lesson`).
+- Services (all `import "server-only"`):
+  - [cases.service.ts](src/services/cases.service.ts) — user reads + all admin case ops.
+  - [courses.service.ts](src/services/courses.service.ts) — `getCourses`/`getCourse` (user), admin
+    `getAdminCourses`/`getAdminCourse`/create/update/delete/publish/thumbnail, + Course Content ops.
+  - [payments.service.ts](src/services/payments.service.ts) — `getPaymentPlans`, `createCheckout`,
+    `getBillingPortal`, `getMyPayments`.
+  - [subscriptions.service.ts](src/services/subscriptions.service.ts) — `getSubscribers` (admin),
+    `getMySubscriptions`, `getCourseSubStatus`, `getCaseBankStatus`.
+  - [enrollments.service.ts](src/services/enrollments.service.ts) — `getMyEnrollments`,
+    `checkEnrollment` (user), `getEnrollments`/`manualEnroll`/`revokeEnroll`/`restoreEnroll` (admin).
+  - [admin.service.ts](src/services/admin.service.ts), [auth.service.ts](src/services/auth.service.ts).
+- Course access helper: [src/lib/access.ts](src/lib/access.ts) — `getCourseAccess(courseId)` →
+  `{ hasAccess, tier }`. **Access = active subscription OR active enrollment** (either grants it).
+- Optional-user helper: [src/lib/current-user.ts](src/lib/current-user.ts) — `getOptionalUser()`
+  (used by the public layout + home page for auth-aware CTAs).
 - Case Bank (specialty grid): [src/app/(marketplace)/full-cases/](<src/app/(marketplace)/full-cases/>)
 - Slug helpers: [src/lib/slug.ts](src/lib/slug.ts) — `/full-cases/[slug]` resolves the slug back to a
   real specialty by fetching `GET /cases/specialties` and slug-matching the name (robust; keep this).
@@ -275,13 +308,19 @@ fd.append("stationImage", stationFile); // optional
 
 - **`(marketplace)`** — member area. Layout [src/app/(marketplace)/layout.tsx](<src/app/(marketplace)/layout.tsx>)
   loads the user via `GET /auth/me`, redirects to `/login` if unauthenticated, renders `MarketplaceShell`
-  (responsive sidebar drawer + `NamedHeader`). Pages: `dashboard`, `courses`, `full-cases`,
-  `subscriptions`, `settings`.
+  (responsive sidebar drawer + `NamedHeader`). Pages: `dashboard`, `courses` (+ `courses/[id]` detail),
+  **`my-courses`** (list of enrolled courses) + **`my-courses/[id]`** (content/lesson list) +
+  **`my-courses/[id]/[lessonId]`** (in-app lesson viewer), `full-cases`, `subscriptions`, `settings`,
+  and `payment/{success,cancel}` (Stripe return targets). **Owned course content lives under
+  `/my-courses/[id]`, NOT `/courses/[id]/learn`** — `/courses/[id]` is the browse/buy page; you only
+  reach `/my-courses/[id]` if you have access (else it redirects to `/courses/[id]`). Every marketplace
+  route has a route-level `loading.tsx` skeleton (§6 Shared infra).
 - **`(admin)`** — admin area. Layout [src/app/(admin)/layout.tsx](<src/app/(admin)/layout.tsx>) loads the
   user, redirects to `/login` if unauthenticated and to `/dashboard` if `role !== "admin"`, renders
   `AdminShell`. **Admin routes are flat `/admin-*`** (NOT nested under `/admin`): `admin-dashboard`,
-  `admin-subscribers`, `admin-casebank` (+ `upload-casebank`), `admin-courses` (+ `upload-course`),
-  `admin-settings`. The proxy matcher (§2) must include each.
+  `admin-subscribers`, `admin-casebank` (+ `upload-casebank`), `admin-courses` (+ `upload-course`,
+  + `admin-courses/[id]/content`), `admin-users`, `admin-enrollments`, `admin-settings`. The proxy
+  matcher (§2) must include each.
 - **Login role redirect**: [login/actions.ts](<src/app/(auth)/login/actions.ts>) sends `admin` →
   `/admin-dashboard`, everyone else → `/dashboard`. There is ONE shared login; no separate admin login.
 
@@ -313,43 +352,139 @@ fd.append("stationImage", stationFile); // optional
 - JWT helpers: [src/lib/jwt.ts](src/lib/jwt.ts) (Edge-safe `decodeJwt`/`isExpired`, used by the proxy).
 - Password show/hide: shared `PasswordField` in [src/components/shared/AuthForm.tsx](src/components/shared/AuthForm.tsx).
 - Cloudinary images whitelisted in [next.config.ts](next.config.ts) (`images.remotePatterns`).
+- **No client state-management library.** The app is server-first (server components fetch via
+  services; mutations use server actions + `router.refresh()`; auth is cookie-based). The old cart +
+  `zustand` were removed — don't reintroduce a store unless a feature genuinely needs cross-route
+  client state.
+- **Loaders:** shared skeletons in [src/components/shared/Skeletons.tsx](src/components/shared/Skeletons.tsx)
+  (`BannerSkeleton`, `CourseCardGridSkeleton`, `ListRowsSkeleton`, `YmalSkeleton`), composed by each
+  marketplace `loading.tsx`. `YouMightAlsoLike` is also wrapped in its own `Suspense` so it streams.
+- **Protected PDF viewer:** [src/components/shared/PdfViewer.tsx](src/components/shared/PdfViewer.tsx)
+  (`react-pdf`/pdf.js, canvas render, no text layer / no download / right-click disabled) points at the
+  **access-checked proxy** [src/app/api/courses/[id]/content/[lessonId]/route.ts](<src/app/api/courses/[id]/content/[lessonId]/route.ts>),
+  which verifies course access + tier and streams the file so the real (private) Cloudinary URL is never
+  exposed. **Only PDFs render in-app.** Video lessons are opened as **external Google-Drive links** from
+  the lesson list (pdf_drive tier only) — not viewed in-app. (Paying for a course also adds the user to a
+  private Google Drive, handled by the backend; the lesson list still handles a Drive link if one is
+  returned so nothing is dropped.)
+- **Settings form:** shared [src/components/shared/SettingsForm.tsx](src/components/shared/SettingsForm.tsx)
+  takes its server actions as an `actions` prop — used by BOTH `admin-settings` and member `settings`
+  (`PATCH /auth/me`, `change-password`, `logout-all`).
+- **`YouMightAlsoLike` + `ProductsCard`** are self-fetching server components over `getCourses` (public);
+  `ProductsCard` sorts newest-first and honors a `cutBy` limit. Cards link to `/products/[id]` (public)
+  or `/courses/[id]` (member).
 
 ## 7. Current state / plan
 
-**Integrated (wired to live backend):**
+### Subscription vs. Enrollment (mental model — they are different things)
 
-- User-facing case read flow (list → specialty → detail) — matches the backend.
-- Auth: login/register/logout, role-based redirect, and proactive token refresh + rotation in the proxy.
-- **Admin dashboard** stat cards (`/admin/dashboard`); admin **casebank** list (`/cases/admin/all`),
-  **courses** list (`/courses`), and **subscribers** (`/subscriptions/subscribers`) — each with
-  client-side search + pagination (§6). Subscribers service: [src/services/subscriptions.service.ts](src/services/subscriptions.service.ts).
-- **Admin case create + edit + validation** — full RHF/zod pipeline → `POST /cases` / `PATCH /cases/:id`
-  with prefill from `GET /cases/admin/:id` (§6 "Admin case create/edit pipeline").
-- **Admin course create + edit + publish** — [upload-course/](<src/app/(admin)/admin-courses/upload-course/>)
-  RHF/zod form (title/price/description) → `POST /courses` / `PATCH /courses/:id`; prefill from
-  `GET /courses/:id`; cover via `PATCH /courses/:id/thumbnail` (multipart — **verify live**); publish via
-  **Save as Draft** / **Publish Now** + per-card **Unpublish** (`PATCH /courses/:id/publish`). Category /
-  Payment Type / Material / Course Link are UI-only. Schema: [src/lib/schemas/course.ts](src/lib/schemas/course.ts).
-  ⚠️ list + prefill still read the **published-only** `/courses` — see the switch-to-`/courses/admin/*` item below.
+- **Subscription** = a recurring **Stripe billing** relationship. Two kinds: **Case Bank** (unlocks ALL
+  cases) and **course** (per course; `tier` = `pdf_only`|`pdf_drive`, `interval` monthly/quarterly).
+  Status via `/subscriptions/{me, case-bank/status, course/:id/status}`.
+- **Enrollment** = an **access record for ONE course**, created by a payment OR an admin manual grant
+  (`source: "manual"`, `paymentId` all-zeros). Carries `accessTier`, `isActive`. Course-only.
+- **Course access = active subscription OR active enrollment** — [lib/access.ts](src/lib/access.ts).
+  (Case Bank access = its subscription only.) One-liner: **subscription = paying; enrollment = access**;
+  access can exist without paying (admin grant).
 
-**Built but UI-only / mock data (NOT yet wired):**
+### Integrated & working (live backend)
 
-- **Marketplace** dashboard / courses / subscriptions / settings — all mock.
-- Admin "Schedule Live Class" button is a stub (toast "Coming soon").
+- **Auth** — login/register/logout, role redirect, proactive refresh + rotation in the proxy,
+  **return-to-page-after-login** (`?redirect=` + `safeRedirect`, see §2).
+- **Cases** — user read flow (list → specialty → detail). **Case Bank access is enforced by the
+  BACKEND**, not a frontend paywall: `GET /cases` returns the **5 free cases** to unsubscribed users (or
+  **all** to subscribers), and `GET /cases/:id` only returns viewable cases. So the case detail has **no
+  paywall** — any case that loads is fully viewable. The Case Bank **list** shows a **subscribe upsell
+  banner** to unsubscribed users ([full-cases/_components/CaseBankUpsell.tsx](<src/app/(marketplace)/full-cases/_components/CaseBankUpsell.tsx>)
+  → `POST /payments/checkout` `type:"case_bank"`, action in [full-cases/actions.ts](<src/app/(marketplace)/full-cases/actions.ts>)).
+- **Courses (member)** — list (`/courses`), detail (`/courses/[id]`) with access gating + a
+  tier×interval **plan picker** → course checkout; **My Courses** (`/my-courses`, from `/enrollments/me`)
+  + content list + in-app lesson viewer under `/my-courses/[id]`.
+- **Settings** (member + admin) — profile / password / logout-all (shared form).
+- **My Subscriptions** (`/subscriptions`, from `/subscriptions/me`) — real cards (case_bank + course,
+  status/tier/interval/renewal date) + a **Manage billing** button (`POST /payments/billing-portal`).
+- **Dashboard** — real stat counts + My Courses section + Subscriptions section.
+- **Banner searches** work via the shared client [SearchBanner](src/components/shared/SearchBanner.tsx)
+  (Courses + Subscriptions filter client-side; Case Bank grid + case list already had working search).
+- **Public site** — home/products connected to real courses; auth-aware CTAs.
+- **Admin** — dashboard, casebank (list + create/edit/publish/duplicate/delete/images), courses (list via
+  `/courses/admin/all` + create/edit/publish/delete/thumbnail + Course Content), subscribers, users,
+  enrollments (manual/revoke/restore).
 
-**Next:**
+### ⚠️ Blocked on backend (frontend built + correct; fails at the backend)
 
-- Wire marketplace **Subscriptions** → `GET /subscriptions/me` + `…/status`; **Payments** checkout
-  (`POST /payments/checkout`) for Case Bank / course tiers; optionally the dashboard **Recent
-  Subscribers** → `GET /subscriptions/subscribers` (top N). Probe each shape first (§0).
-- Wire case **duplicate/delete** (`POST /cases/:id/duplicate`, `DELETE /cases/:id`) and case **images**
-  (`PATCH /cases/:id/{image,station-image}`, multipart). Case publish is done (form Save-as-Draft/Publish-Now).
-- **Switch admin course reads to `/courses/admin/all` + `/courses/admin/:id`** (added 2026-06-25). The
-  admin list + edit-prefill currently use `/courses` + `/courses/:id`, which are **published-only** — so
-  unpublishing a course (or saving one as draft) makes it vanish with no way back. Moving to the admin
-  routes makes drafts visible and the list **Unpublish** / form **Save-as-Draft** safe. Do this before
-  relying on course drafts.
-- Wire **Course Content** (`upload-pdf` / `drive-link`), course delete; verify course **thumbnail**
-  upload against live (Node multipart). (Course create/edit + publish is done.)
-- Case form gaps to revisit: add inputs for `consultationType`/`difficulty` if needed (currently
-  preserved-on-edit / backend-default-on-create — §6).
+1. **Stripe checkout** (course + Case Bank) — `/payments/plans` returns dummy price IDs
+   (`price_dummy_*`), so `POST /payments/checkout` 500s. Needs real Stripe prices; then verify the
+   checkout **response shape** (the redirect-URL field is still unknown — the action tries
+   `url`/`checkoutUrl`/`sessionUrl`).
+2. **Course PDF display** — lesson `fileUrl`s are **private Cloudinary** assets (401), so the proxy
+   can't stream them. Needs a signed URL or a backend stream endpoint; then point the proxy at it.
+
+### Remaining mock (no backend endpoint exists)
+
+- Live-class **Countdown** (`CountDownToClass`) — commented out on the public pages; admin "Schedule
+  Live Class" is a stub. No classes/calendar endpoint.
+
+### Next candidates
+
+- When Stripe is fixed: verify checkout end-to-end, then build the real **My Subscriptions** cards +
+  billing-portal button (probe `/subscriptions/me` item shape first).
+
+---
+
+## 8. Verified response shapes — non-Cases modules
+
+All wrapped in the standard envelope (`{ success, message, data }`). Verified 2026-07-10.
+
+**Course** (`GET /courses` = plain array, published-only; `GET /courses/:id` = single, auth):
+
+```ts
+{ _id, title, description, price, thumbnailUrl?, isPublished, createdBy, createdAt, updatedAt }
+```
+
+Detail returns **no embedded lessons** — fetch content separately. `price` is effectively unused for
+checkout (pricing is global by tier — see plans below).
+
+**Course Content** (`GET /courses/:courseId/content` = plain array):
+
+```ts
+{ _id, courseId, title, type: "pdf"|"video", fileUrl, order, createdAt, updatedAt }
+```
+
+PDF `fileUrl` = a **private** Cloudinary raw URL (needs signing — §7). Video `fileUrl` = a Google-Drive
+share link (embed its `/preview` form).
+
+**Payments plans** (`GET /payments/plans` = array of plan groups):
+
+```ts
+{ type: "case_bank"|"course", tier?: "pdf_only"|"pdf_drive", name, description,
+  prices: [{ amount /* pence */, currency, interval, stripePriceId, label /* "£69.99 / month" */ }] }
+```
+
+`case_bank` = one monthly price (£24.99). `course` tiers = monthly + quarterly. `amount` is minor units —
+prefer the preformatted `label`. **Pricing is GLOBAL by tier**, keyed to `stripePriceId`, NOT `Course.price`.
+
+**Subscription / enrollment status:**
+
+```ts
+GET /subscriptions/course/:courseId/status  → { active: boolean }
+GET /subscriptions/case-bank/status         → { active: boolean }
+GET /enrollments/check/:courseId            → { enrolled: boolean, accessTier?: "pdf_only"|"pdf_drive", accessGrantedAt? }
+```
+
+**Subscriptions** (`GET /subscriptions/me` = plain array; `courseId` populated + `tier` only for
+`type: "course"`):
+
+```ts
+{ _id, type: "case_bank"|"course", userId,
+  courseId?: { _id, title, thumbnailUrl? }, tier?: "pdf_only"|"pdf_drive",
+  billingInterval /* "monthly"|"quarterly" */, status /* "active"|… */, cancelAtPeriodEnd,
+  currentPeriodStart, currentPeriodEnd, stripeCustomerId, stripeSubscriptionId, createdAt, updatedAt }
+```
+
+**Enrollments** (`GET /enrollments/me` = plain array; `courseId` **populated**):
+
+```ts
+{ _id, courseId: { _id, title, description, price, thumbnailUrl? }, userId, accessTier,
+  isActive, source: "manual"|"payment", grantedBy, paymentId, accessGrantedAt, createdAt, updatedAt }
+```
