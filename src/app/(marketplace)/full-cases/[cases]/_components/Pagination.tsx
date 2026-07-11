@@ -1,23 +1,5 @@
 import Link from "next/link";
-
-function pageNumbers(current: number, total: number): (number | "ellipsis")[] {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }
-
-  const out: (number | "ellipsis")[] = [1];
-  if (current > 3) out.push("ellipsis");
-  for (
-    let i = Math.max(2, current - 1);
-    i <= Math.min(total - 1, current + 1);
-    i++
-  ) {
-    out.push(i);
-  }
-  if (current < total - 2) out.push("ellipsis");
-  out.push(total);
-  return out;
-}
+import { pageNumbers } from "@/lib/pagination";
 
 const baseBtn =
   "h-9 min-w-9 px-3 inline-flex items-center justify-center rounded-md text-sm border";

@@ -3,14 +3,13 @@ import axios from "axios";
 import AdminCoursesHero from "./_components/AdminCoursesHero";
 import AdminCourses from "./_components/AdminCourses";
 import CoursesSkeleton from "./_components/CoursesSkeleton";
-import { getAdminCourses } from "@/services/courses.service";
+import { getAllAdminCourses } from "@/services/courses.service";
 import { AdminListProvider } from "../_components/AdminListContext";
 import type { Course } from "@/types/api";
 
 async function loadCourses(): Promise<Course[]> {
   try {
-    const res = await getAdminCourses();
-    return res.success ? res.data.items : [];
+    return await getAllAdminCourses();
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;
     return [];

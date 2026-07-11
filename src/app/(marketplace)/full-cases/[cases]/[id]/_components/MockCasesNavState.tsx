@@ -21,7 +21,7 @@ export default function MocKCasesNavState({
   return (
     <>
       <div
-        className="flex gap-1 sm:gap-2 overflow-x-auto"
+        className="sticky top-0 z-10 bg-white flex gap-1 sm:gap-2 overflow-x-auto border-b border-[#EDEDED] pt-2"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {tabs.map((item) => (

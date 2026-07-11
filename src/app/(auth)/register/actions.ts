@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { redirect } from "next/navigation";
-import { setSession } from "@/lib/session";
+import { setSession, setProfile } from "@/lib/session";
 import { safeRedirect } from "@/lib/redirect";
 import { registerSchema, type RegisterValues } from "@/lib/schemas/auth";
 import { register } from "@/services/auth.service";
@@ -34,6 +34,7 @@ export async function registerAction(
       accessToken: response.data.accessToken,
       refreshToken: response.data.refreshToken,
     });
+    await setProfile(response.data.user);
   } catch (err) {
     if (axios.isAxiosError(err)) {
       const data = err.response?.data as ApiFailure | undefined;

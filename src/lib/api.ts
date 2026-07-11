@@ -1,6 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import {
   clearSession,
+  clearProfile,
   getAccessToken,
   getRefreshToken,
   setSession,
@@ -120,6 +121,7 @@ api.interceptors.response.use(
     if (!tokens) {
       try {
         await clearSession();
+        await clearProfile();
       } catch {
         // ignore — caller layer will redirect
       }

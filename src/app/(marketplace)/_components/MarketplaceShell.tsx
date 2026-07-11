@@ -4,6 +4,7 @@ import { useState } from "react";
 import NamedHeader from "@/components/shared/header/NamedHeader";
 import SideNav from "./SideNav";
 import { Menu, X } from "lucide-react";
+import BackToTop from "@/components/shared/BackToTop";
 import type { User } from "@/types/api";
 
 export default function MarketplaceShell({
@@ -27,9 +28,10 @@ export default function MarketplaceShell({
       <aside
         className={`
           fixed top-0 left-0 h-full z-50 bg-white w-[75vw] sm:w-[55vw] md:w-[45vw] max-w-sm md:max-w-md
-          transform transition-transform duration-300 ease-in-out
+          transform transition-transform duration-300 ease-in-out overflow-y-auto
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:static lg:translate-x-0 lg:w-auto lg:max-w-none lg:basis-[24vw]
+          lg:sticky lg:top-0 lg:translate-x-0 lg:w-auto lg:max-w-none lg:basis-[24vw]
+          lg:h-screen lg:self-start
           pt-4 min-h-screen pr-4 pb-10
         `}
       >
@@ -62,6 +64,8 @@ export default function MarketplaceShell({
 
         {children}
       </aside>
+
+      <BackToTop />
     </main>
   );
 }

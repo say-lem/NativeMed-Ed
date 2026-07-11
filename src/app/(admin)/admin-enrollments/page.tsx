@@ -5,7 +5,7 @@ import Enrollments from "./_components/Enrollments";
 import EnrollmentsSkeleton from "./_components/EnrollmentsSkeleton";
 import { getEnrollments } from "@/services/enrollments.service";
 import { getAdminUsers } from "@/services/admin.service";
-import { getAdminCourses } from "@/services/courses.service";
+import { getAllAdminCourses } from "@/services/courses.service";
 import { AdminListProvider } from "../_components/AdminListContext";
 import type { Course, Enrollment, User } from "@/types/api";
 
@@ -32,8 +32,7 @@ async function loadUsers(): Promise<User[]> {
 
 async function loadCourses(): Promise<Course[]> {
   try {
-    const res = await getAdminCourses();
-    return res.success ? res.data.items : [];
+    return await getAllAdminCourses();
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;
     return [];

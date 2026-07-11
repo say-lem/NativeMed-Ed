@@ -1,9 +1,10 @@
 import axios from "axios";
+import { Suspense } from "react";
 import MockHeaderBg from "../_components/MockHeaderBg";
 import BackIcon from "../_components/BackSvg";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import MocKCasesNavState from "./_components/MockCasesNavState";
-import { colorFromSeed } from "../../_components/GetRandomColor";
+import CaseNav from "./_components/CaseNav";
 import { adaptCase } from "./_components/adaptCase";
 import { getCase } from "@/services/cases.service";
 import type { CaseDetail } from "@/types/api";
@@ -43,9 +44,9 @@ function Badge({
 }
 
 export default async function ViewMockCases({ params }: PageProps) {
-  const { id } = await params;
+  const { cases: slug, id } = await params;
   const detail = await loadCase(id);
-  const color = colorFromSeed(id);
+  const color = "#2D135C";
 
   // Case access is enforced by the backend: `GET /cases` returns the 5 free
   // cases to unsubscribed users (or all to subscribers), and `GET /cases/:id`
@@ -55,7 +56,7 @@ export default async function ViewMockCases({ params }: PageProps) {
   if (!detail) {
     return (
       <>
-        <MockHeaderBg seed={id}>
+        <MockHeaderBg>
           <div className="self-start">
             <BackIcon />
           </div>
@@ -74,7 +75,7 @@ export default async function ViewMockCases({ params }: PageProps) {
 
   return (
     <>
-      <MockHeaderBg seed={id}>
+      <MockHeaderBg>
         <div className="self-start">
           <BackIcon />
         </div>
@@ -101,6 +102,10 @@ export default async function ViewMockCases({ params }: PageProps) {
       <section className="px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         <MocKCasesNavState color={color} mockData={mockData} />
       </section>
+
+      <Suspense fallback={null}>
+        <CaseNav slug={slug} currentId={id} specialty={detail.specialty} />
+      </Suspense>
     </>
   );
 }

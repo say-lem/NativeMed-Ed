@@ -2,7 +2,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { IoSearchSharp } from "react-icons/io5";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import MockHeaderBg from "./MockHeaderBg";
 import BackIcon from "./BackSvg";
@@ -55,7 +55,7 @@ export default function CasesListClient({
 
   return (
     <>
-      <MockHeaderBg seed={title}>
+      <MockHeaderBg>
         <div className="self-start">
           <BackIcon />
         </div>
@@ -74,6 +74,16 @@ export default function CasesListClient({
             placeholder={`Search ${title} cases...`}
             className="border-0 outline-0 w-full text-sm sm:text-base text-white bg-transparent placeholder:text-[#B7B7B98C]"
           />
+          {input && (
+            <button
+              type="button"
+              onClick={() => setInput("")}
+              aria-label="Clear search"
+              className="shrink-0 text-white/70 hover:text-white cursor-pointer"
+            >
+              <X className="size-4 sm:size-5" />
+            </button>
+          )}
         </div>
       </MockHeaderBg>
 

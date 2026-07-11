@@ -1,4 +1,3 @@
-import axios from "axios";
 import { redirect } from "next/navigation";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
@@ -8,21 +7,10 @@ import {
   logoutAllAction,
   updateProfileAction,
 } from "./actions";
-import { me } from "@/services/auth.service";
-import type { User } from "@/types/api";
-
-async function loadUser(): Promise<User | null> {
-  try {
-    const res = await me();
-    return res.success ? res.data : null;
-  } catch (err) {
-    if (axios.isAxiosError(err) && err.response?.status === 401) return null;
-    throw err;
-  }
-}
+import { getSessionUser } from "@/lib/current-user";
 
 export default async function SettingsPage() {
-  const user = await loadUser();
+  const user = await getSessionUser();
   if (!user) redirect("/login");
 
   return (

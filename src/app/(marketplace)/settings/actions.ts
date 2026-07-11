@@ -8,7 +8,7 @@ import {
   logoutAll,
   updateProfile,
 } from "@/services/auth.service";
-import { clearSession } from "@/lib/session";
+import { clearSession, clearProfile, setProfile } from "@/lib/session";
 import type { ApiFailure, FormActionResult } from "@/types/api";
 import type { PasswordValues, ProfileValues } from "@/lib/schemas/settings";
 
@@ -20,6 +20,8 @@ export async function updateProfileAction(
     if (!res.success) {
       return { ok: false, message: res.message, fieldErrors: res.errors };
     }
+    // Keep the cached display profile in sync so the header/name update.
+    await setProfile(res.data);
     revalidatePath("/settings");
     return { ok: true, message: "Profile updated" };
   } catch (err) {
@@ -65,5 +67,6 @@ export async function logoutAllAction(): Promise<void> {
     // Non-fatal — clear locally regardless.
   }
   await clearSession();
+  await clearProfile();
   redirect("/login");
 }

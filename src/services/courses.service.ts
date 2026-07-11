@@ -32,6 +32,27 @@ export async function getAdminCourses(
   return res.data;
 }
 
+/**
+ * Fetch EVERY admin course across all pages. The backend caps `limit` at 50, so
+ * a single request only returns the first 50 — anything after that (e.g. newly
+ * added courses that sort to the end) would be invisible to the client-side
+ * list. This pages through until all `totalPages` are collected.
+ */
+export async function getAllAdminCourses(): Promise<Course[]> {
+  const first = await getAdminCourses(1, 50);
+  if (!first.success) return [];
+
+  const { items, totalPages } = first.data;
+  const all = [...items];
+
+  for (let page = 2; page <= totalPages; page++) {
+    const res = await getAdminCourses(page, 50);
+    if (res.success) all.push(...res.data.items);
+  }
+
+  return all;
+}
+
 /** GET /courses/admin/:id — admin only. Single course **incl. drafts.** Use for edit prefill. */
 export async function getAdminCourse(
   id: string,

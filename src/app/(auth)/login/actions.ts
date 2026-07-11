@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { redirect } from "next/navigation";
-import { setSession } from "@/lib/session";
+import { setSession, setProfile } from "@/lib/session";
 import { safeRedirect } from "@/lib/redirect";
 import { loginSchema, type LoginValues } from "@/lib/schemas/auth";
 import { login } from "@/services/auth.service";
@@ -39,6 +39,7 @@ export async function loginAction(
       accessToken: response.data.accessToken,
       refreshToken: response.data.refreshToken,
     });
+    await setProfile(response.data.user);
     const fallback =
       response.data.user.role === "admin" ? "/admin-dashboard" : "/dashboard";
     destination = safeRedirect(redirectTo, fallback);

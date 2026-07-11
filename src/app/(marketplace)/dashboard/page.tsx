@@ -1,22 +1,12 @@
-import axios from "axios";
 import DashboardHero from "./_components/Hero";
 import StatCards from "./_components/StatCards";
 import SubscriptionsSection from "./_components/SubscriptionsSection";
 import MyCoursesSection from "./_components/MyCoursesSection";
-import { me } from "@/services/auth.service";
-
-async function loadName(): Promise<string | undefined> {
-  try {
-    const res = await me();
-    return res.success ? res.data.fullName : undefined;
-  } catch (err) {
-    if (!axios.isAxiosError(err)) throw err;
-    return undefined;
-  }
-}
+import { getSessionUser } from "@/lib/current-user";
 
 export default async function DashboardPage() {
-  const name = await loadName();
+  const user = await getSessionUser();
+  const name = user?.fullName;
 
   return (
     <div className="py-6 space-y-8">

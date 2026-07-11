@@ -56,7 +56,7 @@ export async function getCase(id: string): Promise<ApiResponse<CaseDetail>> {
   return res.data;
 }
 
-/** GET /cases/admin/all — admin only. All cases incl. drafts, `createdBy` populated. */
+/** GET /cases/admin/all — admin only. One page of all cases incl. drafts. `limit` caps at 50. */
 export async function getAdminCases(
   page = 1,
   limit = 50,
@@ -66,6 +66,29 @@ export async function getAdminCases(
     { params: { page, limit } },
   );
   return res.data;
+}
+
+/**
+ * Fetch EVERY admin case. The backend caps `limit` at 50 and does NOT support
+ * a publish-status filter (verified: `?isPublished=` is ignored, returns all),
+ * so the admin list filters Published/Draft/specialty/search client-side — which
+ * needs the full set. We grab page 1, then fetch the remaining pages **in
+ * parallel** (≈6 requests at limit 50, not 21 sequential) so the load stays fast.
+ */
+export async function getAllAdminCases(): Promise<AdminCase[]> {
+  const first = await getAdminCases(1, 50);
+  if (!first.success) return [];
+
+  const { items, totalPages } = first.data;
+  if (totalPages <= 1) return items;
+
+  const rest = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) => getAdminCases(i + 2, 50)),
+  );
+
+  const all = [...items];
+  for (const res of rest) if (res.success) all.push(...res.data.items);
+  return all;
 }
 
 /** GET /cases/admin/:id — admin only. Full case incl. drafts. */

@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { clearSession, getRefreshToken } from "@/lib/session";
+import { clearSession, clearProfile, getRefreshToken } from "@/lib/session";
 import { logout } from "@/services/auth.service";
 
 export async function logoutAction(): Promise<void> {
@@ -14,5 +14,6 @@ export async function logoutAction(): Promise<void> {
     }
   }
   await clearSession();
+  await clearProfile();
   redirect("/login");
 }

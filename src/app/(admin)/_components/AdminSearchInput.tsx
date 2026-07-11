@@ -1,6 +1,7 @@
 "use client";
 
 import { IoSearchSharp } from "react-icons/io5";
+import { X } from "lucide-react";
 import { useAdminList } from "./AdminListContext";
 
 export default function AdminSearchInput({
@@ -20,6 +21,16 @@ export default function AdminSearchInput({
         placeholder={placeholder}
         className="border-0 outline-0 w-full text-sm sm:text-base bg-transparent text-white placeholder:text-[#B7B7B98C]"
       />
+      {query && (
+        <button
+          type="button"
+          onClick={() => setQuery("")}
+          aria-label="Clear search"
+          className="shrink-0 text-white/70 hover:text-white cursor-pointer"
+        >
+          <X className="size-4 sm:size-5" />
+        </button>
+      )}
     </div>
   );
 }

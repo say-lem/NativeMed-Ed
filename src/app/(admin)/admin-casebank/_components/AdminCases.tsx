@@ -13,6 +13,8 @@ import { deleteCaseAction, duplicateCaseAction } from "../actions";
 
 const PAGE_SIZE = 8;
 
+type StatusFilter = "all" | "published" | "draft";
+
 const SPECIALTY_DOT: Record<string, string> = {
   Cardiology: "#E5187A",
   Respiratory: "#2F80ED",
@@ -57,6 +59,7 @@ function EditIcon() {
 
 export default function AdminCases({ cases }: { cases: AdminCase[] }) {
   const [specialty, setSpecialty] = useState("All");
+  const [status, setStatus] = useState<StatusFilter>("all");
   const { query, page, setPage } = useAdminList();
   const router = useRouter();
   const confirm = useConfirm();
@@ -99,6 +102,15 @@ export default function AdminCases({ cases }: { cases: AdminCase[] }) {
     });
   };
 
+  const publishedCount = cases.filter((c) => c.isPublished).length;
+  const draftCount = cases.length - publishedCount;
+
+  const statusTabs: { key: StatusFilter; label: string; count: number }[] = [
+    { key: "all", label: "All", count: cases.length },
+    { key: "published", label: "Published", count: publishedCount },
+    { key: "draft", label: "Draft", count: draftCount },
+  ];
+
   const specialties = [
     "All",
     ...Array.from(new Set(cases.map((c) => c.specialty))).sort(),
@@ -106,11 +118,16 @@ export default function AdminCases({ cases }: { cases: AdminCase[] }) {
 
   const q = query.trim().toLowerCase();
   const filtered = cases.filter((c) => {
+    if (status === "published" && !c.isPublished) return false;
+    if (status === "draft" && c.isPublished) return false;
     if (specialty !== "All" && c.specialty !== specialty) return false;
     if (!q) return true;
-    return [c.title, c.specialty, c.patientData?.name, `station ${c.stationNumber}`].some(
-      (f) => f?.toLowerCase().includes(q),
-    );
+    return [
+      c.title,
+      c.specialty,
+      c.patientData?.name,
+      `station ${c.stationNumber}`,
+    ].some((f) => f?.toLowerCase().includes(q));
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -122,31 +139,63 @@ export default function AdminCases({ cases }: { cases: AdminCase[] }) {
     setPage(1);
   };
 
+  const selectStatus = (s: StatusFilter) => {
+    setStatus(s);
+    setPage(1);
+  };
+
   return (
     <section className="px-4 sm:px-6 lg:px-10 mt-8 mb-10">
-      {/* Specialty filter + add case */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="relative w-[190px]">
-          <select
-            value={specialty}
-            onChange={(e) => selectSpecialty(e.target.value)}
-            className="appearance-none w-full h-10 rounded-[4px] border-[0.5px] border-black px-4 py-2 pr-10 text-sm text-black bg-white cursor-pointer outline-none"
-          >
-            {specialties.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
+      {/* Status tabs + specialty filter + add case */}
+      <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 w-full sm:w-auto">
+          {/* Published / Draft tabs */}
+          <div className="flex w-full sm:w-auto rounded-[8px] border border-[#E0E0E0] p-0.5 bg-white">
+            {statusTabs.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => selectStatus(t.key)}
+                aria-pressed={status === t.key}
+                className={`flex-1 sm:flex-none px-3.5 h-9 rounded-[6px] text-sm font-medium cursor-pointer transition-colors ${
+                  status === t.key
+                    ? "bg-[#2D135C] text-white"
+                    : "text-black-others hover:bg-gray-100"
+                }`}
+              >
+                {t.label}
+                <span
+                  className={`ml-1.5 text-xs ${status === t.key ? "text-white/80" : "text-subtle-text"}`}
+                >
+                  {t.count}
+                </span>
+              </button>
             ))}
-          </select>
-          <ChevronDown
-            size={18}
-            className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-black"
-          />
+          </div>
+
+          {/* Specialty filter */}
+          <div className="relative w-full sm:w-[190px]">
+            <select
+              value={specialty}
+              onChange={(e) => selectSpecialty(e.target.value)}
+              className="appearance-none w-full h-10 rounded-[4px] border-[0.5px] border-black px-4 py-2 pr-10 text-sm text-black bg-white cursor-pointer outline-none"
+            >
+              {specialties.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              size={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-black"
+            />
+          </div>
         </div>
 
         <Link
           href="/admin-casebank/upload-casebank"
-          className="rounded-[8px] border border-gray-1 py-3 px-4 cursor-pointer flex items-center gap-2 hover:bg-[#2D135C] group"
+          className="w-full sm:w-auto rounded-[8px] border border-gray-1 py-3 px-4 cursor-pointer flex items-center justify-center gap-2 hover:bg-[#2D135C] group"
         >
           <StatPlusIcon className="text-[#6F6F6F] group-hover:text-white" />
           <span className="text-black leading-[130%] font-medium text-sm tracking-[-2%] group-hover:text-white">
@@ -159,8 +208,8 @@ export default function AdminCases({ cases }: { cases: AdminCase[] }) {
       <div className="mt-6">
         {rows.length === 0 ? (
           <p className="text-center text-subtle-text py-16">
-            {q || specialty !== "All"
-              ? "No cases match your search."
+            {q || specialty !== "All" || status !== "all"
+              ? "No cases match your filters."
               : "No cases yet. Add one to get started."}
           </p>
         ) : (

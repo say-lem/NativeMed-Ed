@@ -1,5 +1,6 @@
 import PublicHeader from "@/components/shared/header/Header";
 import Footer from "@/components/shared/footer/Footer";
+import BackToTop from "@/components/shared/BackToTop";
 import { getOptionalUser } from "@/lib/current-user";
 
 export default async function RootLayout({
@@ -13,6 +14,7 @@ export default async function RootLayout({
       <PublicHeader user={user} />
       {children}
       <Footer />
+      <BackToTop />
     </main>
   );
 }

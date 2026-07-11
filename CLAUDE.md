@@ -92,6 +92,9 @@ update the code, then update this file.
   `redirect` from `searchParams` (server-side, in the page — no `useSearchParams`) and preserves it
   across the login↔register footer links. So a logged-out "Get this course" → `/courses/:id` bounces
   through login and lands back on the course.
+- **Already-signed-in guard**: `/login` + `/register` pages call `getOptionalUser()` and, if a user
+  exists, `redirect()` them away (to `?redirect=` target if safe, else the role default) — a logged-in
+  user can't land on the auth forms.
 - Every case endpoint requires `Authorization: Bearer <accessToken>`.
 - Standard envelope on **every** response:
   ```ts
@@ -341,9 +344,26 @@ fd.append("stationImage", stationFile); // optional
   reflow into "Data Gathering". **Seen By** is an input; **isPublished** is set by the form's
   **Save as Draft** / **Publish Now** buttons. Still **no inputs** for `consultationType`/`difficulty` —
   on edit they're preserved (PATCH merge), on create the backend defaults apply.
-- Admin list search/pagination is **client-side** over the fetched set (`limit=50`), shared via
-  [(admin)/_components/AdminListContext.tsx](<src/app/(admin)/_components/AdminListContext.tsx>) +
-  `AdminSearchInput` + `Pagination`. Switch to server-side paging if a list exceeds 50.
+- **Admin cases list = client-side over a fast parallel fetch-all.** `/cases/admin/all` does **NOT**
+  support a publish-status filter — verified: `?isPublished=true|false` is **ignored** (returns all 251
+  cases, mixed `isPublished`). Each item *does* carry `isPublished`, so Published/Draft is filtered
+  **client-side**, which needs the whole set. [admin-casebank/page.tsx](<src/app/(admin)/admin-casebank/page.tsx>)
+  calls `getAllAdminCases()` ([cases.service.ts](src/services/cases.service.ts)) which grabs page 1 then
+  fetches the remaining pages **in parallel** (≈6 requests at limit 50, NOT 21 sequential — this was the
+  original slowness). `AdminCases` then does **All/Published/Draft tabs (with live counts)** + specialty
+  `<select>` (options derived from the fetched set, so draft-only specialties appear) + search (via
+  `AdminListContext`) + `PAGE_SIZE=8` client pagination — all instant, no refetch. Top controls are
+  **full-width stacked on mobile**, inline row on `sm+`. Rows show a **Draft** badge. (If the case count
+  grows very large, ask backend to add a real `isPublished` filter + go server-side.)
+- **Other admin lists (courses, users, subscribers, enrollments)** are also **client-side** over the
+  fetched set, shared via [(admin)/_components/AdminListContext.tsx](<src/app/(admin)/_components/AdminListContext.tsx>)
+  + `AdminSearchInput` + `Pagination`. Admin **courses** + **enrollments** course dropdown use
+  `getAllAdminCourses()` ([courses.service.ts](src/services/courses.service.ts)) which pages through all
+  `totalPages` (currently **sequential** — parallelize like `getAllAdminCases` if it gets slow).
+  `getAdminUsers()` still fetches only page 1 (limit 50).
+- Pagination number truncation is shared: [src/lib/pagination.ts](src/lib/pagination.ts) `pageNumbers`
+  shows first + last + a window around the active page (≤15 numbers, `…` for gaps). Used by BOTH the
+  admin `Pagination` and the user Case Bank pager.
 
 ### Shared infra
 
@@ -359,6 +379,30 @@ fd.append("stationImage", stationFile); // optional
 - **Loaders:** shared skeletons in [src/components/shared/Skeletons.tsx](src/components/shared/Skeletons.tsx)
   (`BannerSkeleton`, `CourseCardGridSkeleton`, `ListRowsSkeleton`, `YmalSkeleton`), composed by each
   marketplace `loading.tsx`. `YouMightAlsoLike` is also wrapped in its own `Suspense` so it streams.
+- **Error boundaries:** shared [src/components/shared/ErrorState.tsx](src/components/shared/ErrorState.tsx)
+  (retry card) is rendered by route-group `error.tsx` at [(marketplace)/error.tsx](<src/app/(marketplace)/error.tsx>)
+  and [(admin)/error.tsx](<src/app/(admin)/error.tsx>) — these catch page errors **inside the shell** (sidebar
+  stays), important because Render free-tier cold-starts/timeouts throw. The root [src/app/error.tsx](src/app/error.tsx)
+  is the last-resort full-page fallback (public pages / catastrophic).
+- **Scroll-to-top on pagination:** the admin client-side `Pagination` ([(admin)/_components/Pagination.tsx](<src/app/(admin)/_components/Pagination.tsx>))
+  `window.scrollTo({top:0})` on page change (the list is sliced in memory, so nothing else scrolls the user up).
+  The user Case Bank pager is `<Link>`-based, so Next handles scroll-to-top on navigation.
+- **Sticky case-detail tabs:** the section tab bar (Full Case/Patient/Doctor/Examiner/Resources) in
+  [MockCasesNavState.tsx](<src/app/(marketplace)/full-cases/[cases]/[id]/_components/MockCasesNavState.tsx>)
+  is `sticky top-0` so it stays reachable through long case content.
+- **Case header color is fixed:** `MockHeaderBg` always uses the app default `#2D135C` (the old
+  per-seed `colorFromSeed` logic + `GetRandomColor.tsx` were removed).
+- **Back to top:** [src/components/shared/BackToTop.tsx](src/components/shared/BackToTop.tsx) (floating
+  button, appears after 400px scroll) is mounted once in `MarketplaceShell`, `AdminShell`, and the
+  public layout — so it covers every page in all three areas.
+- **Search clear (✕):** `SearchBanner`, admin `AdminSearchInput`, and the user Case Bank search
+  (`CasesListClient`) each show a ✕ to reset the query when non-empty.
+- **Branded 404:** [src/app/not-found.tsx](src/app/not-found.tsx) (global) — replaces the default 404.
+- **Case prev/next:** [CaseNav.tsx](<src/app/(marketplace)/full-cases/[cases]/[id]/_components/CaseNav.tsx>)
+  (streamed via `Suspense`) shows Previous/Next station within the browsing context (specialty, or
+  "all"). Neighbours are found in a 50-item window (backend `limit` cap); a neighbour outside the window
+  (e.g. a high station in the full 251-case "all" list) just hides its button — never a broken link.
+  Full coverage across a large "all" list would need a backend "adjacent case" endpoint.
 - **Protected PDF viewer:** [src/components/shared/PdfViewer.tsx](src/components/shared/PdfViewer.tsx)
   (`react-pdf`/pdf.js, canvas render, no text layer / no download / right-click disabled) points at the
   **access-checked proxy** [src/app/api/courses/[id]/content/[lessonId]/route.ts](<src/app/api/courses/[id]/content/[lessonId]/route.ts>),
