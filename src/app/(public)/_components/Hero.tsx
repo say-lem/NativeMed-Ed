@@ -5,7 +5,8 @@ import RotatingTagline from "./RotatingTagline";
 
 export default function HomeHero({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
   return (
-    <section className="radialBgGradient min-h-[70vh] sm:min-h-[80vh] md:min-h-screen lg:min-h-[120vh] overflow-hidden relative">
+    <section className="radialBgGradient overflow-hidden relative">
+      <div className="relative z-10">
       <div className="flex items-center justify-center px-4 sm:px-8 lg:px-15 pt-6 sm:pt-8 lg:pt-16">
         <Image
           src="/Images/socket tile.png"
@@ -54,14 +55,21 @@ export default function HomeHero({ isLoggedIn = false }: { isLoggedIn?: boolean 
           </Button>
         </Link>
       </div>
+      </div>
 
-      <div className="relative w-full h-[30vh] sm:h-[35vh] md:h-[60vh] lg:h-screen -mt-[20vh] sm:-mt-[25vh] md:-mt-[45vh] lg:-mt-[65vh]">
+      {/* Decorative bottom arc. Height is width-relative (vw) so the crop is
+          identical at every screen width — the old bug was a vh-sized box, whose
+          ratio swung with viewport height and cropped the curve differently on
+          every device. object-bottom keeps the arcs; full width keeps the side
+          sweeps. A small vw pull tucks it just under the content. z-0 = behind. */}
+      <div className="relative z-0 w-full h-[30vw] sm:h-[26vw] md:h-[24vw] lg:h-[22vw] -mt-[8vw] sm:-mt-[7vw] lg:-mt-[6vw]">
         <Image
           src="/Images/Elipses.png"
-          alt="Elipses"
+          alt=""
+          aria-hidden
           priority
           fill
-          className="object-cover object-bottom"
+          className="object-cover object-bottom select-none pointer-events-none"
           sizes="100vw"
         />
       </div>

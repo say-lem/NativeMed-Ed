@@ -3,8 +3,8 @@ import Image from "next/image";
 
 export default function AboutHero() {
   return (
-    <section className="radialBgGradient pt-8 sm:pt-10 lg:pt-16 min-h-[70vh] sm:min-h-[80vh] md:min-h-[100vh] lg:min-h-[120vh]">
-      <div className="relative mt-4 sm:mt-6 lg:mt-14 flex px-4 sm:px-8 lg:px-15 items-center justify-center gap-4 sm:gap-8 lg:gap-15">
+    <section className="radialBgGradient pt-8 sm:pt-10 lg:pt-16 overflow-hidden">
+      <div className="relative z-10 mt-4 sm:mt-6 lg:mt-14 flex px-4 sm:px-8 lg:px-15 items-center justify-center gap-4 sm:gap-8 lg:gap-15">
         <Image
           src="/Images/dna tile.png"
           alt="DNA Tile"
@@ -32,8 +32,19 @@ export default function AboutHero() {
         />
       </div>
 
-      <div className="relative w-full h-[30vh] sm:h-[35vh] md:h-[60vh] lg:h-screen -mt-[20vh] sm:-mt-[25vh] md:-mt-[45vh] lg:-mt-[65vh]">
-        <Image src="/Images/Elipses.png" alt="Elipses" priority fill className="object-cover object-bottom" sizes="100vw" />
+      {/* Decorative bottom arc. Height is width-relative (vw) so the crop is
+          identical at every screen width (the old bug was a vh-sized box).
+          object-bottom keeps the arcs; full width keeps the side sweeps. z-0 = behind. */}
+      <div className="relative z-0 w-full h-[30vw] sm:h-[26vw] md:h-[24vw] lg:h-[22vw] -mt-[8vw] sm:-mt-[7vw] lg:-mt-[6vw]">
+        <Image
+          src="/Images/Elipses.png"
+          alt=""
+          aria-hidden
+          priority
+          fill
+          className="object-cover object-bottom select-none pointer-events-none"
+          sizes="100vw"
+        />
       </div>
 
       {/* Bridging the gap in education section */}
