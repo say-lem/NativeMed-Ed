@@ -113,23 +113,23 @@ export function PatientDataSection({
         )}
 
         {mockData.recentNotes.length > 0 && (
-          <div>
+          <div className="space-y-2 pt-3 sm:pt-4">
             <MockTagText text="Recent Notes/Consultation" />
-            <MockCasesPurpleBg>
+            <div className="space-y-4">
               {mockData.recentNotes.map((data, idx) => (
-                <div key={idx} className="space-y-2">
+                <div key={idx} className="space-y-3">
                   {isPresent(data.doctor) && (
-                    <p className="font-semibold text-xs sm:text-sm leading-[150%] tracking-[-1%] text-black-others">
+                    <p className="font-semibold text-sm sm:text-base leading-[150%] tracking-[-1%] text-black-others">
                       {data.doctor}
                     </p>
                   )}
                   {isPresent(data.complaint) && (
-                    <div className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-black-others">
+                    <div className="text-sm sm:text-base leading-[150%] tracking-[-1%] text-black-others">
                       <Markdown>{data.complaint}</Markdown>
                     </div>
                   )}
                   {isPresent(data.examination) && (
-                    <p className="text-xs sm:text-sm leading-[150%] tracking-[-1%]">
+                    <p className="text-sm sm:text-base leading-[150%] tracking-[-1%]">
                       <span className="text-black-others font-medium">
                         Examination:
                       </span>{" "}
@@ -137,7 +137,7 @@ export function PatientDataSection({
                     </p>
                   )}
                   {isPresent(data.Plan) && (
-                    <p className="text-xs sm:text-sm leading-[150%] tracking-[-1%]">
+                    <p className="text-sm sm:text-base leading-[150%] tracking-[-1%]">
                       <span className="text-black-others font-medium">
                         Plan:
                       </span>{" "}
@@ -146,7 +146,7 @@ export function PatientDataSection({
                   )}
                 </div>
               ))}
-            </MockCasesPurpleBg>
+            </div>
           </div>
         )}
 
@@ -193,9 +193,9 @@ export function PatientDataSection({
 
               {isPresent(mockData.investigationResults.normalResults) && (
                 <div className="bg-white border-t-[0.2px] border-gray-2 px-4 py-3">
-                  <span className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-[#0A0A0A]">
+                  <Markdown className="text-xs sm:text-sm leading-[150%] tracking-[-1%] text-[#0A0A0A]">
                     {mockData.investigationResults.normalResults}
-                  </span>
+                  </Markdown>
                 </div>
               )}
             </div>

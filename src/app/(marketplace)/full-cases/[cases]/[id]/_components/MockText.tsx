@@ -12,7 +12,7 @@ export function MockHeaderText({ text }: Prop) {
 
 export function MockTagText({ text }: Prop) {
   return (
-    <h3 className="font-semibold text-xs sm:text-sm leading-[150%] tracking-[-2%] text-subtle-text capitalize">
+    <h3 className="font-bold text-sm sm:text-base leading-[150%] tracking-[-2%] text-black capitalize">
       {text}
     </h3>
   );
