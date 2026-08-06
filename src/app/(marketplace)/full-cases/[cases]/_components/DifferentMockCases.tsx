@@ -71,19 +71,7 @@ export default function DifferentMockCases({
                 <span>{DEFAULT_DURATION_MIN} mins</span>
               </p>
             </aside>
-            <aside className="shrink-0">
-              {showSpecialty ? (
-                <p className="text-xs sm:text-sm leading-[150%] text-primary-100 font-semibold">
-                  {c.specialty}
-                </p>
-              ) : (
-                <p
-                  className={`text-xs sm:text-sm capitalize leading-[150%] ${difficultyClass[c.difficulty] ?? "text-black-others"}`}
-                >
-                  {c.difficulty}
-                </p>
-              )}
-            </aside>
+
           </Link>
         );
       })}

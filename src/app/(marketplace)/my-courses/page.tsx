@@ -11,7 +11,11 @@ async function loadEnrollments(): Promise<Enrollment[]> {
     return res.success ? res.data : [];
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;
-    console.error("[my-courses] fetch error:", err.code, err.message);
+    console.error("[my-courses] fetch error:", {
+      code: err.code,
+      message: err.message,
+      status: err.response?.status,
+    });
     return [];
   }
 }
