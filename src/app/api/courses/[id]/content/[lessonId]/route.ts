@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { getCourseContent } from "@/services/courses.service";
 import { getCourseAccess } from "@/lib/access";
+import { includesLectures } from "@/lib/tiers";
 
 interface RouteParams {
   params: Promise<{ id: string; lessonId: string }>;
@@ -34,8 +35,10 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
   if (!fileUrl) return new Response("Not found", { status: 404 });
 
-  // Video lessons (Google Drive) require the pdf_drive tier.
-  if (type === "video" && access.tier !== "pdf_drive") {
+  // Video lessons (Google Drive) require the tier that includes lectures.
+  // TODO(Phase 6): once course content carries a lecture/mock-session category, gate on
+  // that instead of file type — `type` is format (pdf/video), not what the tier buys.
+  if (type === "video" && !includesLectures(access.tier)) {
     return new Response("Forbidden", { status: 403 });
   }
 

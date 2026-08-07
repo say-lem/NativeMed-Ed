@@ -1,5 +1,6 @@
 "use client";
 import { Loader2, X } from "lucide-react";
+import { tierLabel } from "@/lib/tiers";
 
 function fmt(iso?: string): string {
   if (!iso) return "—";
@@ -22,11 +23,6 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
     </div>
   );
 }
-
-const TIER_LABELS: Record<string, string> = {
-  pdf_only: "PDF only",
-  pdf_drive: "PDF + Drive",
-};
 
 export default function EnrollmentDetailModal({
   user,
@@ -89,7 +85,7 @@ export default function EnrollmentDetailModal({
           />
           <DetailRow
             label="Tier"
-            value={tier ? (TIER_LABELS[tier] ?? tier) : "—"}
+            value={tierLabel(tier)}
           />
           <DetailRow
             label="Status"

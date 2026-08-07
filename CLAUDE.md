@@ -1,8 +1,20 @@
 # Native Medical Education — Frontend (Next.js App Router)
 
 Internal reference for integrating with the Native Med backend. Keep this in sync with the
-backend integration guides. When the backend doc and the code disagree, the backend doc wins —
-update the code, then update this file.
+backend integration guides.
+
+> **PROBE THE LIVE API BEFORE BUILDING.** The written guides have repeatedly been wrong. The
+> ordering is: **live API > Postman collection > prose doc**. Public endpoints need no auth, so
+> confirming a shape costs one command:
+> `curl -s https://nativemed.onrender.com/api/v1/payments/plans`
+> Doc claims already disproved by live data: Case Bank returns **5 free cases**, not 403;
+> `/enrollments/me` `courseId` can be **`null`**; course tiers have **no per-tier price**.
+> Mark facts as "verified against live data (date)" vs "per the doc" so the difference stays visible.
+
+**2026-08-07 backend migration** (courses/pricing/tiers/Stripe) — status, remaining work, and the
+open questions for backend live in
+[docs/backend-migration-2026-08-07.md](docs/backend-migration-2026-08-07.md). Read that first if
+anything below looks inconsistent.
 
 ---
 
@@ -20,12 +32,12 @@ update the code, then update this file.
 | Health         | `GET /health`                                                                                                                                                                                                                                                                | none  |                                                                                          |
 | Auth           | `POST /auth/{register,login,refresh-token,logout,forgot-password,reset-password,change-password,logout-all}`, `GET/PATCH /auth/me`                                                                                                                                           | mixed | register/login/refresh/forgot/reset are public; me/change-password/logout-all need token |
 | Auth admin     | `POST/GET /auth/admin/users`, `GET/PATCH /auth/admin/users/:userId`, `PATCH /auth/admin/users/:userId/toggle-status`                                                                                                                                                         | admin | user management (note: also duplicated under `/admin/users`)                             |
-| Courses        | `GET /courses` (PUBLIC, **published-only** plain array — NOT paginated), `GET /courses/:id` (auth, **published-only**), `GET /courses/admin/all` (admin, **paginated, incl. drafts**), `GET /courses/admin/:id` (admin, incl. drafts), `POST/PATCH/DELETE /courses/:id` (admin), `PATCH /courses/:id/{thumbnail,publish}` (admin)                                                             | mixed | `POST` body: `{ title, description, price }` (all required). thumbnail = multipart field `thumbnail`. **Admin must use `/courses/admin/*` to see drafts** — `/courses` + `/courses/:id` hide unpublished (mirrors Cases). |
+| Courses        | `GET /courses` (PUBLIC, **published-only** plain array — NOT paginated), `GET /courses/:id` (**public** since 2026-08-07, published-only), `GET /courses/admin/all` (admin, **paginated, incl. drafts**), `GET /courses/admin/:id` (admin, incl. drafts), `POST/PATCH/DELETE /courses/:id` (admin), `PATCH /courses/:id/{thumbnail,publish}` (admin)                                                             | mixed | **`POST` body changed 2026-08-07**: `{ title, description, priceMonthly?, priceQuarterly?, lecturesDriveFolderId, mockSessionsDriveFolderId, isPublished? }` — **at least one price** required, **both Drive links** required on create. The old single `price` field is GONE. Drive links are **write-only** (no GET returns them). thumbnail = multipart field `thumbnail`. **Admin must use `/courses/admin/*` to see drafts.** |
 | Course Content | `GET /courses/:courseId/content[/:id]` (auth); **two create endpoints** — `POST .../content/upload-pdf` (admin, multipart: `file,title,order,type=pdf`, Cloudinary) and `POST .../content/drive-link` (admin, JSON: `{title,type,fileUrl,order,duration}`); `PATCH/DELETE .../content/:id` (admin)                                                                                | mixed | PDF lessons are uploaded; video lessons are Google-Drive links. lesson `type` e.g. `"video"`/`"pdf"` |
 | Cases          | see §4                                                                                                                                                                                                                                                                       | mixed | only module with a written integration doc + frontend integration                        |
-| Enrollments    | `GET /enrollments/me` (auth, array; `courseId` **populated**), `GET /enrollments/check/:courseId` (auth), `GET /enrollments` + `/course/:courseId` + `/user/:userId` (admin), `POST /enrollments/{manual,revoke}` (admin, `{ userId, courseId }`), `PATCH /enrollments/:id/restore` (admin) | mixed | course access grants; backs the member **My Courses**. An enrollment = access to a course (via payment OR admin grant); ≠ a subscription (§7) |
+| Enrollments    | `GET /enrollments/me` (auth, array; `courseId` populated **but can be `null`**), `GET /enrollments/check/:courseId` (auth), `GET /enrollments` + `/course/:courseId` + `/user/:userId` (admin), `POST /enrollments/{manual,revoke}` (admin, `{ userId, courseId }`), `PATCH /enrollments/:id/restore` (admin) | mixed | course access grants; backs the member **My Courses**. An enrollment = access to a course (via payment OR admin grant); ≠ a subscription (§7). ⚠️ **`courseId` is `null` when the referenced course was deleted** (Mongoose populate on a missing doc) — always guard before rendering; see §8. |
 | Admin          | `GET /admin/dashboard`, `GET /admin/users[/:userId]`, `PATCH /admin/users/:userId/toggle-status`                                                                                                                                                                             | admin | dashboard stats + user mgmt                                                              |
-| Payments       | `GET /payments/plans` (public), `POST /payments/checkout` (auth; `{ type:"case_bank"\|"course", interval, tier?, courseId?, successUrl, cancelUrl }`), `POST /payments/billing-portal` (auth), `GET /payments/me` (auth, paginated), `POST /payments/webhook` (Stripe, raw body + `Stripe-Signature`)                                                                                | mixed | **Stripe** checkout. `type:"case_bank"` → Case Bank sub; `type:"course"` + `tier:"pdf_only"\|"pdf_drive"` → course. `interval`: `monthly`/`quarterly`/… |
+| Payments       | `GET /payments/plans` (public), `POST /payments/checkout` (auth; `{ type:"case_bank"\|"course", interval, tier?, courseId?, successUrl, cancelUrl }`), `POST /payments/billing-portal` (auth, `{ returnUrl }`, **404 if no subscription**), `GET /payments/me` (auth, paginated, amounts in **pence**), `POST /payments/webhook` (Stripe, raw body + `Stripe-Signature`)                                                                                | mixed | **Stripe** checkout, **live keys as of 2026-08-07** — do NOT complete test payments. `type:"case_bank"` → Case Bank sub; `type:"course"` + `tier:"mocksessions_only"\|"mocksession_and_lectures"` → course. Checkout response (verified): `data: { sessionId, url }` — we use the hosted redirect (`url`), so Stripe.js is not needed. Errors: `409` already subscribed, `400` unsupported interval / unpublished, `404` not found. |
 | Subscriptions  | `GET /subscriptions/plans` (public), `GET /subscriptions/me` (auth), `GET /subscriptions/case-bank/status` (auth), `GET /subscriptions/course/:courseId/status` (auth), `GET /subscriptions/subscribers` (admin)                                                              | mixed | **`/subscriptions/subscribers` is the REAL source for the admin Subscribers screen** — NOT `/admin/users`. A user ≠ a subscriber. `/subscriptions/me` + `…/status` back the marketplace "My Subscriptions"/access gating |
 
 - Admin **Subscribers** screen is wired to `GET /subscriptions/subscribers` (plain array; a user is NOT
@@ -38,11 +50,8 @@ update the code, then update this file.
   `status`** = `{ active: boolean }`), Enrollments (**`/enrollments/me`** + **`/check/:id`**, §8), Course
   Content (§8). **Still unverified:** `POST /payments/checkout` response, `POST /payments/billing-portal`
   response, `GET /payments/me`.
-- **Two backend blockers** the frontend is waiting on (both built client-side, both fail at the backend):
-  1. **Stripe checkout** — `/payments/plans` returns dummy price IDs (`price_dummy_*`), so
-     `POST /payments/checkout` 500s ("Something went wrong"). Needs real Stripe prices.
-  2. **Course PDF delivery** — lesson `fileUrl`s are **private Cloudinary** assets (`401 deny or ACL
-     failure`), so our proxy can't stream them. Needs a signed URL or a backend stream endpoint. See §7.
+- **Backend blockers** — see §7 (Stripe checkout is now resolved; PDF delivery, the missing
+  lecture/mock-session category, and per-tier pricing are still open).
 
 ## 1. Environment & API base URL
 
@@ -408,9 +417,10 @@ fd.append("stationImage", stationFile); // optional
   **access-checked proxy** [src/app/api/courses/[id]/content/[lessonId]/route.ts](<src/app/api/courses/[id]/content/[lessonId]/route.ts>),
   which verifies course access + tier and streams the file so the real (private) Cloudinary URL is never
   exposed. **Only PDFs render in-app.** Video lessons are opened as **external Google-Drive links** from
-  the lesson list (pdf_drive tier only) — not viewed in-app. (Paying for a course also adds the user to a
-  private Google Drive, handled by the backend; the lesson list still handles a Drive link if one is
-  returned so nothing is dropped.)
+  the lesson list (`mocksession_and_lectures` tier only — via `includesLectures()`, never a hardcoded
+  string) — not viewed in-app. (Paying for a course also adds the user to a private Google Drive,
+  handled by the backend; the lesson list still handles a Drive link if one is returned so nothing is
+  dropped.) ⚠️ In-app PDFs are **still non-functional** — the Cloudinary 401 (§7) is unresolved.
 - **Settings form:** shared [src/components/shared/SettingsForm.tsx](src/components/shared/SettingsForm.tsx)
   takes its server actions as an `actions` prop — used by BOTH `admin-settings` and member `settings`
   (`PATCH /auth/me`, `change-password`, `logout-all`).
@@ -423,8 +433,11 @@ fd.append("stationImage", stationFile); // optional
 ### Subscription vs. Enrollment (mental model — they are different things)
 
 - **Subscription** = a recurring **Stripe billing** relationship. Two kinds: **Case Bank** (unlocks ALL
-  cases) and **course** (per course; `tier` = `pdf_only`|`pdf_drive`, `interval` monthly/quarterly).
-  Status via `/subscriptions/{me, case-bank/status, course/:id/status}`.
+  cases) and **course** (per course; `tier` = `mocksessions_only`|`mocksession_and_lectures`,
+  `interval` monthly/quarterly). Status via `/subscriptions/{me, case-bank/status, course/:id/status}`.
+  **Tier controls WHICH Drive materials you get; interval controls how often you're billed.**
+  Renamed from `pdf_only`/`pdf_drive` on 2026-08-07 — labels + helpers in
+  [src/lib/tiers.ts](src/lib/tiers.ts) (`tierLabel`, `includesLectures`); never hardcode the strings.
 - **Enrollment** = an **access record for ONE course**, created by a payment OR an admin manual grant
   (`source: "manual"`, `paymentId` all-zeros). Carries `accessTier`, `isActive`. Course-only.
 - **Course access = active subscription OR active enrollment** — [lib/access.ts](src/lib/access.ts).
@@ -457,12 +470,21 @@ fd.append("stationImage", stationFile); // optional
 
 ### ⚠️ Blocked on backend (frontend built + correct; fails at the backend)
 
-1. **Stripe checkout** (course + Case Bank) — `/payments/plans` returns dummy price IDs
-   (`price_dummy_*`), so `POST /payments/checkout` 500s. Needs real Stripe prices; then verify the
-   checkout **response shape** (the redirect-URL field is still unknown — the action tries
-   `url`/`checkoutUrl`/`sessionUrl`).
-2. **Course PDF display** — lesson `fileUrl`s are **private Cloudinary** assets (401), so the proxy
-   can't stream them. Needs a signed URL or a backend stream endpoint; then point the proxy at it.
+Full detail + all open questions: [docs/backend-migration-2026-08-07.md](docs/backend-migration-2026-08-07.md).
+
+1. ~~**Stripe checkout**~~ — **RESOLVED 2026-08-07.** Real price IDs are live and checkout reaches
+   the Stripe hosted page. Response shape confirmed `{ sessionId, url }`. ⚠️ Backend is on **LIVE
+   Stripe keys**, so end-to-end payment is untested — do not complete a payment until it's switched
+   to test mode.
+2. **Course PDF display** — still open. Lesson `fileUrl`s are **private Cloudinary** assets (401 to
+   our proxy). Backend confirmed PDF lessons are staying, so this still needs a signed URL or a
+   backend stream endpoint.
+3. **No lecture / mock-session category on course content** — `type` is only `pdf`|`video` (file
+   format). Tier gating is *supposed* to hide lectures from `mocksessions_only`, but nothing records
+   which bucket a lesson is in. The content proxy currently approximates it with
+   `type === "video"` and carries a `TODO(Phase 6)`.
+4. **Both course tiers cost the same** — no per-tier price field exists (see §8). Business decision
+   pending with backend.
 
 ### Remaining mock (no backend endpoint exists)
 
@@ -480,14 +502,21 @@ fd.append("stationImage", stationFile); // optional
 
 All wrapped in the standard envelope (`{ success, message, data }`). Verified 2026-07-10.
 
-**Course** (`GET /courses` = plain array, published-only; `GET /courses/:id` = single, auth):
+**Course** (`GET /courses` = plain array, published-only; `GET /courses/:id` = single, public).
+Key set **verified by curl 2026-08-07** across all live courses:
 
 ```ts
-{ _id, title, description, price, thumbnailUrl?, isPublished, createdBy, createdAt, updatedAt }
+{ _id, title, description, priceMonthly?, priceQuarterly?, thumbnailUrl?,
+  isPublished, createdAt, updatedAt }
 ```
 
-Detail returns **no embedded lessons** — fetch content separately. `price` is effectively unused for
-checkout (pricing is global by tier — see plans below).
+- Prices are **GBP pounds** (`49.99`), NOT pence — unlike `PlanPrice.amount` and `/payments/me`.
+- A **missing** price means that interval **isn't offered** (checkout 400s on it) — it does NOT
+  mean free. Helpers: [src/lib/price.ts](src/lib/price.ts).
+- The old single `price` field is **gone**.
+- `lecturesDriveFolderId` / `mockSessionsDriveFolderId` are accepted on write but **never
+  returned** — so the admin edit form cannot prefill them (it treats blank as "keep existing").
+- Detail returns **no embedded lessons** — fetch content separately.
 
 **Course Content** (`GET /courses/:courseId/content` = plain array):
 
@@ -498,37 +527,54 @@ checkout (pricing is global by tier — see plans below).
 PDF `fileUrl` = a **private** Cloudinary raw URL (needs signing — §7). Video `fileUrl` = a Google-Drive
 share link (embed its `/preview` form).
 
-**Payments plans** (`GET /payments/plans` = array of plan groups):
+**Payments plans** (`GET /payments/plans` = array of plan groups). Verified by curl 2026-08-07:
 
 ```ts
-{ type: "case_bank"|"course", tier?: "pdf_only"|"pdf_drive", name, description,
-  prices: [{ amount /* pence */, currency, interval, stripePriceId, label /* "£69.99 / month" */ }] }
+{ type: "case_bank"|"course", tier?: CourseTier, name, description,
+  prices: [{ amount /* pence */, currency, interval, stripePriceId, label /* "£24.99 / month" */ }] }
 ```
 
-`case_bank` = one monthly price (£24.99). `course` tiers = monthly + quarterly. `amount` is minor units —
-prefer the preformatted `label`. **Pricing is GLOBAL by tier**, keyed to `stripePriceId`, NOT `Course.price`.
+- `case_bank` = ONE real monthly price, £24.99 (`price_1U1pnT…` — no longer a `price_dummy_*`).
+- **`course` plan groups return `prices: []`.** Use them for the tier **name/description only**;
+  the amount comes from the course's `priceMonthly`/`priceQuarterly`.
+- ⚠️ This **REVERSES** the old note that "pricing is GLOBAL by tier, keyed to `stripePriceId`".
+  It is now **per-course**.
+- ⚠️ **There is no per-tier price field anywhere** (not on the plan, not on the course), so both
+  course tiers necessarily cost the same — the higher tier includes the lower one for the same
+  money. Flagged to backend as Q10 in the migration doc; a business decision is pending.
 
-**Subscription / enrollment status:**
+**Subscription / enrollment status** (extra fields added 2026-08-07; only the boolean is
+guaranteed — the rest are absent from the negative form):
 
 ```ts
-GET /subscriptions/course/:courseId/status  → { active: boolean }
-GET /subscriptions/case-bank/status         → { active: boolean }
-GET /enrollments/check/:courseId            → { enrolled: boolean, accessTier?: "pdf_only"|"pdf_drive", accessGrantedAt? }
+GET /subscriptions/course/:courseId/status  → { active, tier?, currentPeriodEnd?, cancelAtPeriodEnd?, billingInterval? }
+GET /subscriptions/case-bank/status         → { active, currentPeriodEnd?, cancelAtPeriodEnd?, billingInterval? }
+GET /enrollments/check/:courseId            → { enrolled: boolean, accessTier?: CourseTier, accessGrantedAt? }
 ```
+
+**`status: "past_due"` STILL GRANTS ACCESS** (Stripe is retrying) — show a warning to update the
+card, never a lockout. Presentation + rules: [src/lib/subscription-status.ts](src/lib/subscription-status.ts).
 
 **Subscriptions** (`GET /subscriptions/me` = plain array; `courseId` populated + `tier` only for
 `type: "course"`):
 
 ```ts
 { _id, type: "case_bank"|"course", userId,
-  courseId?: { _id, title, thumbnailUrl? }, tier?: "pdf_only"|"pdf_drive",
+  courseId?: { _id, title, thumbnailUrl? } | null, tier?: CourseTier,
   billingInterval /* "monthly"|"quarterly" */, status /* "active"|… */, cancelAtPeriodEnd,
   currentPeriodStart, currentPeriodEnd, stripeCustomerId, stripeSubscriptionId, createdAt, updatedAt }
 ```
 
-**Enrollments** (`GET /enrollments/me` = plain array; `courseId` **populated**):
+**Enrollments** (`GET /enrollments/me` = plain array):
 
 ```ts
-{ _id, courseId: { _id, title, description, price, thumbnailUrl? }, userId, accessTier,
-  isActive, source: "manual"|"payment", grantedBy, paymentId, accessGrantedAt, createdAt, updatedAt }
+{ _id, courseId: { _id, title, description, priceMonthly?, priceQuarterly?, thumbnailUrl? } | string | null,
+  userId, accessTier, isActive, source: "manual"|"payment", grantedBy, paymentId,
+  accessGrantedAt, createdAt, updatedAt }
 ```
+
+⚠️ **`courseId` can be `null`** — observed live 2026-08-07 on three active enrollments whose
+courses had been deleted. Anything rendering enrollments must filter these out **before** deciding
+whether to show an empty state, or you get a blank page with no empty state at all (this exact bug
+cost a debugging session). See `MyCoursesList` — it separates "never enrolled" from "your courses
+are no longer available".

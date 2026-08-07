@@ -20,15 +20,17 @@ export async function saveCourseAction(input: {
   try {
     const res = input.id
       ? await updateCourse(input.id, input.payload)
-      : await createCourse(input.payload);
+      : // POST /courses accepts isPublished (defaults false) as of 2026-08-07, so
+        // create can land in the right state without a second request.
+        await createCourse({ ...input.payload, isPublished: input.publish });
 
     if (!res.success) {
       return { ok: false, message: res.message, fieldErrors: res.errors };
     }
 
     const course = res.data;
-    // POST /courses can't set isPublished (unknown fields are stripped), so
-    // reconcile the published state via the publish toggle if it differs.
+    // Fallback: if the backend ignored isPublished (or this is an edit), reconcile
+    // the published state via the publish toggle.
     if (!!course.isPublished !== input.publish) {
       try {
         await publishCourse(course._id);

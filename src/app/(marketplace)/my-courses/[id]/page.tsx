@@ -13,6 +13,7 @@ import { BannerTitleCase } from "@/components/shared/TitleCase";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import { getCourse, getCourseContent } from "@/services/courses.service";
 import { getCourseAccess } from "@/lib/access";
+import { includesLectures } from "@/lib/tiers";
 import type { Course, Lesson } from "@/types/api";
 
 interface PageProps {
@@ -55,8 +56,8 @@ export default async function CourseContentPage({ params }: PageProps) {
     (a, b) => (a.order ?? 0) - (b.order ?? 0),
   );
 
-  // pdf_only tier can't open the Google-Drive video lessons.
-  const canWatchVideo = access.tier === "pdf_drive";
+  // The mock-sessions-only tier can't open the Google-Drive video lessons.
+  const canWatchVideo = includesLectures(access.tier);
 
   return (
     <>

@@ -9,16 +9,13 @@ import CoursePurchase from "./_components/CoursePurchase";
 import { getCourse } from "@/services/courses.service";
 import { getPaymentPlans } from "@/services/payments.service";
 import { getCourseAccess } from "@/lib/access";
+import { tierLabel } from "@/lib/tiers";
+import { formatDate } from "@/lib/date";
 import type { Course, PaymentPlan } from "@/types/api";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
-
-const TIER_LABEL: Record<string, string> = {
-  pdf_only: "PDF Only",
-  pdf_drive: "PDF + Drive",
-};
 
 async function loadCourse(id: string): Promise<Course | null> {
   try {
@@ -91,10 +88,14 @@ export default async function CourseDetailPage({ params }: PageProps) {
             <div className="inline-flex items-center gap-2 rounded-full bg-green-50 border border-green-200 px-3 py-1.5 text-sm font-medium text-green-700">
               <CheckCircle2 size={16} />
               You have access
-              {access.tier
-                ? ` — ${TIER_LABEL[access.tier] ?? access.tier}`
-                : ""}
+              {access.tier ? ` — ${tierLabel(access.tier)}` : ""}
             </div>
+            {access.currentPeriodEnd && (
+              <span className="text-xs text-subtle-text">
+                {access.cancelAtPeriodEnd ? "Access until" : "Renews"}{" "}
+                {formatDate(access.currentPeriodEnd)}
+              </span>
+            )}
             <Link href={`/my-courses/${course._id}`}>
               <Button className="font-bold text-sm sm:text-base bg-black-others">
                 Go to course
@@ -132,7 +133,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
           <h2 className="font-semibold text-xl sm:text-2xl text-black-others">
             Choose your plan
           </h2>
-          <CoursePurchase courseId={course._id} plans={plans} />
+          <CoursePurchase course={course} plans={plans} />
         </div>
       )}
       </section>

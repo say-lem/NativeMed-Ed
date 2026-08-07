@@ -1,9 +1,15 @@
 import "server-only";
 import { api } from "@/lib/api";
-import type { ApiResponse, Paginated, PaymentPlan } from "@/types/api";
+import type {
+  ApiResponse,
+  CourseTier,
+  Paginated,
+  PaymentPlan,
+} from "@/types/api";
 
-/** Course access tiers accepted by checkout (`type: "course"`). */
-export type CourseTier = "pdf_only" | "pdf_drive";
+/** Course access tiers accepted by checkout (`type: "course"`). Canonical definition
+ *  lives in `@/types/api`; re-exported here for existing callers. */
+export type { CourseTier };
 
 /** Billing interval accepted by checkout. Confirm the full set against `/payments/plans`. */
 export type PaymentInterval = "monthly" | "quarterly" | string;

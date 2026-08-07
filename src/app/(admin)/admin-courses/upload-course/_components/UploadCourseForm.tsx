@@ -7,11 +7,12 @@ import { toast } from "sonner";
 import { ChevronDown, Loader2, Upload } from "lucide-react";
 import {
   CATEGORIES,
-  courseSchema,
+  makeCourseSchema,
   emptyCourseValues,
   buildCoursePayload,
   type CourseFormValues,
 } from "@/lib/schemas/course";
+import { applyFieldErrors } from "@/lib/form-errors";
 import { LogoLoaderOverlay } from "@/components/shared/LogoLoader";
 import { saveCourseAction, uploadCourseThumbnailAction } from "../actions";
 
@@ -81,12 +82,17 @@ export default function UploadCourseForm({
     initialThumbnail,
   );
 
+  const isEdit = Boolean(courseId);
+
   const {
     register,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useForm<CourseFormValues>({
-    resolver: zodResolver(courseSchema),
+    // On edit the Drive links are optional — they're never returned by the API, so they
+    // can't be prefilled, and an empty field is omitted from the PATCH.
+    resolver: zodResolver(makeCourseSchema(isEdit ? "edit" : "create")),
     defaultValues: initialValues ?? emptyCourseValues,
   });
 
@@ -104,7 +110,13 @@ export default function UploadCourseForm({
       setSaving(true);
       const result = await saveCourseAction({ id: courseId, payload, publish });
       if (!result.ok) {
-        toast.error(result.message ?? "Something went wrong");
+        // Surface per-field backend errors (e.g. "Invalid Google Drive folder link")
+        // on the offending input, not just as a generic toast.
+        const shown = applyFieldErrors(result.fieldErrors, setError);
+        toast.error(
+          result.message ??
+            (shown ? "Please fix the highlighted fields" : "Something went wrong"),
+        );
         setSaving(false);
         return;
       }
@@ -180,17 +192,88 @@ export default function UploadCourseForm({
           </div>
         </div>
 
-        {/* Price */}
-        <div className="space-y-2">
-          <Label text="Price" required />
-          <input
-            type="text"
-            placeholder="£19.99"
-            className={fieldClass}
-            {...register("price")}
-          />
-          <FieldError message={errors.price?.message} />
-        </div>
+        {/* Pricing — at least one interval required; an empty field means that
+            interval isn't offered and is hidden at checkout. */}
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-semibold text-black-others mb-2">
+            Pricing <span className="text-[#E5102E]">*</span>
+          </legend>
+          <p className="text-xs text-subtle-text mb-3 leading-[150%]">
+            Set at least one price. Leave an interval blank if you don&apos;t
+            want to offer it — it won&apos;t be shown to buyers.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label text="Monthly price (£)" />
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="49.99"
+                className={fieldClass}
+                {...register("priceMonthly")}
+              />
+              <FieldError message={errors.priceMonthly?.message} />
+            </div>
+            <div className="space-y-2">
+              <Label text="Quarterly price (£)" />
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="129.99"
+                className={fieldClass}
+                {...register("priceQuarterly")}
+              />
+              <FieldError message={errors.priceQuarterly?.message} />
+            </div>
+          </div>
+        </fieldset>
+
+        {/* Google Drive folders — course materials live here; the backend shares them
+            with each buyer's email according to their access tier. */}
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-semibold text-black-others mb-2">
+            Google Drive folders{" "}
+            {!isEdit && <span className="text-[#E5102E]">*</span>}
+          </legend>
+          <p className="text-xs text-subtle-text mb-3 leading-[150%]">
+            Share each folder with the Native Med service account (Editor role)
+            before saving. Paste the folder link or its ID.
+            {isEdit && (
+              <>
+                {" "}
+                <span className="text-[#7A4B00]">
+                  Existing links can&apos;t be shown for security, so these
+                  start blank — leave them empty to keep the current folders, or
+                  paste a new link to replace one.
+                </span>
+              </>
+            )}
+          </p>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label text="Lectures folder" required={!isEdit} />
+              <input
+                type="text"
+                placeholder="https://drive.google.com/drive/folders/…"
+                className={fieldClass}
+                {...register("lecturesDriveFolderId")}
+              />
+              <FieldError message={errors.lecturesDriveFolderId?.message} />
+            </div>
+            <div className="space-y-2">
+              <Label text="Mock sessions folder" required={!isEdit} />
+              <input
+                type="text"
+                placeholder="https://drive.google.com/drive/folders/…"
+                className={fieldClass}
+                {...register("mockSessionsDriveFolderId")}
+              />
+              <FieldError
+                message={errors.mockSessionsDriveFolderId?.message}
+              />
+            </div>
+          </div>
+        </fieldset>
 
         {/* Description */}
         <div className="space-y-2">

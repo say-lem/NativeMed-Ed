@@ -1,14 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Course } from "@/types/api";
-
-function formatPrice(price?: number): string {
-  if (price == null || price === 0) return "Free";
-  return `£${price.toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
+import { courseBadgePrice } from "@/lib/price";
 
 export default function CoursesCard({
   courses,
@@ -50,7 +43,7 @@ export default function CoursesCard({
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
             <p className="absolute rounded-[100px] py-2 px-3 top-2 right-5 bg-[#00000080] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
-              {formatPrice(course.price)}
+              {courseBadgePrice(course)}
             </p>
           </aside>
 

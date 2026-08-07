@@ -1,11 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Enrollment } from "@/types/api";
-
-const TIER_LABEL: Record<string, string> = {
-  pdf_only: "PDF Only",
-  pdf_drive: "PDF + Drive",
-};
+import { tierLabel } from "@/lib/tiers";
 
 /** The populated course object on an enrollment. Null when `courseId` came back as a
  *  bare id string, or as `null` — which the backend returns when the referenced course
@@ -129,7 +125,7 @@ export default function MyCoursesList({
                 />
                 {e.accessTier && (
                   <span className="absolute top-2 right-2 rounded-[100px] py-1 px-3 bg-[#00000080] border-[0.2px] border-white/80 text-xs font-semibold text-white">
-                    {TIER_LABEL[e.accessTier] ?? e.accessTier}
+                    {tierLabel(e.accessTier)}
                   </span>
                 )}
               </div>

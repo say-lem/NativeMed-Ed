@@ -1,40 +1,23 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Subscription } from "@/types/api";
+import { tierLabel } from "@/lib/tiers";
+import { statusMeta, type StatusTone } from "@/lib/subscription-status";
+import { formatDate } from "@/lib/date";
 
-const TIER_LABEL: Record<string, string> = {
-  pdf_only: "PDF Only",
-  pdf_drive: "PDF + Drive",
+const TONE_BADGE: Record<StatusTone, string> = {
+  good: "bg-green-600",
+  warn: "bg-amber-500",
+  dead: "bg-gray-500",
 };
-
-const MONTHS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
-/** Deterministic date (UTC) so server and client render the same string. */
-function formatDate(iso?: string): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
-}
 
 export default function SubscriptionCard({ sub }: { sub: Subscription }) {
   const isCourse = sub.type === "course";
   const title = isCourse ? sub.courseId?.title ?? "Course" : "Case Bank Access";
   const thumb = isCourse ? sub.courseId?.thumbnailUrl : undefined;
-  const active = sub.status === "active";
-  const endLabel = sub.cancelAtPeriodEnd ? "Cancels on" : "Renews on";
+  const meta = statusMeta(sub.status);
+  // `past_due` keeps access, so the period end is still meaningful.
+  const endLabel = sub.cancelAtPeriodEnd ? "Access until" : "Renews on";
 
   return (
     <div className="rounded-[16px] overflow-hidden courseBorder pb-4 bg-white flex flex-col">
@@ -47,11 +30,9 @@ export default function SubscriptionCard({ sub }: { sub: Subscription }) {
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
         />
         <span
-          className={`absolute top-2 right-2 rounded-[100px] py-1 px-3 text-xs font-semibold text-white capitalize ${
-            active ? "bg-green-600" : "bg-gray-500"
-          }`}
+          className={`absolute top-2 right-2 rounded-[100px] py-1 px-3 text-xs font-semibold text-white capitalize ${TONE_BADGE[meta.tone]}`}
         >
-          {active ? "Active" : sub.status}
+          {meta.label}
         </span>
       </div>
 
@@ -66,7 +47,7 @@ export default function SubscriptionCard({ sub }: { sub: Subscription }) {
           </span>
           {isCourse && sub.tier && (
             <span className="rounded-full bg-primary-10 text-primary-100 px-2 py-1">
-              {TIER_LABEL[sub.tier] ?? sub.tier}
+              {tierLabel(sub.tier)}
             </span>
           )}
         </div>
@@ -74,6 +55,12 @@ export default function SubscriptionCard({ sub }: { sub: Subscription }) {
         {sub.currentPeriodEnd && (
           <p className="text-xs text-subtle-text">
             {endLabel} {formatDate(sub.currentPeriodEnd)}
+          </p>
+        )}
+
+        {meta.notice && (
+          <p className="rounded-[6px] bg-[#FFF8EC] border border-[#F5C26B] px-2 py-1.5 text-xs text-[#7A4B00] leading-[150%]">
+            {meta.notice}
           </p>
         )}
 

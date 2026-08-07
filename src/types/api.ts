@@ -212,24 +212,42 @@ export interface CaseInput {
   furtherResources: FurtherResource[];
 }
 
-/** Course (GET /courses). Shape verified against live data 2026-06-25. */
+/** Course access tier (`type: "course"` subscriptions + enrollments). Renamed by the
+ *  backend 2026-08-07 from `pdf_only`/`pdf_drive`. Labels live in `@/lib/tiers`. */
+export type CourseTier = "mocksessions_only" | "mocksession_and_lectures";
+
+/** Course (GET /courses). Prices are in **GBP pounds** (e.g. 49.99), NOT pence — unlike
+ *  `PlanPrice.amount`. The old single `price` field was removed by the backend 2026-08-07.
+ *  `lecturesDriveFolderId`/`mockSessionsDriveFolderId` are accepted on write but are
+ *  server-only — no GET returns them (backend intends to expose them on admin GET). */
 export interface Course {
   _id: string;
   title: string;
   description?: string;
-  price?: number;
+  priceMonthly?: number;
+  priceQuarterly?: number;
   thumbnailUrl?: string;
   isPublished?: boolean;
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
+  /** Present only if the backend starts returning them on admin routes. */
+  lecturesDriveFolderId?: string;
+  mockSessionsDriveFolderId?: string;
 }
 
-/** Payload for POST /courses (create) and PATCH /courses/:id (partial update). */
+/** Payload for POST /courses (create) and PATCH /courses/:id (partial update).
+ *  Create requires: title, description, BOTH Drive folder links, and at least one price.
+ *  Update: all optional, but at least one price must survive the merge. */
 export interface CourseInput {
   title: string;
   description?: string;
-  price?: number;
+  priceMonthly?: number;
+  priceQuarterly?: number;
+  /** Full Drive folder URL or a raw folder ID — backend extracts the ID. */
+  lecturesDriveFolderId?: string;
+  mockSessionsDriveFolderId?: string;
+  isPublished?: boolean;
 }
 
 /** Enrollment (GET /enrollments, admin). `userId`/`courseId` come populated;
@@ -237,18 +255,23 @@ export interface CourseInput {
 export interface Enrollment {
   _id: string;
   userId?: UserRef | string;
+  /** Populated course object, a bare id string, or **null** when the referenced course
+   *  has been deleted (populate on a missing doc) — always guard before rendering. */
   courseId?:
     | {
         _id: string;
         title?: string;
         description?: string;
-        price?: number;
+        priceMonthly?: number;
+        priceQuarterly?: number;
         thumbnailUrl?: string;
       }
-    | string;
+    | string
+    | null;
   isActive?: boolean;
   source?: string; // "manual" | "payment"
-  accessTier?: string; // "pdf_only" | "pdf_drive"
+  /** Widened to string: legacy records may still carry pre-2026-08-07 tier names. */
+  accessTier?: CourseTier | string;
   accessGrantedAt?: string;
   grantedBy?: string;
   subscriptionId?: string;
@@ -287,22 +310,40 @@ export interface PlanPrice {
  *  `type: "course"` plans. Verified 2026-07-10. */
 export interface PaymentPlan {
   type: "case_bank" | "course";
-  tier?: "pdf_only" | "pdf_drive";
+  tier?: CourseTier;
   name: string;
   description: string;
   prices: PlanPrice[];
 }
 
+/** Stripe subscription status. `past_due` STILL GRANTS ACCESS (payment retry in
+ *  progress) — show a warning, don't lock the user out. Widened with `string` because
+ *  Stripe can report states we haven't enumerated. */
+export type SubscriptionStatus =
+  | "active"
+  | "past_due"
+  | "cancelled"
+  | "expired"
+  | string;
+
 /** GET /subscriptions/course/:courseId/status — access via a live subscription.
- *  Verified 2026-07-10. */
+ *  Extra fields added by the backend 2026-08-07; only `active` is guaranteed
+ *  (it's absent from the `{ active: false }` form). */
 export interface CourseSubStatus {
   active: boolean;
+  tier?: CourseTier | string;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
+  billingInterval?: string;
 }
 
 /** GET /subscriptions/case-bank/status — one subscription unlocks ALL cases.
- *  Verified 2026-07-10. */
+ *  Same extra fields as the course status, minus `tier`. */
 export interface CaseBankStatus {
   active: boolean;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd?: boolean;
+  billingInterval?: string;
 }
 
 /** GET /subscriptions/me — a user's Stripe subscription. `courseId` (populated)
@@ -311,10 +352,10 @@ export interface Subscription {
   _id: string;
   type: "case_bank" | "course";
   userId: string;
-  courseId?: { _id: string; title?: string; thumbnailUrl?: string };
-  tier?: "pdf_only" | "pdf_drive";
+  courseId?: { _id: string; title?: string; thumbnailUrl?: string } | null;
+  tier?: CourseTier | string;
   billingInterval: string; // "monthly" | "quarterly" | …
-  status: string; // "active" | "canceled" | …
+  status: SubscriptionStatus;
   cancelAtPeriodEnd: boolean;
   currentPeriodStart?: string;
   currentPeriodEnd?: string;
@@ -328,6 +369,6 @@ export interface Subscription {
  *  a past payment). `accessTier` is the level granted. Verified 2026-07-10. */
 export interface EnrollmentCheck {
   enrolled: boolean;
-  accessTier?: "pdf_only" | "pdf_drive";
+  accessTier?: CourseTier | string;
   accessGrantedAt?: string;
 }

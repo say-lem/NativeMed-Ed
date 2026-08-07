@@ -7,6 +7,7 @@ import SearchBanner from "@/components/shared/SearchBanner";
 import { Button } from "@/components/ui/button";
 import SubscriptionCard from "./Subscriptioncard";
 import { openBillingPortal } from "../actions";
+import { needsAttention } from "@/lib/subscription-status";
 import type { Subscription } from "@/types/api";
 
 function subTitle(s: Subscription): string {
@@ -22,6 +23,13 @@ export default function SubscriptionsBrowser({
 }) {
   const [query, setQuery] = useState("");
   const [pending, startTransition] = useTransition();
+
+  // `past_due` keeps access while Stripe retries, so this is a prompt to fix the card —
+  // not a lockout. Surfaced at page level too, since a failing card affects billing overall.
+  const attention = useMemo(
+    () => needsAttention(subscriptions),
+    [subscriptions],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -50,6 +58,29 @@ export default function SubscriptionsBrowser({
       />
 
       <section className="px-4 sm:px-8 lg:px-15 py-8 sm:py-10 space-y-6">
+        {attention.length > 0 && (
+          <div className="rounded-[8px] border border-[#F5C26B] bg-[#FFF8EC] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-[#7A4B00] leading-[150%]">
+              <span className="font-semibold">
+                {attention.length === 1
+                  ? "A payment needs your attention."
+                  : `${attention.length} payments need your attention.`}
+              </span>{" "}
+              You still have access while we retry, but update your card to
+              avoid losing it.
+            </p>
+            <Button
+              type="button"
+              onClick={manage}
+              disabled={pending}
+              className="font-bold bg-[#7A4B00] hover:opacity-90 disabled:opacity-60"
+            >
+              {pending && <Loader2 className="size-4 animate-spin" />}
+              Update payment
+            </Button>
+          </div>
+        )}
+
         {subscriptions.length > 0 && (
           <div className="flex justify-end">
             <Button

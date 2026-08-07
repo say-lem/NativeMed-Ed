@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { StatVideoIcon } from "../../admin-dashboard/_components/StatIcons";
 import Link from "next/link";
 import type { Course } from "@/types/api";
+import { courseAdminPrice } from "@/lib/price";
 import { useAdminList } from "../../_components/AdminListContext";
 import Pagination from "../../_components/Pagination";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
@@ -16,14 +17,6 @@ const PAGE_SIZE = 6;
 
 const FILTERS = ["All", "Published", "Draft"] as const;
 type Filter = (typeof FILTERS)[number];
-
-function formatPrice(price?: number): string {
-  if (price == null) return "—";
-  return `£${price.toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-}
 
 export default function AdminCourses({ courses }: { courses: Course[] }) {
   const [filter, setFilter] = useState<Filter>("All");
@@ -169,7 +162,7 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
 
                 <div className="mt-auto pt-3 flex items-center justify-between gap-2">
                   <p className="text-base font-semibold text-black-others">
-                    {formatPrice(course.price)}
+                    {courseAdminPrice(course)}
                   </p>
                   <div className="flex items-center gap-2">
                     <button
