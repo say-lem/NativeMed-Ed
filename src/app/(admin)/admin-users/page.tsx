@@ -10,7 +10,6 @@ import type { User } from "@/types/api";
 async function loadUsers(): Promise<User[]> {
   try {
     const res = await getAdminUsers();
-    console.log("[GET /admin/users] raw response:", JSON.stringify(res, null, 2));
     return res.success ? res.data.items : [];
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;

@@ -5,12 +5,13 @@ import { Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { startCourseCheckout } from "../actions";
-import { byTierOrder, TIER_LABEL, TIER_ORDER } from "@/lib/tiers";
+import { byTierOrder, TIER_LABEL } from "@/lib/tiers";
 import {
-  availableIntervals,
   formatMoney,
   INTERVAL_LONG,
-  priceForInterval,
+  intervalsForTier,
+  priceFor,
+  purchasableTiers,
 } from "@/lib/price";
 import type { Course, CourseTier, PaymentPlan } from "@/types/api";
 
@@ -34,50 +35,57 @@ export default function CoursePurchase({
   plans: PaymentPlan[];
 }) {
   /**
-   * Tier name/description still come from `/payments/plans`, but **prices do not** —
-   * as of 2026-08-07 course plans return `prices: []` and the amount lives on the course
-   * (`priceMonthly`/`priceQuarterly`, in pounds). Falls back to the known tiers so an
-   * empty/failed plans fetch can't hide the buy button.
+   * Tier name/description come from `/payments/plans` (course plans return `prices: []`),
+   * but **prices come from the course** — `pricing[tier][interval]`, per tier since
+   * 2026-08-10. Only tiers the course actually prices are offered: migrated courses often
+   * have just `mocksession_and_lectures`, and showing an unbuyable tier would 400 at
+   * checkout. Falls back to the known tier labels if the plans fetch fails.
    */
   const tiers = useMemo(() => {
-    const fromPlans = plans
+    const sellable = purchasableTiers(course);
+
+    const described = plans
       .filter((p) => p.type === "course" && p.tier)
       .sort((a, b) => byTierOrder(a.tier, b.tier));
 
-    if (fromPlans.length > 0) {
-      return fromPlans.map((p) => ({
-        tier: p.tier as CourseTier,
-        name: p.name,
-        description: p.description,
-      }));
-    }
+    return sellable.map((t) => {
+      const plan = described.find((p) => p.tier === t);
+      return {
+        tier: t,
+        name: plan?.name ?? TIER_LABEL[t],
+        description: plan?.description ?? TIER_FALLBACK_DESCRIPTION[t],
+      };
+    });
+  }, [course, plans]);
 
-    return TIER_ORDER.map((t) => ({
-      tier: t,
-      name: TIER_LABEL[t],
-      description: TIER_FALLBACK_DESCRIPTION[t],
-    }));
-  }, [plans]);
-
-  // Only intervals this course actually has a price for — checkout 400s otherwise.
-  const intervals = useMemo(() => availableIntervals(course), [course]);
-
-  const [interval, setInterval] = useState<string>(intervals[0] ?? "monthly");
   const [tier, setTier] = useState<CourseTier>(
-    tiers[0]?.tier ?? "mocksessions_only",
+    () => purchasableTiers(course)[0] ?? "mocksession_and_lectures",
   );
+
+  // Intervals are scoped to the SELECTED tier — a tier may be monthly-only.
+  const intervals = useMemo(() => intervalsForTier(course, tier), [course, tier]);
+  const [interval, setInterval] = useState<string>(
+    () => intervalsForTier(course, tier)[0] ?? "monthly",
+  );
+
   const [pending, startTransition] = useTransition();
   const router = useRouter();
 
-  const amount = priceForInterval(course, interval);
+  // Switching tier can invalidate the chosen interval (e.g. quarterly exists on one tier
+  // only) — fall back to that tier's first available interval.
+  const activeInterval = intervals.includes(interval)
+    ? interval
+    : (intervals[0] ?? interval);
+
+  const amount = priceFor(course, tier, activeInterval);
   const priceLabel =
     amount != null
-      ? `${formatMoney(amount)} / ${INTERVAL_LONG[interval] ?? interval}`
+      ? `${formatMoney(amount)} / ${INTERVAL_LONG[activeInterval] ?? activeInterval}`
       : null;
 
   const subscribe = () => {
     startTransition(async () => {
-      const res = await startCourseCheckout(course._id, tier, interval);
+      const res = await startCourseCheckout(course._id, tier, activeInterval);
       if (res.ok && res.url) {
         window.location.assign(res.url);
         return;
@@ -96,9 +104,9 @@ export default function CoursePurchase({
     });
   };
 
-  // No price on either interval — the course isn't buyable (backend requires one, so this
-  // is a data problem rather than a normal state).
-  if (intervals.length === 0) {
+  // No tier has a price — the course isn't buyable. Real case: legacy courses came through
+  // the 2026-08-10 migration with no `pricing` object at all.
+  if (tiers.length === 0) {
     return (
       <p className="text-sm text-subtle-text">
         This course isn&apos;t available for purchase yet. Please check back
@@ -109,7 +117,7 @@ export default function CoursePurchase({
 
   return (
     <div className="space-y-6">
-      {/* Interval toggle — only shown when the course offers both */}
+      {/* Interval toggle — scoped to the selected tier, shown only if that tier has both */}
       {intervals.length > 1 && (
         <div className="inline-flex rounded-[10px] border border-gray-1 p-1 bg-white">
           {intervals.map((iv) => (
@@ -118,7 +126,7 @@ export default function CoursePurchase({
               type="button"
               onClick={() => setInterval(iv)}
               className={`px-4 py-2 rounded-[8px] text-sm font-medium capitalize transition-colors ${
-                interval === iv
+                activeInterval === iv
                   ? "bg-black-others text-white"
                   : "text-subtle-text hover:text-black-others"
               }`}
@@ -129,11 +137,23 @@ export default function CoursePurchase({
         </div>
       )}
 
-      {/* Tier cards. Price is per-course, so it's the same on both cards — the tier
-          changes what you get, not what you pay. */}
+      {/* Tier cards — each shows ITS OWN price, which is the point of per-tier pricing.
+          A tier priced on a different interval than the one selected falls back to its
+          own cheapest available one, so a card never renders blank. */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {tiers.map((t) => {
           const active = t.tier === tier;
+          const tierIntervals = intervalsForTier(course, t.tier);
+          const shownInterval = tierIntervals.includes(activeInterval)
+            ? activeInterval
+            : tierIntervals[0];
+          const tierAmount = shownInterval
+            ? priceFor(course, t.tier, shownInterval)
+            : undefined;
+          const tierLabelPrice =
+            tierAmount != null && shownInterval
+              ? `${formatMoney(tierAmount)} / ${INTERVAL_LONG[shownInterval] ?? shownInterval}`
+              : "—";
           return (
             <button
               key={t.tier}
@@ -160,7 +180,7 @@ export default function CoursePurchase({
                 </span>
               </div>
               <p className="mt-2 text-xl font-bold text-black-others">
-                {priceLabel ?? "—"}
+                {tierLabelPrice}
               </p>
               <p className="mt-2 text-xs sm:text-sm leading-[150%] text-subtle-text">
                 {t.description}

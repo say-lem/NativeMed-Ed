@@ -1,7 +1,5 @@
-import { FiFacebook, FiTwitter } from "react-icons/fi";
-import { IoLogoInstagram } from "react-icons/io5";
-import { TbBrandYoutube } from "react-icons/tb";
 import SubtleText from "@/components/shared/SubtleText";
+import SocialLinks from "./_components/SocialLinks";
 import { Button } from "@/components/ui/button";
 
 function Label({ text }: { text: string }) {
@@ -19,20 +17,7 @@ export default function Contact() {
         </h2>
         <SubtleText text="Reach out to learn more about our programs and how we can support your success." />
 
-        <div className="flex flex-wrap gap-3 sm:gap-4 mt-5 md:mt-7">
-          <button className="cursor-pointer p-2.25 rounded-full border border-primary-20">
-            <IoLogoInstagram className="size-5 text-black-others" />
-          </button>
-          <button className="cursor-pointer p-2.25 rounded-full border border-primary-20">
-            <FiFacebook className="size-5 text-black-others" />
-          </button>
-          <button className="cursor-pointer p-2.25 rounded-full border border-primary-20">
-            <FiTwitter className="size-5 text-black-others" />
-          </button>
-          <button className="cursor-pointer p-2.25 rounded-full border border-primary-20">
-            <TbBrandYoutube className="size-5 text-black-others" />
-          </button>
-        </div>
+        <SocialLinks />
       </aside>
       <aside className="w-full md:basis-2/3 rounded-[16px] border border-primary-20 p-4 sm:p-5 md:p-8 space-y-4 sm:space-y-5 md:space-y-7">
         <div className="space-y-2">

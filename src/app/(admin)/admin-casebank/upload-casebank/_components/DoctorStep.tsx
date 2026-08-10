@@ -29,7 +29,7 @@ export default function DoctorStep() {
       <SectionHeading text="Patient Data" />
       <FormCard>
         <TextField
-          label="Question Title"
+          label="Case Title"
           required
           placeholder="e.g., Chest Pain in 57-year-old"
           registration={register("title")}

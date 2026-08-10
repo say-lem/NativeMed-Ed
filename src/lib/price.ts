@@ -1,12 +1,16 @@
-import type { Course } from "@/types/api";
+import type { Course, CoursePricing, CourseTier, TierPricing } from "@/types/api";
+import { TIER_ORDER } from "@/lib/tiers";
 
 /**
- * Course price formatting. Course prices are in **GBP pounds** (e.g. 49.99) — unlike
- * `PlanPrice.amount` and payment history, which are in pence.
+ * Course price formatting + lookup.
  *
- * A missing price means that interval **is not offered**, not that it's free: the backend
- * requires at least one of monthly/quarterly, and checkout 400s on an interval the course
- * doesn't have.
+ * Course prices are **GBP pounds** (49.99) — unlike `PlanPrice.amount` and `/payments/me`,
+ * which are pence. Never divide these by 100.
+ *
+ * Since 2026-08-10 pricing is **per access tier**: `pricing[tier][interval]`. Everything
+ * here treats a missing tier or interval as "not offered" rather than free — checkout 400s
+ * on a combination the course doesn't price. Verified against live data: some courses have
+ * only one tier priced, and some have no `pricing` object at all.
  */
 export function formatMoney(amount: number): string {
   return `£${amount.toLocaleString("en-GB", {
@@ -25,41 +29,94 @@ export const INTERVAL_LONG: Record<string, string> = {
   quarterly: "quarter",
 };
 
-/** Compact single label for cards/badges — prefers monthly, falls back to quarterly. */
-export function courseBadgePrice(course: Course): string {
-  if (course.priceMonthly != null)
-    return `${formatMoney(course.priceMonthly)}/${INTERVAL_SHORT.monthly}`;
-  if (course.priceQuarterly != null)
-    return `${formatMoney(course.priceQuarterly)}/${INTERVAL_SHORT.quarterly}`;
-  return "—";
+export const INTERVALS: string[] = ["monthly", "quarterly"];
+
+function tierPricing(
+  pricing: CoursePricing | undefined,
+  tier: CourseTier,
+): TierPricing | undefined {
+  return pricing?.[tier];
 }
 
-/** Both intervals, for admin lists. */
-export function courseAdminPrice(course: Course): string {
-  const parts: string[] = [];
-  if (course.priceMonthly != null)
-    parts.push(`${formatMoney(course.priceMonthly)}/${INTERVAL_SHORT.monthly}`);
-  if (course.priceQuarterly != null)
-    parts.push(
-      `${formatMoney(course.priceQuarterly)}/${INTERVAL_SHORT.quarterly}`,
-    );
-  return parts.length ? parts.join(" · ") : "—";
-}
-
-/** Intervals this course can actually be bought on — drives the checkout picker. */
-export function availableIntervals(course: Course): string[] {
-  const out: string[] = [];
-  if (course.priceMonthly != null) out.push("monthly");
-  if (course.priceQuarterly != null) out.push("quarterly");
-  return out;
-}
-
-/** Price for a specific interval, or undefined if not offered. */
-export function priceForInterval(
+/** Price for one tier + interval, or undefined when that combination isn't sold. */
+export function priceFor(
   course: Course,
+  tier: CourseTier,
   interval: string,
 ): number | undefined {
-  if (interval === "monthly") return course.priceMonthly;
-  if (interval === "quarterly") return course.priceQuarterly;
-  return undefined;
+  const t = tierPricing(course.pricing, tier);
+  if (!t) return undefined;
+  const value = interval === "monthly" ? t.monthly : t.quarterly;
+  return typeof value === "number" ? value : undefined;
+}
+
+/** Intervals this tier can be bought on. Empty = tier not purchasable. */
+export function intervalsForTier(course: Course, tier: CourseTier): string[] {
+  return INTERVALS.filter((iv) => priceFor(course, tier, iv) != null);
+}
+
+/** Tiers with at least one price — the only ones we may offer for sale. */
+export function purchasableTiers(course: Course): CourseTier[] {
+  return TIER_ORDER.filter((t) => intervalsForTier(course, t).length > 0);
+}
+
+/** Is any tier/interval on sale at all? */
+export function isPurchasable(course: Course): boolean {
+  return purchasableTiers(course).length > 0;
+}
+
+/** Cheapest price across every tier and interval — for "from £X" card badges. */
+function lowestPrice(course: Course): { amount: number; interval: string } | null {
+  let best: { amount: number; interval: string } | null = null;
+  for (const tier of TIER_ORDER) {
+    for (const interval of INTERVALS) {
+      const amount = priceFor(course, tier, interval);
+      if (amount == null) continue;
+      if (!best || amount < best.amount) best = { amount, interval };
+    }
+  }
+  return best;
+}
+
+/**
+ * Compact label for cards/badges. Shows the cheapest option, since a course can now have
+ * up to four prices and a card only has room for one.
+ */
+export function courseBadgePrice(course: Course): string {
+  const low = lowestPrice(course);
+  if (!low) return "—";
+  const suffix = INTERVAL_SHORT[low.interval] ?? low.interval;
+  const prefix = purchasableTiers(course).length > 1 ? "from " : "";
+  return `${prefix}${formatMoney(low.amount)}/${suffix}`;
+}
+
+const SHORT_TIER: Record<CourseTier, string> = {
+  mocksessions_only: "Sessions",
+  mocksession_and_lectures: "+ Lectures",
+};
+
+/**
+ * Priced combinations as structured rows, one per tier — for admin lists.
+ *
+ * Returned as data rather than a single string: with two tiers × two intervals the flat
+ * string ran to ~60 characters and wrapped over six lines inside a card, pushing the action
+ * buttons out of the layout. Callers render it as a compact two-row block instead.
+ */
+export function coursePriceRows(
+  course: Course,
+): { tier: CourseTier; label: string; prices: string }[] {
+  return TIER_ORDER.flatMap((tier) => {
+    const intervals = intervalsForTier(course, tier);
+    if (intervals.length === 0) return [];
+    const prices = intervals
+      .map((iv) => {
+        const amount = priceFor(course, tier, iv);
+        return amount == null
+          ? null
+          : `${formatMoney(amount)}/${INTERVAL_SHORT[iv] ?? iv}`;
+      })
+      .filter(Boolean)
+      .join(" · ");
+    return [{ tier, label: SHORT_TIER[tier], prices }];
+  });
 }

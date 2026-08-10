@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Course, CourseInput } from "@/types/api";
+import type { AdminCourse, CourseInput, CoursePricing } from "@/types/api";
 
 export const CATEGORIES = ["Course", "Session", "Webinar"];
 export const PAYMENT_TYPES = ["One-time", "Subscription", "Free"];
@@ -15,9 +15,9 @@ const priceField = z
  *  /file/d/<id>/view, /open?id=<id>) and extracts the ID itself. We only reject input
  *  that clearly isn't either, so we don't out-guess the backend's parser.
  *
- *  `required` is false on **edit**: no GET returns the stored Drive links, so we can't
- *  prefill them. Forcing them would make an admin re-paste both just to fix a typo — and
- *  `buildCoursePayload` omits empty ones, so a PATCH leaves the stored values alone. */
+ *  `required` is false on **edit**: an admin may leave a link blank to keep the stored
+ *  folder (`buildCoursePayload` omits empty fields from the PATCH). Since 2026-08-10 admin
+ *  GETs DO return the links, so they normally arrive prefilled. */
 const driveField = (required: boolean) =>
   z
     .string()
@@ -31,8 +31,14 @@ const driveField = (required: boolean) =>
       "Paste a Google Drive folder link, or the folder ID on its own",
     );
 
+/**
+ * Pricing is per access tier since 2026-08-10 — four inputs, and **each tier** needs at
+ * least one interval. On create the backend requires both tiers; on edit it merges, so a
+ * tier left entirely blank keeps whatever is stored.
+ */
 export function makeCourseSchema(mode: "create" | "edit") {
-  const driveRequired = mode === "create";
+  const isCreate = mode === "create";
+
   return z
     .object({
       title: z.string().trim().min(3, "Title must be at least 3 characters"),
@@ -40,19 +46,35 @@ export function makeCourseSchema(mode: "create" | "edit") {
         .string()
         .trim()
         .min(10, "Description must be at least 10 characters"),
-      priceMonthly: priceField,
-      priceQuarterly: priceField,
-      lecturesDriveFolderId: driveField(driveRequired),
-      mockSessionsDriveFolderId: driveField(driveRequired),
+      sessionsMonthly: priceField,
+      sessionsQuarterly: priceField,
+      lecturesMonthly: priceField,
+      lecturesQuarterly: priceField,
+      lecturesDriveFolderId: driveField(isCreate),
+      mockSessionsDriveFolderId: driveField(isCreate),
     })
-    // Backend rule: at least one of the two prices must be set.
-    .refine((v) => v.priceMonthly !== "" || v.priceQuarterly !== "", {
-      message: "Set a monthly price, a quarterly price, or both",
-      path: ["priceMonthly"],
+    .superRefine((v, ctx) => {
+      // Mirrors the backend rule per tier. On edit, a fully blank tier is allowed (it
+      // isn't sent, so the stored price survives) — but a partially filled one is fine too.
+      if (isCreate && v.sessionsMonthly === "" && v.sessionsQuarterly === "") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["sessionsMonthly"],
+          message: "Set a monthly or quarterly price for Mock Sessions Only",
+        });
+      }
+      if (isCreate && v.lecturesMonthly === "" && v.lecturesQuarterly === "") {
+        ctx.addIssue({
+          code: "custom",
+          path: ["lecturesMonthly"],
+          message:
+            "Set a monthly or quarterly price for Mock Sessions + Lectures",
+        });
+      }
     });
 }
 
-/** Create-mode schema (both Drive links required). */
+/** Create-mode schema (both Drive links + both tiers required). */
 export const courseSchema = makeCourseSchema("create");
 
 export type CourseFormValues = z.infer<typeof courseSchema>;
@@ -60,23 +82,28 @@ export type CourseFormValues = z.infer<typeof courseSchema>;
 export const emptyCourseValues: CourseFormValues = {
   title: "",
   description: "",
-  priceMonthly: "",
-  priceQuarterly: "",
+  sessionsMonthly: "",
+  sessionsQuarterly: "",
+  lecturesMonthly: "",
+  lecturesQuarterly: "",
   lecturesDriveFolderId: "",
   mockSessionsDriveFolderId: "",
 };
 
 const toStr = (n?: number) => (n != null ? String(n) : "");
 
-/** Prefill for edit. Drive links are NOT returned by any GET today, so they normally come
- *  back empty and the admin must re-enter them — the form says so. Reads them anyway, for
- *  when the backend starts including them on admin routes. */
-export function courseToFormValues(c: Course): CourseFormValues {
+/** Prefill for edit. Drive links now come back on admin GETs, so they populate; a course
+ *  with only one tier priced (migrated data) leaves the other tier's inputs blank. */
+export function courseToFormValues(c: AdminCourse): CourseFormValues {
+  const sessions = c.pricing?.mocksessions_only;
+  const lectures = c.pricing?.mocksession_and_lectures;
   return {
     title: c.title ?? "",
     description: c.description ?? "",
-    priceMonthly: toStr(c.priceMonthly),
-    priceQuarterly: toStr(c.priceQuarterly),
+    sessionsMonthly: toStr(sessions?.monthly),
+    sessionsQuarterly: toStr(sessions?.quarterly),
+    lecturesMonthly: toStr(lectures?.monthly),
+    lecturesQuarterly: toStr(lectures?.quarterly),
     lecturesDriveFolderId: c.lecturesDriveFolderId ?? "",
     mockSessionsDriveFolderId: c.mockSessionsDriveFolderId ?? "",
   };
@@ -89,18 +116,36 @@ const parsePrice = (v: string): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
-/** Build the API payload. Empty price → field omitted (that interval isn't offered).
- *  Empty Drive link → field omitted, so a PATCH doesn't wipe the stored value. */
+/** Build the API payload. Empty price → interval omitted (not offered). A tier with no
+ *  prices at all → tier key omitted, so a PATCH merge keeps the stored values. Empty Drive
+ *  link → omitted, same reason. */
 export function buildCoursePayload(v: CourseFormValues): CourseInput {
   const payload: CourseInput = {
     title: v.title.trim(),
     description: v.description.trim(),
   };
 
-  const monthly = parsePrice(v.priceMonthly);
-  const quarterly = parsePrice(v.priceQuarterly);
-  if (monthly != null) payload.priceMonthly = monthly;
-  if (quarterly != null) payload.priceQuarterly = quarterly;
+  const pricing: CoursePricing = {};
+
+  const sessionsMonthly = parsePrice(v.sessionsMonthly);
+  const sessionsQuarterly = parsePrice(v.sessionsQuarterly);
+  if (sessionsMonthly != null || sessionsQuarterly != null) {
+    pricing.mocksessions_only = {
+      ...(sessionsMonthly != null && { monthly: sessionsMonthly }),
+      ...(sessionsQuarterly != null && { quarterly: sessionsQuarterly }),
+    };
+  }
+
+  const lecturesMonthly = parsePrice(v.lecturesMonthly);
+  const lecturesQuarterly = parsePrice(v.lecturesQuarterly);
+  if (lecturesMonthly != null || lecturesQuarterly != null) {
+    pricing.mocksession_and_lectures = {
+      ...(lecturesMonthly != null && { monthly: lecturesMonthly }),
+      ...(lecturesQuarterly != null && { quarterly: lecturesQuarterly }),
+    };
+  }
+
+  if (Object.keys(pricing).length > 0) payload.pricing = pricing;
 
   const lectures = v.lecturesDriveFolderId.trim();
   const mockSessions = v.mockSessionsDriveFolderId.trim();

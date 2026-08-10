@@ -216,34 +216,61 @@ export interface CaseInput {
  *  backend 2026-08-07 from `pdf_only`/`pdf_drive`. Labels live in `@/lib/tiers`. */
 export type CourseTier = "mocksessions_only" | "mocksession_and_lectures";
 
-/** Course (GET /courses). Prices are in **GBP pounds** (e.g. 49.99), NOT pence — unlike
- *  `PlanPrice.amount`. The old single `price` field was removed by the backend 2026-08-07.
- *  `lecturesDriveFolderId`/`mockSessionsDriveFolderId` are accepted on write but are
- *  server-only — no GET returns them (backend intends to expose them on admin GET). */
+/** Prices for one access tier, in **GBP pounds** (e.g. 49.99) — NOT pence, unlike
+ *  `PlanPrice.amount` and `/payments/me`. A missing interval means it isn't offered. */
+export interface TierPricing {
+  monthly?: number;
+  quarterly?: number;
+}
+
+/**
+ * Per-tier course pricing (replaced the flat `priceMonthly`/`priceQuarterly` on 2026-08-10).
+ *
+ * ⚠️ **Both tier keys are optional here, deliberately.** The backend guide types them as
+ * required, but live data (verified by curl 2026-08-10) disagrees:
+ *   - migrated courses carry ONLY `mocksession_and_lectures` — `mocksessions_only` is absent
+ *     entirely (not `{}` as the doc claims)
+ *   - some older courses have **no `pricing` key at all**
+ * Typing these as required would make `course.pricing[tier].monthly` throw on real data.
+ * Always go through the helpers in `@/lib/price`.
+ */
+export type CoursePricing = Partial<Record<CourseTier, TierPricing>>;
+
+/** Course — public shape (`GET /courses`, `GET /courses/:id`). */
 export interface Course {
   _id: string;
   title: string;
   description?: string;
-  priceMonthly?: number;
-  priceQuarterly?: number;
+  /** Absent on some legacy courses — treat as "not purchasable". */
+  pricing?: CoursePricing;
   thumbnailUrl?: string;
   isPublished?: boolean;
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
-  /** Present only if the backend starts returning them on admin routes. */
+}
+
+/**
+ * Course — admin shape (`GET /courses/admin/*`, and the `POST`/`PATCH` responses).
+ * Since 2026-08-10 these routes DO return the Drive folder links, so the admin edit form
+ * can prefill them. Public routes still omit them — never spread an `AdminCourse` into a
+ * public-facing component.
+ */
+export interface AdminCourse extends Course {
   lecturesDriveFolderId?: string;
   mockSessionsDriveFolderId?: string;
 }
 
-/** Payload for POST /courses (create) and PATCH /courses/:id (partial update).
- *  Create requires: title, description, BOTH Drive folder links, and at least one price.
- *  Update: all optional, but at least one price must survive the merge. */
+/**
+ * Payload for POST /courses (create) and PATCH /courses/:id (partial update).
+ * Create requires: title, description, both Drive links, and **both** tier keys in
+ * `pricing`, each with at least one interval. Update merges per tier/interval, so send
+ * only what changed — but after the merge both tiers must still have a price.
+ */
 export interface CourseInput {
   title: string;
   description?: string;
-  priceMonthly?: number;
-  priceQuarterly?: number;
+  pricing?: CoursePricing;
   /** Full Drive folder URL or a raw folder ID — backend extracts the ID. */
   lecturesDriveFolderId?: string;
   mockSessionsDriveFolderId?: string;
@@ -262,8 +289,7 @@ export interface Enrollment {
         _id: string;
         title?: string;
         description?: string;
-        priceMonthly?: number;
-        priceQuarterly?: number;
+        pricing?: CoursePricing;
         thumbnailUrl?: string;
       }
     | string

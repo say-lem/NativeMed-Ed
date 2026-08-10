@@ -1,6 +1,7 @@
 import "server-only";
 import { api } from "@/lib/api";
 import type {
+  AdminCourse,
   ApiResponse,
   Course,
   CourseInput,
@@ -24,8 +25,8 @@ export async function getCourse(id: string): Promise<ApiResponse<Course>> {
 export async function getAdminCourses(
   page = 1,
   limit = 50,
-): Promise<ApiResponse<Paginated<Course>>> {
-  const res = await api.get<ApiResponse<Paginated<Course>>>(
+): Promise<ApiResponse<Paginated<AdminCourse>>> {
+  const res = await api.get<ApiResponse<Paginated<AdminCourse>>>(
     "/courses/admin/all",
     { params: { page, limit } },
   );
@@ -38,7 +39,7 @@ export async function getAdminCourses(
  * added courses that sort to the end) would be invisible to the client-side
  * list. This pages through until all `totalPages` are collected.
  */
-export async function getAllAdminCourses(): Promise<Course[]> {
+export async function getAllAdminCourses(): Promise<AdminCourse[]> {
   const first = await getAdminCourses(1, 50);
   if (!first.success) return [];
 
@@ -53,32 +54,38 @@ export async function getAllAdminCourses(): Promise<Course[]> {
   return all;
 }
 
-/** GET /courses/admin/:id — admin only. Single course **incl. drafts.** Use for edit prefill. */
+/** GET /courses/admin/:id — admin only. Single course **incl. drafts**, and (since
+ *  2026-08-10) **incl. the Drive folder links** — hence `AdminCourse`. Used for edit prefill. */
 export async function getAdminCourse(
   id: string,
-): Promise<ApiResponse<Course>> {
-  const res = await api.get<ApiResponse<Course>>(`/courses/admin/${id}`);
+): Promise<ApiResponse<AdminCourse>> {
+  const res = await api.get<ApiResponse<AdminCourse>>(`/courses/admin/${id}`);
   return res.data;
 }
 
-/** POST /courses — admin. Create a course. */
+/** POST /courses — admin. Create a course. Requires both pricing tiers + both Drive links. */
 export async function createCourse(
   payload: CourseInput,
-): Promise<ApiResponse<Course>> {
-  const res = await api.post<ApiResponse<Course>>("/courses", payload);
+): Promise<ApiResponse<AdminCourse>> {
+  const res = await api.post<ApiResponse<AdminCourse>>("/courses", payload);
   return res.data;
 }
 
-/** PATCH /courses/:id — admin. Partial update. */
+/** PATCH /courses/:id — admin. Partial update; `pricing` merges per tier/interval, so send
+ *  only what changed. Omitted Drive links keep their stored value. */
 export async function updateCourse(
   id: string,
   payload: Partial<CourseInput>,
-): Promise<ApiResponse<Course>> {
-  const res = await api.patch<ApiResponse<Course>>(`/courses/${id}`, payload);
+): Promise<ApiResponse<AdminCourse>> {
+  const res = await api.patch<ApiResponse<AdminCourse>>(
+    `/courses/${id}`,
+    payload,
+  );
   return res.data;
 }
 
-/** DELETE /courses/:id — admin. Hard delete (also removes the Cloudinary thumbnail). */
+/** DELETE /courses/:id — admin. **Cascades** since 2026-08-10: deactivates every enrollment,
+ *  revokes Drive access, and cancels Stripe billing for the course, then deletes it. */
 export async function deleteCourse(
   id: string,
 ): Promise<ApiResponse<null>> {

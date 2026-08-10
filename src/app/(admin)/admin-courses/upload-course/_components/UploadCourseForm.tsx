@@ -192,38 +192,77 @@ export default function UploadCourseForm({
           </div>
         </div>
 
-        {/* Pricing — at least one interval required; an empty field means that
-            interval isn't offered and is hidden at checkout. */}
+        {/* Pricing — per access tier since 2026-08-10. Each tier needs at least one
+            interval; a blank interval simply isn't offered to buyers. */}
         <fieldset className="space-y-2">
           <legend className="text-sm font-semibold text-black-others mb-2">
-            Pricing <span className="text-[#E5102E]">*</span>
+            Pricing {!isEdit && <span className="text-[#E5102E]">*</span>}
           </legend>
-          <p className="text-xs text-subtle-text mb-3 leading-[150%]">
-            Set at least one price. Leave an interval blank if you don&apos;t
-            want to offer it — it won&apos;t be shown to buyers.
+          <p className="text-xs text-subtle-text mb-4 leading-[150%]">
+            Each tier is priced separately. Leave an interval blank if you
+            don&apos;t offer it — buyers won&apos;t see it.
+            {isEdit && " Blank fields keep the current price."}
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label text="Monthly price (£)" />
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="49.99"
-                className={fieldClass}
-                {...register("priceMonthly")}
-              />
-              <FieldError message={errors.priceMonthly?.message} />
+
+          <div className="space-y-5">
+            <div className="rounded-[8px] border-[0.5px] border-[#B7B7B9] p-4 space-y-4">
+              <p className="text-sm font-medium text-black-others">
+                Mock Sessions Only
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label text="Monthly (£)" />
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="29.99"
+                    className={fieldClass}
+                    {...register("sessionsMonthly")}
+                  />
+                  <FieldError message={errors.sessionsMonthly?.message} />
+                </div>
+                <div className="space-y-2">
+                  <Label text="Quarterly (£)" />
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="79.99"
+                    className={fieldClass}
+                    {...register("sessionsQuarterly")}
+                  />
+                  <FieldError message={errors.sessionsQuarterly?.message} />
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label text="Quarterly price (£)" />
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="129.99"
-                className={fieldClass}
-                {...register("priceQuarterly")}
-              />
-              <FieldError message={errors.priceQuarterly?.message} />
+
+            <div className="rounded-[8px] border-[0.5px] border-[#B7B7B9] p-4 space-y-4">
+              <p className="text-sm font-medium text-black-others">
+                Mock Sessions + Lectures
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label text="Monthly (£)" />
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="49.99"
+                    className={fieldClass}
+                    {...register("lecturesMonthly")}
+                  />
+                  <FieldError message={errors.lecturesMonthly?.message} />
+                </div>
+                <div className="space-y-2">
+                  <Label text="Quarterly (£)" />
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="129.99"
+                    className={fieldClass}
+                    {...register("lecturesQuarterly")}
+                  />
+                  <FieldError message={errors.lecturesQuarterly?.message} />
+                </div>
+              </div>
             </div>
           </div>
         </fieldset>

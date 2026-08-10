@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { StatVideoIcon } from "../../admin-dashboard/_components/StatIcons";
 import Link from "next/link";
 import type { Course } from "@/types/api";
-import { courseAdminPrice } from "@/lib/price";
+import { coursePriceRows } from "@/lib/price";
 import { useAdminList } from "../../_components/AdminListContext";
 import Pagination from "../../_components/Pagination";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
@@ -39,10 +39,13 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
   };
 
   const remove = async (course: Course) => {
+    // Since 2026-08-10 DELETE cascades: it deactivates every enrollment, revokes Drive
+    // access, and cancels Stripe billing for the course. Much higher stakes than before.
     const ok = await confirm({
-      title: "Delete course?",
-      message: `"${course.title}" and its thumbnail will be permanently removed. This can't be undone.`,
-      confirmText: "Delete",
+      title: `Delete "${course.title}"?`,
+      message:
+        "This immediately revokes access for all enrolled users and cancels their subscriptions for this course. The course and its thumbnail are permanently removed. This can't be undone.",
+      confirmText: "Delete course",
       tone: "danger",
     });
     if (!ok) return;
@@ -120,83 +123,105 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mt-8">
-          {rows.map((course) => (
-            <div
-              key={course._id}
-              className="rounded-[16px] overflow-hidden courseBorder bg-white flex flex-col"
-            >
-              <aside className="relative w-full min-h-44 sm:min-h-48">
-                <Image
-                  src={course.thumbnailUrl || "/Images/coursesImage.png"}
-                  alt={`image of ${course.title}`}
-                  fill
-                  className="object-cover object-center"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-                <span className="absolute top-3 left-3 rounded-[100px] py-1.5 px-3 bg-[#00000080] border-[0.2px] border-white/80 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
-                  {course.isPublished ? "Published" : "Draft"}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => remove(course)}
-                  disabled={deletingId === course._id}
-                  aria-label={`Delete ${course.title}`}
-                  title="Delete course"
-                  className="absolute top-3 right-3 grid place-items-center size-8 rounded-full bg-[#00000080] border-[0.2px] border-white/80 text-white cursor-pointer hover:bg-red-600 disabled:opacity-60"
-                >
-                  {deletingId === course._id ? (
-                    <Loader2 size={15} className="animate-spin" />
-                  ) : (
-                    <Trash2 size={15} />
-                  )}
-                </button>
-              </aside>
+          {rows.map((course) => {
+            const priceRows = coursePriceRows(course);
+            return (
+              <div
+                key={course._id}
+                className="rounded-[16px] overflow-hidden courseBorder bg-white flex flex-col"
+              >
+                <aside className="relative w-full min-h-44 sm:min-h-48">
+                  <Image
+                    src={course.thumbnailUrl || "/Images/coursesImage.png"}
+                    alt={`image of ${course.title}`}
+                    fill
+                    className="object-cover object-center"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  <span className="absolute top-3 left-3 rounded-[100px] py-1.5 px-3 bg-[#00000080] border-[0.2px] border-white/80 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
+                    {course.isPublished ? "Published" : "Draft"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => remove(course)}
+                    disabled={deletingId === course._id}
+                    aria-label={`Delete ${course.title}`}
+                    title="Delete course"
+                    className="absolute top-3 right-3 grid place-items-center size-8 rounded-full bg-[#00000080] border-[0.2px] border-white/80 text-white cursor-pointer hover:bg-red-600 disabled:opacity-60"
+                  >
+                    {deletingId === course._id ? (
+                      <Loader2 size={15} className="animate-spin" />
+                    ) : (
+                      <Trash2 size={15} />
+                    )}
+                  </button>
+                </aside>
 
-              <aside className="px-4 sm:px-5 py-4 flex flex-col gap-2 flex-1">
-                <p className="text-base sm:text-lg font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
-                  {course.title}
-                </p>
-                <p className="text-xs sm:text-sm leading-[150%] text-subtle-text line-clamp-2">
-                  {course.description}
-                </p>
-
-                <div className="mt-auto pt-3 flex items-center justify-between gap-2">
-                  <p className="text-base font-semibold text-black-others">
-                    {courseAdminPrice(course)}
+                <aside className="px-4 sm:px-5 py-4 flex flex-col gap-2 flex-1">
+                  <p className="text-base sm:text-lg font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
+                    {course.title}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => togglePublish(course._id)}
-                      disabled={pendingId === course._id}
-                      className={`flex items-center gap-1.5 rounded-[8px] text-sm font-medium px-4 py-2 cursor-pointer disabled:opacity-60 ${
-                        course.isPublished
-                          ? "border border-gray-1 text-subtle-text hover:bg-gray-100"
-                          : "border border-primary-100 text-primary-100 hover:bg-primary-10"
-                      }`}
-                    >
-                      {pendingId === course._id && (
-                        <Loader2 size={14} className="animate-spin" />
-                      )}
-                      {course.isPublished ? "Unpublish" : "Publish"}
-                    </button>
-                    <Link
-                      href={`/admin-courses/upload-course?id=${course._id}`}
-                      className="rounded-[8px] bg-black text-white text-sm font-medium px-5 py-2 cursor-pointer hover:bg-black/85"
-                    >
-                      Edit
-                    </Link>
+                  <p className="text-xs sm:text-sm leading-[150%] text-subtle-text line-clamp-2">
+                    {course.description}
+                  </p>
+
+                  {/* Pricing: one row per tier. Four prices can't share a row with the
+                    action buttons, so they get their own block. */}
+                  <div className="mt-auto pt-3 space-y-1">
+                    {priceRows.length === 0 ? (
+                      <p className="text-sm text-subtle-text">No price set</p>
+                    ) : (
+                      priceRows.map((row) => (
+                        <div
+                          key={row.tier}
+                          className="flex items-baseline justify-between gap-3"
+                        >
+                          <span className="text-xs text-subtle-text shrink-0">
+                            {row.label}
+                          </span>
+                          <span className="text-sm font-semibold text-black-others text-right">
+                            {row.prices}
+                          </span>
+                        </div>
+                      ))
+                    )}
                   </div>
-                </div>
-                <Link
-                  href={`/admin-courses/${course._id}/content`}
-                  className="mt-3 flex items-center justify-center gap-1.5 rounded-[8px] border border-gray-1 text-sm font-medium text-black-others py-2 cursor-pointer hover:bg-gray-100"
-                >
-                  <ListVideo size={15} /> Manage Content
-                </Link>
-              </aside>
-            </div>
-          ))}
+
+                  <div className="pt-3 flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => togglePublish(course._id)}
+                        disabled={pendingId === course._id}
+                        className={`flex items-center gap-1.5 rounded-[8px] text-sm font-medium px-4 py-2 cursor-pointer disabled:opacity-60 ${
+                          course.isPublished
+                            ? "border border-gray-1 text-subtle-text hover:bg-gray-100"
+                            : "border border-primary-100 text-primary-100 hover:bg-primary-10"
+                        }`}
+                      >
+                        {pendingId === course._id && (
+                          <Loader2 size={14} className="animate-spin" />
+                        )}
+                        {course.isPublished ? "Unpublish" : "Publish"}
+                      </button>
+                      <Link
+                        href={`/admin-courses/upload-course?id=${course._id}`}
+                        className="flex-1 text-center rounded-[8px] bg-black text-white text-sm font-medium px-5 py-2 cursor-pointer hover:bg-black/85"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/admin-courses/${course._id}/content`}
+                    className="mt-3 flex items-center justify-center gap-1.5 rounded-[8px] border border-gray-1 text-sm font-medium text-black-others py-2 cursor-pointer hover:bg-gray-100"
+                  >
+                    <ListVideo size={15} /> Manage Content
+                  </Link>
+                </aside>
+              </div>
+            );
+          })}
         </div>
       )}
 

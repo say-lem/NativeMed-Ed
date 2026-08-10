@@ -31,6 +31,17 @@ export default function SubscriptionsBrowser({
     [subscriptions],
   );
 
+  /**
+   * Only offer the billing portal when there's a real Stripe subscription behind it.
+   * Admin-granted access still appears here as an active subscription, but has no Stripe
+   * customer — the portal can't open for it, so showing the button just produces an error.
+   */
+  const canManageBilling = useMemo(
+    () =>
+      subscriptions.some((s) => s.stripeSubscriptionId || s.stripeCustomerId),
+    [subscriptions],
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return subscriptions;
@@ -69,19 +80,21 @@ export default function SubscriptionsBrowser({
               You still have access while we retry, but update your card to
               avoid losing it.
             </p>
-            <Button
-              type="button"
-              onClick={manage}
-              disabled={pending}
-              className="font-bold bg-[#7A4B00] hover:opacity-90 disabled:opacity-60"
-            >
-              {pending && <Loader2 className="size-4 animate-spin" />}
-              Update payment
-            </Button>
+            {canManageBilling && (
+              <Button
+                type="button"
+                onClick={manage}
+                disabled={pending}
+                className="font-bold bg-[#7A4B00] hover:opacity-90 disabled:opacity-60"
+              >
+                {pending && <Loader2 className="size-4 animate-spin" />}
+                Update payment
+              </Button>
+            )}
           </div>
         )}
 
-        {subscriptions.length > 0 && (
+        {canManageBilling && (
           <div className="flex justify-end">
             <Button
               type="button"
