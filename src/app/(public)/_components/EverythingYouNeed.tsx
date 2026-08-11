@@ -16,17 +16,21 @@ export default function EverythingYouNeed() {
         />
       </aside>
 
-      <aside className="w-full md:basis-3/5 mt-2 sm:mt-4 md:mt-0 relative">
-        <Image
-          src={"/Images/everythingImage.svg"}
-          alt="What you get: SCA cases, live classes, question banks, recordings, and testimonies"
-          width={752}
-          height={415}
-          className="w-full h-auto"
-          sizes="(max-width: 768px) 100vw, 60vw"
-        />
+      <aside className="w-full md:basis-3/5 mt-2 sm:mt-4 md:mt-0">
+        {/* Inner wrapper is sized by the image itself (h-auto). The <aside> is a flex item
+            and stretches to match the tall heading beside it, so anchoring the overlay to
+            the aside would centre it in a too-tall box and push the text off its baseline. */}
+        <div className="relative w-full">
+          <Image
+            src={"/Images/everythingImage.svg"}
+            alt="What you get: SCA cases, live classes, question banks, recordings, and testimonies"
+            width={752}
+            height={415}
+            className="block w-full h-auto"
+            sizes="(max-width: 768px) 100vw, 60vw"
+          />
 
-        {/*
+          {/*
           The case count is rendered here rather than in the artwork. Figma exported that
           SVG with "Outline text" on, so every label inside it is a <path> — the digits are
           shapes, not editable text. The original "800+" path was removed from the file and
@@ -36,23 +40,25 @@ export default function EverythingYouNeed() {
           lines up and scales with the image at every width. Inline SVG inherits the page
           font, so this renders in Fustat like the rest of the site.
         */}
-        <svg
-          viewBox="0 0 752 415"
-          aria-hidden="true"
-          focusable="false"
-          className="pointer-events-none absolute inset-0 h-full w-full select-none"
-        >
-          <text
-            x="17.32"
-            y="250.6"
-            fill="#F7F4FB"
-            fontSize="40"
-            fontWeight="700"
-            letterSpacing="-1"
+          <svg
+            viewBox="0 0 752 415"
+            preserveAspectRatio="xMinYMin meet"
+            aria-hidden="true"
+            focusable="false"
+            className="pointer-events-none absolute inset-0 h-full w-full select-none"
           >
-            200+
-          </text>
-        </svg>
+            <text
+              x="17.32"
+              y="250.6"
+              fill="#F7F4FB"
+              fontSize="40"
+              fontWeight="700"
+              letterSpacing="-1"
+            >
+              200+
+            </text>
+          </svg>
+        </div>
       </aside>
     </section>
   );
