@@ -7,10 +7,12 @@ import {
   logoutAllAction,
   updateProfileAction,
 } from "./actions";
-import { getSessionUser } from "@/lib/current-user";
+import { getFreshUser } from "@/lib/fresh-profile";
 
 export default async function SettingsPage() {
-  const user = await getSessionUser();
+  // Fresh from /auth/me, not the cached cookie — the cookie predates telegramUsername /
+  // examSitting on older sessions and would render them blank.
+  const user = await getFreshUser();
   if (!user) redirect("/login");
 
   return (
@@ -19,7 +21,12 @@ export default async function SettingsPage() {
         <BannerTitleCase text="Settings" />
       </BannerBg>
       <SettingsForm
-        initialProfile={{ fullName: user.fullName, phone: user.phone }}
+        initialProfile={{
+          fullName: user.fullName,
+          phone: user.phone,
+          telegramUsername: user.telegramUsername ?? "",
+          examSitting: user.examSitting ?? "",
+        }}
         email={user.email}
         actions={{
           updateProfileAction,

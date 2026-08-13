@@ -16,7 +16,7 @@ type Tab = (typeof TABS)[number];
 const PAGE_SIZE = 8;
 
 const colGrid =
-  "grid grid-cols-[1.3fr_1.8fr_0.8fr_1fr_110px_130px] items-center gap-6";
+  "grid grid-cols-[1.3fr_1.7fr_1.1fr_90px_0.7fr_1fr_110px_130px] items-center gap-5";
 
 function isActiveUser(u: User): boolean {
   return u.isActive !== false;
@@ -83,7 +83,14 @@ export default function Users({ users }: { users: User[] }) {
       tab === "All" ? true : tab === "Active" ? active : !active;
     if (!byTab) return false;
     if (!q) return true;
-    return [u.fullName, u.email, u.phone, u.role].some((f) =>
+    return [
+      u.fullName,
+      u.email,
+      u.phone,
+      u.role,
+      u.telegramUsername,
+      u.examSitting,
+    ].some((f) =>
       f?.toLowerCase().includes(q),
     );
   });
@@ -121,13 +128,15 @@ export default function Users({ users }: { users: User[] }) {
 
       {/* Table */}
       <div className="overflow-x-auto mt-6">
-        <div className="min-w-[880px] rounded-[8px] border border-[#EDEDED] overflow-hidden">
+        <div className="min-w-[1140px] rounded-[8px] border border-[#EDEDED] overflow-hidden">
           {/* Header */}
           <div
             className={`${colGrid} bg-primary-10 border-b-[0.5px] border-[#B7B7B9] px-4 sm:px-6 py-3`}
           >
             <span className="text-base font-normal leading-[150%] text-[#080A0D]">Name</span>
             <span className="text-base font-normal leading-[150%] text-[#080A0D]">Email</span>
+            <span className="text-base font-normal leading-[150%] text-[#080A0D]">Telegram</span>
+            <span className="text-base font-normal leading-[150%] text-[#080A0D]">Exam</span>
             <span className="text-base font-normal leading-[150%] text-[#080A0D]">Role</span>
             <span className="text-base font-normal leading-[150%] text-[#080A0D]">Joined</span>
             <span className="text-base font-normal leading-[150%] text-[#080A0D]">Status</span>
@@ -163,6 +172,13 @@ export default function Users({ users }: { users: User[] }) {
                   </p>
                   <p className="text-sm font-normal leading-[150%] text-subtle-text truncate">
                     {u.email}
+                  </p>
+                  {/* Collected at signup since 2026-08-12 — older accounts show a dash. */}
+                  <p className="text-sm font-normal leading-[150%] text-subtle-text truncate">
+                    {u.telegramUsername || "—"}
+                  </p>
+                  <p className="text-sm font-normal leading-[150%] text-subtle-text whitespace-nowrap">
+                    {u.examSitting || "—"}
                   </p>
                   <p className="text-sm font-normal leading-[150%] tracking-[-0.02em] text-black capitalize">
                     {u.role}

@@ -90,6 +90,10 @@ export default function UserDetailModal({
         {/* Details */}
         <div className="mt-5">
           <DetailRow label="Phone" value={user.phone || "—"} />
+          {/* Collected at signup since 2026-08-12. Older accounts predate it, hence the
+              dash fallback — these are not editable from the admin API. */}
+          <DetailRow label="Telegram" value={user.telegramUsername || "—"} />
+          <DetailRow label="Exam sitting" value={user.examSitting || "—"} />
           <DetailRow
             label="Role"
             value={<span className="capitalize">{user.role}</span>}

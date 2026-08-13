@@ -7,6 +7,11 @@ export interface User {
   phone: string;
   role: Role;
   mustChangePassword: boolean;
+  /** Stored with a leading "@" — the backend normalizes it on register. */
+  telegramUsername?: string;
+  /** `MM/YY`, e.g. "03/26". Required at register; older accounts may lack it. */
+  examSitting?: string;
+  whatsappNumber?: string;
   isActive?: boolean;
   createdAt?: string;
   updatedAt?: string;

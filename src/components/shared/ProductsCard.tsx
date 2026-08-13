@@ -38,7 +38,9 @@ export default async function ProductsCard({ cutBy = 0 }: { cutBy?: number }) {
           <div
             role="link"
             tabIndex={0}
-            className="rounded-[16px] border-[0.5px] border-[rgba(247, 244, 251, 1)] cardShadow space-y-3 sm:space-y-4 lg:space-y-8 overflow-y-hidden pb-3 sm:pb-4 h-full flex flex-col"
+            /* Arbitrary values can't contain spaces — `border-[rgba(247, 244, 251, 1)]` was
+               invalid so no border colour was ever applied. Hex form works. */
+            className="rounded-[16px] border-[0.5px] border-[#F7F4FB] cardShadow space-y-3 sm:space-y-4 lg:space-y-8 overflow-y-hidden pb-3 sm:pb-4 h-full flex flex-col"
           >
             <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64">
               <Image
@@ -55,7 +57,11 @@ export default async function ProductsCard({ cutBy = 0 }: { cutBy?: number }) {
                 <p className="text-base sm:text-lg lg:text-xl font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
                   {course.title}
                 </p>
-                <p className="line-clamp-3 text-sm leading-[150%] text-[rgba(55, 55, 55, 1)] h-auto md:h-28 lg:h-28">
+                {/* No fixed height: `h-28` (112px) was taller than the 3 clamped lines
+                    (~63px), so the box showed ~5⅓ lines and sliced the last one through the
+                    middle. The clamp alone ends the text cleanly with an ellipsis, and the
+                    parent's `flex-1` still keeps every "View Course" button bottom-aligned. */}
+                <p className="line-clamp-3 text-sm leading-[150%] text-[#373737]">
                   {course.description}
                 </p>
               </div>

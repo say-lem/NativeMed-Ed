@@ -5,6 +5,50 @@ export const loginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+/** `examSitting` must be exactly `MM/YY` (e.g. `03/26`) — the backend rejects `3/26`,
+ *  `13/26` and anything free-text. */
+export const EXAM_SITTING_RE = /^(0[1-9]|1[0-2])\/\d{2}$/;
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+/**
+ * Upcoming exam sittings as `{ value, label }`, e.g. `{ value: "03/26", label: "March 2026" }`.
+ *
+ * Deliberately a `<select>` rather than `<input type="month">`: Safari on desktop doesn't
+ * support that input type and silently falls back to a free-text box, which would let users
+ * type anything and hit the backend's strict MM/YY validation. A select makes an invalid
+ * value impossible, and its value is already in the API's format so nothing needs converting.
+ */
+export function examSittingOptions(
+  from: Date = new Date(),
+  count = 24,
+): { value: string; label: string }[] {
+  const out: { value: string; label: string }[] = [];
+  for (let i = 0; i < count; i++) {
+    const d = new Date(from.getFullYear(), from.getMonth() + i, 1);
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    out.push({
+      value: `${month}/${String(year).slice(2)}`,
+      label: `${MONTH_NAMES[d.getMonth()]} ${year}`,
+    });
+  }
+  return out;
+}
+
 export const registerSchema = z.object({
   fullName: z
     .string()
@@ -15,6 +59,20 @@ export const registerSchema = z.object({
     .string()
     .min(1, "Phone is required")
     .regex(/^\+?[0-9]{7,15}$/, "Enter a valid phone number"),
+  // The server prefixes "@" itself, so accept it with or without one and don't be stricter
+  // than the backend (which only requires a non-empty string).
+  telegramUsername: z
+    .string()
+    .trim()
+    .min(1, "Telegram username is required")
+    .regex(
+      /^@?[A-Za-z0-9_]{4,32}$/,
+      "Use letters, numbers and underscores (min 4 characters)",
+    ),
+  examSitting: z
+    .string()
+    .min(1, "Select your exam sitting")
+    .regex(EXAM_SITTING_RE, "Select your exam sitting"),
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")

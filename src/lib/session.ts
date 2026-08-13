@@ -59,6 +59,11 @@ export async function setProfile(user: User): Promise<void> {
     role: user.role,
     mustChangePassword: user.mustChangePassword,
     isActive: user.isActive,
+    // Collected at signup since 2026-08-12 and editable from Settings, so they have to
+    // survive the round-trip — otherwise the form renders them blank and a save would
+    // silently wipe them.
+    telegramUsername: user.telegramUsername,
+    examSitting: user.examSitting,
   };
   store.set(PROFILE_COOKIE, JSON.stringify(profile), {
     ...baseCookieOptions,

@@ -49,12 +49,25 @@ export async function me(): Promise<ApiResponse<User>> {
   return res.data;
 }
 
-/** PATCH /auth/me — update the signed-in user's profile (fullName, phone). */
+/**
+ * PATCH /auth/me — update the signed-in user's profile.
+ *
+ * `examSitting` is validated as strict `MM/YY` **when present**, so an empty string is
+ * stripped rather than sent — accounts created before 2026-08-12 have no exam sitting, and
+ * sending `""` would 422 a save that only changed the user's name.
+ */
 export async function updateProfile(payload: {
   fullName?: string;
   phone?: string;
+  telegramUsername?: string;
+  examSitting?: string;
 }): Promise<ApiResponse<User>> {
-  const res = await api.patch<ApiResponse<User>>("/auth/me", payload);
+  // Drop empty optionals rather than sending "" — the backend validates format when a
+  // field is present, so a blank would 422 a save that only changed the user's name.
+  const body = Object.fromEntries(
+    Object.entries(payload).filter(([, v]) => v !== "" && v != null),
+  );
+  const res = await api.patch<ApiResponse<User>>("/auth/me", body);
   return res.data;
 }
 

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { EXAM_SITTING_RE } from "./auth";
 
 export const profileSchema = z.object({
   fullName: z
@@ -9,6 +10,21 @@ export const profileSchema = z.object({
     .string()
     .min(1, "Phone is required")
     .regex(/^\+?[0-9]{7,15}$/, "Enter a valid phone number"),
+  /** `PATCH /auth/me` accepts this (unlike the admin edit endpoint, which strips it). */
+  telegramUsername: z
+    .string()
+    .trim()
+    .refine(
+      (v) => v === "" || /^@?[A-Za-z0-9_]{4,32}$/.test(v),
+      "Use letters, numbers and underscores (min 4 characters)",
+    )
+    .optional(),
+  /** Optional here (unlike register) — accounts created before 2026-08-12 have none, and
+   *  `PATCH /auth/me` only validates the format when the field is actually sent. */
+  examSitting: z
+    .string()
+    .refine((v) => v === "" || EXAM_SITTING_RE.test(v), "Select a valid exam sitting")
+    .optional(),
 });
 
 export type ProfileValues = z.infer<typeof profileSchema>;

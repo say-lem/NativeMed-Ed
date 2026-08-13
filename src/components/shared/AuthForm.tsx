@@ -13,6 +13,7 @@ import TitleCase from "./TitleCase";
 import SubtleText from "./SubtleText";
 import { Button } from "../ui/button";
 import {
+  examSittingOptions,
   loginSchema,
   registerSchema,
   type LoginValues,
@@ -237,7 +238,14 @@ function RegisterForm({ redirectTo }: { redirectTo?: string }) {
     formState: { errors },
   } = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { fullName: "", email: "", phone: "", password: "" },
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      telegramUsername: "",
+      examSitting: "",
+      password: "",
+    },
   });
 
   const onSubmit = (values: RegisterValues) => {
@@ -338,6 +346,37 @@ function RegisterFields({
           {...register("phone")}
         />
         <FieldError message={errors.phone?.message} />
+      </div>
+      <div className="space-y-2">
+        <Label text="Telegram Username" htmlFor="telegramUsername" />
+        <input
+          id="telegramUsername"
+          type="text"
+          autoComplete="off"
+          placeholder="@yourusername"
+          className={inputClass}
+          {...register("telegramUsername")}
+        />
+        <FieldError message={errors.telegramUsername?.message} />
+      </div>
+      <div className="space-y-2">
+        <Label text="Exam Sitting" htmlFor="examSitting" />
+        <select
+          id="examSitting"
+          defaultValue=""
+          className={`${inputClass} cursor-pointer`}
+          {...register("examSitting")}
+        >
+          <option value="" disabled>
+            Select month and year
+          </option>
+          {examSittingOptions().map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <FieldError message={errors.examSitting?.message} />
       </div>
       <div className="space-y-2">
         <Label text="Password" htmlFor="password" />

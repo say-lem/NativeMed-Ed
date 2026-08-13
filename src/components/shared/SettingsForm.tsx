@@ -11,6 +11,7 @@ import {
   type PasswordValues,
   type ProfileValues,
 } from "@/lib/schemas/settings";
+import { examSittingOptions } from "@/lib/schemas/auth";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import type { FormActionResult } from "@/types/api";
 
@@ -121,7 +122,14 @@ export default function SettingsForm({
     },
   });
 
-  const onSaveProfile = (values: ProfileValues) => {
+  const onSaveProfile = async (values: ProfileValues) => {
+    const ok = await confirm({
+      title: "Save these changes?",
+      message:
+        "Your profile details will be updated. You can change them again at any time.",
+      confirmText: "Save changes",
+    });
+    if (!ok) return;
     startProfile(async () => {
       const res = await actions.updateProfileAction(values);
       if (res.ok) {
@@ -133,7 +141,14 @@ export default function SettingsForm({
     });
   };
 
-  const onChangePassword = (values: PasswordValues) => {
+  const onChangePassword = async (values: PasswordValues) => {
+    const ok = await confirm({
+      title: "Change your password?",
+      message:
+        "You'll stay signed in on this device. Use \"Log out of all devices\" below if you also want to end your other sessions.",
+      confirmText: "Update password",
+    });
+    if (!ok) return;
     startPassword(async () => {
       const res = await actions.changePasswordAction(values);
       if (res.ok) {
@@ -210,6 +225,35 @@ export default function SettingsForm({
               <p className="text-xs text-subtle-text mt-1">
                 Email can&apos;t be changed here.
               </p>
+            </div>
+            <div className="space-y-2">
+              <Label text="Telegram Username" />
+              <input
+                type="text"
+                className={fieldClass}
+                placeholder="@yourusername"
+                {...profileForm.register("telegramUsername")}
+              />
+              <FieldError
+                message={profileForm.formState.errors.telegramUsername?.message}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label text="Exam Sitting" />
+              <select
+                className={`${fieldClass} cursor-pointer`}
+                {...profileForm.register("examSitting")}
+              >
+                <option value="">Not set</option>
+                {examSittingOptions().map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <FieldError
+                message={profileForm.formState.errors.examSitting?.message}
+              />
             </div>
           </div>
           <div className="flex justify-end">

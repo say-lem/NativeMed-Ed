@@ -10,7 +10,7 @@ function Label({ text }: { text: string }) {
 
 export default function Contact() {
   return (
-    <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-12 sm:pt-20 md:pt-36 pb-16 sm:pb-24 md:pb-40 lg:pb-60 flex flex-col md:flex-row justify-between gap-8 md:gap-12">
+    <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-12 sm:pt-20 md:pt-36 pb-8 sm:pb-12 md:pb-24 lg:pb-36 flex flex-col md:flex-row justify-between gap-8 md:gap-12">
       <aside className="w-full md:basis-1/3">
         <h2 className="font-semibold tracking-[-2%] text-3xl sm:text-4xl md:text-5xl leading-[130%] text-black-others">
           Feel Free To <span className="text-primary-100">Reach Out</span>

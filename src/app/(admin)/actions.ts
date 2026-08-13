@@ -15,5 +15,6 @@ export async function logoutAction(): Promise<void> {
   }
   await clearSession();
   await clearProfile();
-  redirect("/login");
+  // Home, not /login — a logged-out user has finished, not been kicked out mid-task.
+  redirect("/");
 }

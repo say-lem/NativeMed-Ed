@@ -137,7 +137,10 @@ function FaQs() {
 
   return (
     <>
-      <section className="px-4 sm:px-8 md:px-10 lg:px-15 pt-10 sm:pt-14 md:pt-18 lg:pt-24 pb-10 sm:pb-14 md:pb-18 lg:pb-24">
+      {/* Last section before the footer. `pb-2` is intentional and small: the footer no
+          longer pulls itself up, and its own pt-40 provides the breathing room. This keeps
+          the home page looking exactly as it did. */}
+      <section className="px-4 sm:px-8 md:px-10 lg:px-15 pt-10 sm:pt-14 md:pt-18 lg:pt-24 pb-2">
         <div className="text-center mx-auto w-full sm:w-[85%] md:w-[65%] lg:w-[50%] mb-4 sm:mb-6 md:mb-8 lg:mb-12">
           <ButtonTag title="FAQs" />
           <TitleCase text="Your Questions answered" />

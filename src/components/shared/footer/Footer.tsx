@@ -5,7 +5,16 @@ import { Button } from "@/components/ui/button";
 export default function Footer() {
   return (
     <>
-      <footer className="bg-black pt-16 sm:pt-24 md:pt-32 lg:pt-40 pb-10 sm:pb-16 md:pb-20 lg:pb-24 px-4 sm:px-8 md:px-10 lg:px-15 -mt-8 sm:-mt-12 md:-mt-16 lg:-mt-24">
+      {/*
+        No negative top margin. It used to pull itself up (-mt-8 … lg:-mt-24, i.e. 96px on
+        desktop) to tighten the gap under the home page, which meant EVERY page had to
+        out-pad it — and any page whose bottom padding was smaller than the pull-up got the
+        black block dragged over its content (this happened to the product cards).
+
+        The footer is now neutral: each page owns the space above it via its own `pb-*`.
+        Existing pages had their padding reduced by the same amount, so spacing is unchanged.
+      */}
+      <footer className="bg-black pt-16 sm:pt-24 md:pt-32 lg:pt-40 pb-10 sm:pb-16 md:pb-20 lg:pb-24 px-4 sm:px-8 md:px-10 lg:px-15">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-6 lg:gap-0">
           <Image
             src={"/Images/main_logo.png"}
