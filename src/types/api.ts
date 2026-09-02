@@ -403,3 +403,57 @@ export interface EnrollmentCheck {
   accessTier?: CourseTier | string;
   accessGrantedAt?: string;
 }
+
+export type ReviewStatus = "pending" | "approved" | "revoked";
+
+/** Public review (GET /reviews) — approved-only, used on the homepage. */
+export interface Review {
+  _id: string;
+  name: string;
+  examSat: string;
+  /** MM/YY, e.g. "03/26" */
+  datePassed: string;
+  rating: number;
+  review: string;
+  createdAt: string;
+}
+
+/** Admin projection (GET /admin/reviews) — every status, moderation fields included. */
+export interface AdminReview extends Review {
+  status: ReviewStatus;
+  moderatedBy?: UserRef;
+  moderatedAt?: string;
+  updatedAt: string;
+}
+
+/** Payload for POST /reviews (public submit). Always lands as "pending". */
+export interface ReviewInput {
+  name: string;
+  examSat: string;
+  datePassed: string;
+  rating: number;
+  review: string;
+}
+
+/**
+ * Backend model name is "Activity" (GET /activities, admin CRUD under
+ * /admin/activities) — surfaced on the frontend as "Upcoming Events". No status/publish
+ * concept: every activity is public and `GET /activities` is the only list endpoint, used
+ * by both the homepage and the admin page.
+ */
+export interface Activity {
+  _id: string;
+  /** ISO 8601 */
+  date: string;
+  description: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Payload for POST/PATCH /admin/activities. */
+export interface ActivityInput {
+  /** yyyy-mm-dd (native `<input type="date">` value) or full ISO. */
+  date: string;
+  description: string;
+}

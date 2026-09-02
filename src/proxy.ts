@@ -126,5 +126,9 @@ export const config = {
     "/admin-users/:path*",
     "/admin-enrollments",
     "/admin-enrollments/:path*",
+    "/admin-reviews",
+    "/admin-reviews/:path*",
+    "/admin-events",
+    "/admin-events/:path*",
   ],
 };

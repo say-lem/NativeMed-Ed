@@ -5,6 +5,7 @@ import MyCoursesSection from "./_components/MyCoursesSection";
 import { getSessionUser } from "@/lib/current-user";
 
 export default async function DashboardPage() {
+  // Admin redirect is handled one level up, in the (marketplace) layout.
   const user = await getSessionUser();
   const name = user?.fullName;
 

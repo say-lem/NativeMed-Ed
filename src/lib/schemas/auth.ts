@@ -84,3 +84,12 @@ export const registerSchema = z.object({
 
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
+
+/** Client-only: adds the sign-up consent checkbox on top of the fields the backend expects. */
+export const registerFormSchema = registerSchema.extend({
+  agreeToTerms: z.boolean().refine((v) => v === true, {
+    message: "You must agree to the Terms & Conditions and Legal Disclaimer",
+  }),
+});
+
+export type RegisterFormValues = z.infer<typeof registerFormSchema>;
