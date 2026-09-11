@@ -24,7 +24,7 @@ function Testimonial({ reviews }: { reviews: Review[] }) {
     <section className="px-4 sm:px-8 md:px-10 lg:px-15 pt-10 sm:pt-14 md:pt-20 lg:pt-28 pb-10 sm:pb-14 md:pb-18 lg:pb-24">
       <div className="text-center mx-auto w-full sm:w-[85%] md:w-[65%] lg:w-[50%] mb-4 sm:mb-6 md:mb-8 lg:mb-12">
         <ButtonTag title="Testimonials" />
-        <TitleCase text="See what the community is saying about native medical Education" />
+        <TitleCase text="See what Doctors say about native medical Education" />
       </div>
 
       <div

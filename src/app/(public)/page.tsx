@@ -78,8 +78,9 @@ export default async function Home() {
       <WhatYouGet />
       <UpcomingEvents events={events} />
       <Testimonial reviews={reviews} />
-      <FaQs />
       <FeaturedVideos videos={homepage.youtubeLinks} />
+      <FaQs />
+      
     </>
   );
 }
