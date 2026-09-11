@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import AdminSideNavLink from "./AdminSideNavLink";
-import { CalendarDays, GraduationCap, Star, Users as UsersIcon } from "lucide-react";
+import { CalendarDays, GraduationCap, Home, Star, Users as UsersIcon } from "lucide-react";
 import {
   CoursesIcon,
   DashboardIcon,
@@ -37,6 +37,11 @@ export default function AdminSideNav() {
           icon={<DashboardIcon color={color("/admin-dashboard")} />}
           href="/admin-dashboard"
           label="Dashboard"
+        />
+        <AdminSideNavLink
+          icon={<Home size={22} color={color("/admin-homepage")} />}
+          href="/admin-homepage"
+          label="Homepage"
         />
         <AdminSideNavLink
           icon={<SubscriptionsIcon color={color("/admin-subscribers")} />}

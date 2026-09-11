@@ -3,11 +3,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import type { Activity } from "@/types/api";
+import type { Activity, Course } from "@/types/api";
 import { formatDate } from "@/lib/date";
 import { useAdminList } from "../../_components/AdminListContext";
 import Pagination from "../../_components/Pagination";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
+import EventPublishButton from "./EventPublishButton";
 import EventFormModal from "./EventFormModal";
 import { deleteActivityAction } from "../actions";
 
@@ -15,13 +16,13 @@ const TABS = ["Upcoming", "Past", "All"] as const;
 type Tab = (typeof TABS)[number];
 const PAGE_SIZE = 8;
 
-const colGrid = "grid grid-cols-[140px_1fr_160px] items-center gap-6";
+const colGrid = "grid grid-cols-[140px_1fr_320px] items-center gap-6";
 
 function isUpcoming(e: Activity): boolean {
   return new Date(e.date).getTime() >= Date.now();
 }
 
-export default function AdminEvents({ events }: { events: Activity[] }) {
+export default function AdminEvents({ events, courses }: { events: Activity[]; courses: Pick<Course, "_id" | "title" | "isPublished">[] }) {
   const [tab, setTab] = useState<Tab>("Upcoming");
   const { query, page, setPage } = useAdminList();
   const router = useRouter();
@@ -58,7 +59,7 @@ export default function AdminEvents({ events }: { events: Activity[] }) {
       tab === "All" ? true : tab === "Upcoming" ? isUpcoming(e) : !isUpcoming(e);
     if (!byTab) return false;
     if (!q) return true;
-    return e.description.toLowerCase().includes(q);
+    return [e.description, e.activityStatus, e.activityType].some((value) => value?.toLowerCase().includes(q));
   });
   if (tab === "Past") filtered.reverse();
 
@@ -126,8 +127,16 @@ export default function AdminEvents({ events }: { events: Activity[] }) {
                   <p className="text-sm font-semibold text-[#080A0D]">
                     {formatDate(e.date)}
                   </p>
-                  <p className="text-sm text-black line-clamp-2">{e.description}</p>
-                  <div className="flex items-center gap-2">
+                  <div className="text-sm text-black">
+                    <div className="flex flex-wrap justify-between gap-2">
+                      <h3 className="font-semibold">{e.activityStatus}</h3>
+                      {e.activityType && <span className="rounded-full bg-primary-10 px-2 py-1 text-xs text-primary-100">{e.activityType}</span>}
+                    </div>
+                    <p className="line-clamp-2">{e.description}</p>
+                    <p className="text-xs text-subtle-text mt-1">{e.time && `${e.time} · `}{e.isPublished === false ? "Unpublished" : "Published"}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <EventPublishButton event={e} disabled={busy} />
                     <button
                       type="button"
                       onClick={() => setEditing(e)}
@@ -158,6 +167,7 @@ export default function AdminEvents({ events }: { events: Activity[] }) {
 
       {creating && (
         <EventFormModal
+          courses={courses}
           onClose={() => setCreating(false)}
           onSaved={() => {
             setCreating(false);
@@ -168,6 +178,7 @@ export default function AdminEvents({ events }: { events: Activity[] }) {
 
       {editing && (
         <EventFormModal
+          courses={courses}
           event={editing}
           onClose={() => setEditing(null)}
           onSaved={() => {

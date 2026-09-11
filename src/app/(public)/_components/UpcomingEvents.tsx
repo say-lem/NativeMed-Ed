@@ -1,4 +1,5 @@
 "use client";
+import EventDetails from "@/components/shared/EventDetails";
 import ButtonTag from "@/components/shared/ButtonTag";
 import SubtleText from "@/components/shared/SubtleText";
 import TitleCase from "@/components/shared/TitleCase";
@@ -43,7 +44,7 @@ export default function UpcomingEvents({ events }: { events: Activity[] }) {
                 key={`${event._id}-${i}`}
                 data-card
                 aria-hidden={i >= events.length}
-                className={`flex-none flex gap-4 items-center py-4 px-4 sm:py-5 sm:px-6 rounded-[16px] w-72 sm:w-88 md:w-96 transition-[opacity,border-color,box-shadow] duration-300 ${
+                className={`flex-none flex gap-4 items-start py-4 px-4 sm:py-5 sm:px-6 rounded-[16px] w-72 sm:w-88 md:w-96 transition-[opacity,border-color,box-shadow] duration-300 ${
                   isActive
                     ? "bg-[rgba(245,239,255,1)] border-2 border-primary opacity-100 shadow-md"
                     : "bg-[rgba(245,239,255,0.7)] border border-[rgba(155,124,209,0.4)] opacity-70"
@@ -57,9 +58,7 @@ export default function UpcomingEvents({ events }: { events: Activity[] }) {
                     {month}
                   </span>
                 </div>
-                <p className="text-sm sm:text-base leading-[150%] text-secondary-100 line-clamp-4">
-                  {event.description}
-                </p>
+                <EventDetails event={event} duplicate={i >= events.length} />
               </div>
             );
           })}

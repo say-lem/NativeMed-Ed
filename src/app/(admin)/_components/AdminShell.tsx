@@ -6,6 +6,7 @@ import AdminSideNav from "./AdminSideNav";
 import type { User } from "@/types/api";
 import AdminHeader from "@/components/shared/header/AdminHeader";
 import BackToTop from "@/components/shared/BackToTop";
+import FeedbackButton from "@/components/shared/feedback/FeedbackButton";
 
 export default function AdminShell({
   user,
@@ -66,6 +67,7 @@ export default function AdminShell({
       </aside>
 
       <BackToTop />
+      <FeedbackButton />
     </main>
   );
 }

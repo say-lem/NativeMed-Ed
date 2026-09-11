@@ -1,5 +1,7 @@
 import ProductsCard from "@/components/shared/ProductsCard";
 import Image from "next/image";
+import Link from "next/link";
+import { Gift } from "lucide-react";
 
 export default function ProductsHero() {
   return (
@@ -30,6 +32,15 @@ export default function ProductsHero() {
       </div>
 
       <div className="pt-2 sm:pt-4 lg:pt-6">
+        <div className="flex justify-center pb-6 sm:pb-8">
+          <Link
+            href="/free-products"
+            className="inline-flex items-center gap-2 rounded-full border border-primary-100 text-primary-100 hover:bg-primary-10 text-sm font-semibold px-5 py-2.5 transition-colors"
+          >
+            <Gift size={16} />
+            Browse Free Products
+          </Link>
+        </div>
         <ProductsCard />
       </div>
     </section>

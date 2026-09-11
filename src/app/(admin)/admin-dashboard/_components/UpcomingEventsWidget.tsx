@@ -1,3 +1,4 @@
+import EventPublishButton from "../../admin-events/_components/EventPublishButton";
 import Link from "next/link";
 import { formatDate } from "@/lib/date";
 import type { Activity } from "@/types/api";
@@ -25,7 +26,7 @@ export default function UpcomingEventsWidget({ events }: { events: Activity[] })
             {events.map((e) => (
               <div
                 key={e._id}
-                className="grid grid-cols-[140px_1fr] items-center gap-6 border-b border-[#EDEDED] py-5"
+                className="grid grid-cols-[140px_1fr_auto] items-center gap-6 border-b border-[#EDEDED] py-5"
               >
                 <p className="text-[15px] font-semibold leading-[120%] tracking-[-0.02em] text-black-others">
                   {formatDate(e.date)}
@@ -33,6 +34,7 @@ export default function UpcomingEventsWidget({ events }: { events: Activity[] })
                 <p className="text-sm font-normal leading-[150%] text-subtle-text line-clamp-2">
                   {e.description}
                 </p>
+                <EventPublishButton event={e} />
               </div>
             ))}
           </div>

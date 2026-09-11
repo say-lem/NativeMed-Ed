@@ -5,6 +5,7 @@ import NamedHeader from "@/components/shared/header/NamedHeader";
 import SideNav from "./SideNav";
 import { Menu, X } from "lucide-react";
 import BackToTop from "@/components/shared/BackToTop";
+import FeedbackButton from "@/components/shared/feedback/FeedbackButton";
 import type { User } from "@/types/api";
 
 export default function MarketplaceShell({
@@ -66,6 +67,7 @@ export default function MarketplaceShell({
       </aside>
 
       <BackToTop />
+      <FeedbackButton />
     </main>
   );
 }
