@@ -5,13 +5,33 @@ import WhatYouGet from "./_components/WhatYouGet";
 import UpcomingEvents from "./_components/UpcomingEvents";
 import Testimonial from "./_components/Testimonial";
 import FaQs from "./_components/FaQs";
+import FeaturedVideos from "./_components/FeaturedVideos";
 // import CountDownToClass from "@/components/shared/Countdown";
 import { getOptionalUser } from "@/lib/current-user";
 import { getReviews } from "@/services/reviews.service";
 import { getActivities } from "@/services/activities.service";
-import type { Activity, Review } from "@/types/api";
+import { getHomepageData } from "@/services/homepage.service";
+import type { Activity, HomepageData, Review } from "@/types/api";
 
 const MAX_UPCOMING_EVENTS = 8;
+
+const EMPTY_HOMEPAGE_DATA: HomepageData = {
+  caseNumber: 0,
+  testimonialsCount: 0,
+  registrarsCount: 0,
+  youtubeLinks: [],
+};
+
+/** Stats + admin-managed YouTube links. Falls back to zero/empty on a backend hiccup. */
+async function loadHomepageData(): Promise<HomepageData> {
+  try {
+    const res = await getHomepageData();
+    return res.success ? res.data : EMPTY_HOMEPAGE_DATA;
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    return EMPTY_HOMEPAGE_DATA;
+  }
+}
 
 async function loadReviews(): Promise<Review[]> {
   try {
@@ -40,20 +60,26 @@ async function loadUpcomingEvents(): Promise<Activity[]> {
 }
 
 export default async function Home() {
-  const [user, reviews, events] = await Promise.all([
+  const [user, reviews, events, homepage] = await Promise.all([
     getOptionalUser(),
     loadReviews(),
     loadUpcomingEvents(),
+    loadHomepageData(),
   ]);
   return (
     <>
       <HomeHero isLoggedIn={!!user} />
       {/* <CountDownToClass /> */}
-      <EverythingYouNeed />
+      <EverythingYouNeed
+        caseNumber={homepage.caseNumber}
+        testimonialsCount={homepage.testimonialsCount}
+        registrarsCount={homepage.registrarsCount}
+      />
       <WhatYouGet />
       <UpcomingEvents events={events} />
       <Testimonial reviews={reviews} />
       <FaQs />
+      <FeaturedVideos videos={homepage.youtubeLinks} />
     </>
   );
 }

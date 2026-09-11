@@ -130,5 +130,7 @@ export const config = {
     "/admin-reviews/:path*",
     "/admin-events",
     "/admin-events/:path*",
+    "/admin-homepage",
+    "/admin-homepage/:path*",
   ],
 };

@@ -11,7 +11,7 @@ import {
   emptyActivityValues,
   type ActivityValues,
 } from "@/lib/schemas/activity";
-import type { Activity } from "@/types/api";
+import type { Activity, Course } from "@/types/api";
 import { createActivityAction, updateActivityAction } from "../actions";
 
 const inputClass =
@@ -42,10 +42,12 @@ function toDateInputValue(iso: string): string {
 
 export default function EventFormModal({
   event,
+  courses,
   onClose,
   onSaved,
 }: {
   event?: Activity;
+  courses: Pick<Course, "_id" | "title" | "isPublished">[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -59,7 +61,7 @@ export default function EventFormModal({
   } = useForm<ActivityValues>({
     resolver: zodResolver(activitySchema),
     defaultValues: event
-      ? { date: toDateInputValue(event.date), description: event.description }
+      ? { date: toDateInputValue(event.date), description: event.description, time: event.time ?? "", activityType: event.activityType ?? "", activityStatus: event.activityStatus ?? "", courseId: event.courseId ?? "", isPublished: event.isPublished !== false }
       : emptyActivityValues,
   });
 
@@ -90,7 +92,7 @@ export default function EventFormModal({
         onClick={onClose}
         className="absolute inset-0 bg-black/50 cursor-default"
       />
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-xl">
+      <div className="relative z-10 w-full max-w-md max-h-[90dvh] overflow-y-auto rounded-2xl bg-white p-6 sm:p-8 shadow-xl">
         <button
           type="button"
           onClick={onClose}
@@ -104,7 +106,7 @@ export default function EventFormModal({
           {event ? "Edit Event" : "Post an Event"}
         </h2>
         <p className="mt-1 text-sm text-subtle-text">
-          Shown in Upcoming Events on the homepage once the date is in the future.
+          Published events appear publicly. Future events also appear on the homepage. Date and description are required; all other fields are optional.
         </p>
 
         <form
@@ -134,6 +136,28 @@ export default function EventFormModal({
             />
             <FieldError message={errors.description?.message} />
           </div>
+
+          {(["activityStatus", "activityType", "time"] as const).map((field) => (
+            <div key={field} className="space-y-2">
+              <Label text={`${field === "activityStatus" ? "Course status (event title)" : field === "activityType" ? "Activity type" : "Time"} (optional)`} htmlFor={`event-${field}`} />
+              <input id={`event-${field}`} type={field === "time" ? "time" : "text"} maxLength={field === "time" ? undefined : 100} className={inputClass} {...register(field)} />
+              <FieldError message={errors[field]?.message} />
+            </div>
+          ))}
+          {event && <p className="text-xs text-subtle-text">Leaving time, course status, or activity type blank keeps its saved value.</p>}
+          <div className="space-y-2">
+            <Label text="Linked course (optional)" htmlFor="event-course" />
+            <select id="event-course" className={inputClass} {...register("courseId")}>
+              <option value="">No linked course</option>
+              {event?.courseId && !courses.some((course) => course._id === event.courseId) && <option value={event.courseId}>Previously linked course (unavailable)</option>}
+              {courses.map((course) => <option key={course._id} value={course._id}>{course.title}{!course.isPublished ? " (draft)" : ""}</option>)}
+            </select>
+            <p className="text-xs text-subtle-text">Draft courses must be published before users can view their information. Select “No linked course” to remove a link.</p>
+            <FieldError message={errors.courseId?.message} />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-secondary-100">
+            <input type="checkbox" {...register("isPublished")} /> Publish event (optional; enabled by default)
+          </label>
 
           <div className="flex justify-end gap-3 mt-2">
             <button

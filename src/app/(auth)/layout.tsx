@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { IoArrowBack } from "react-icons/io5";
+import FeedbackButton from "@/components/shared/feedback/FeedbackButton";
 
 export default function AuthLayout({
   children,
@@ -16,6 +17,7 @@ export default function AuthLayout({
       </button>
 
       {children}
+      <FeedbackButton />
     </main>
   );
 }

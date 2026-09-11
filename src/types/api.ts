@@ -435,13 +435,91 @@ export interface ReviewInput {
   review: string;
 }
 
-/**
- * Backend model name is "Activity" (GET /activities, admin CRUD under
- * /admin/activities) — surfaced on the frontend as "Upcoming Events". No status/publish
- * concept: every activity is public and `GET /activities` is the only list endpoint, used
- * by both the homepage and the admin page.
- */
+/** Payload for POST /reviews/feedback (public submit). Private admin inbox — never shown publicly. */
+export interface FeedbackInput {
+  name?: string;
+  message: string;
+}
+
+export interface YoutubeLink {
+  _id: string;
+  title: string;
+  url: string;
+  order: number;
+}
+
+/** GET /homepage — public. `caseNumber` is always the live published-case count, never stored. */
+export interface HomepageData {
+  caseNumber: number;
+  testimonialsCount: number;
+  registrarsCount: number;
+  youtubeLinks: YoutubeLink[];
+}
+
+/** Admin mutation responses (PATCH /admin/homepage, youtube-link CRUD) return the raw settings
+ *  document — no `caseNumber`, since that's derived and never stored on it. */
+export interface HomepageSettings {
+  _id: string;
+  testimonialsCount: number;
+  registrarsCount: number;
+  youtubeLinks: YoutubeLink[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Payload for PATCH /admin/homepage. At least one field required (enforced by the schema). */
+export interface UpdateHomepageStatsInput {
+  testimonialsCount?: number;
+  registrarsCount?: number;
+}
+
+/** Payload for POST /admin/homepage/youtube-links (all required) and PATCH .../:linkId (partial). */
+export interface YoutubeLinkInput {
+  title: string;
+  url: string;
+  order?: number;
+}
+
+export type FreeProductType = "link" | "pdf";
+
+/** GET /free-products (public) and /admin/free-products (admin, incl. drafts). For `pdf`
+ *  products, `fileUrl` is a freshly-signed short-lived Cloudinary download link — never cache it. */
+export interface FreeProduct {
+  _id: string;
+  title: string;
+  description: string;
+  type: FreeProductType;
+  fileUrl: string;
+  isPublished: boolean;
+  order: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Payload for POST /admin/free-products (creates a `link` product). */
+export interface CreateLinkFreeProductInput {
+  title: string;
+  description: string;
+  fileUrl: string;
+}
+
+/** Payload for PATCH /admin/free-products/:id. `fileUrl` is only accepted on `link` products. */
+export interface UpdateFreeProductInput {
+  title?: string;
+  description?: string;
+  fileUrl?: string;
+  order?: number;
+  isPublished?: boolean;
+}
+
+/** Backend activities are displayed as events; missing publication flags remain public. */
 export interface Activity {
+  time?: string;
+  activityType?: string;
+  activityStatus?: string;
+  courseId?: string | null;
+  isPublished?: boolean;
   _id: string;
   /** ISO 8601 */
   date: string;
@@ -453,6 +531,11 @@ export interface Activity {
 
 /** Payload for POST/PATCH /admin/activities. */
 export interface ActivityInput {
+  time?: string;
+  activityType?: string;
+  activityStatus?: string;
+  courseId?: string | null;
+  isPublished?: boolean;
   /** yyyy-mm-dd (native `<input type="date">` value) or full ISO. */
   date: string;
   description: string;
