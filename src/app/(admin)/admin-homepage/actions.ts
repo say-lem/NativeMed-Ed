@@ -11,8 +11,10 @@ import {
 import {
   createLinkFreeProduct,
   deleteFreeProduct,
+  replaceFreeProductCoverImage,
   setFreeProductPublished,
   updateFreeProduct,
+  uploadBlogFreeProduct,
   uploadPdfFreeProduct,
 } from "@/services/freeProducts.service";
 import {
@@ -25,12 +27,13 @@ import {
 } from "@/lib/schemas/homepage";
 import {
   freeProductLinkSchema,
+  freeProductLinkPayload,
   type FreeProductLinkValues,
   freeProductEditSchema,
   freeProductEditPayload,
   type FreeProductEditValues,
 } from "@/lib/schemas/freeProducts";
-import type { ApiFailure, FormActionResult } from "@/types/api";
+import type { ApiFailure, FormActionResult, FreeProductType } from "@/types/api";
 
 function fail(err: unknown, tag: string, fallback: string): FormActionResult {
   if (axios.isAxiosError(err)) {
@@ -145,7 +148,7 @@ export async function addLinkFreeProductAction(
     };
   }
   try {
-    const res = await createLinkFreeProduct(parsed.data);
+    const res = await createLinkFreeProduct(freeProductLinkPayload(parsed.data));
     if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
     revalidateFreeProducts();
     return { ok: true, message: "Free product added" };
@@ -183,11 +186,62 @@ export async function addPdfFreeProductAction(formData: FormData): Promise<FormA
   }
 }
 
-/** Edit a product's title/description/order (+ fileUrl if `isLink`). */
+/** Add a `blog` product (multipart) — reads `coverImage`, `title`, `content`, optional
+ *  `description`/`order` from formData. */
+export async function addBlogFreeProductAction(formData: FormData): Promise<FormActionResult> {
+  try {
+    const file = formData.get("coverImage");
+    const title = String(formData.get("title") ?? "").trim();
+    const content = String(formData.get("content") ?? "").trim();
+    const description = String(formData.get("description") ?? "").trim();
+    const order = Number(formData.get("order") ?? 0);
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, message: "Please choose a cover image." };
+    }
+    if (title.length < 2) return { ok: false, message: "Title is required." };
+    if (content.length < 20) {
+      return { ok: false, message: "Content must be at least 20 characters." };
+    }
+
+    const fd = new FormData();
+    fd.set("coverImage", file);
+    fd.set("title", title);
+    fd.set("content", content);
+    if (description) fd.set("description", description);
+    fd.set("order", String(order));
+    const res = await uploadBlogFreeProduct(fd);
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidateFreeProducts();
+    return { ok: true, message: "Blog post added" };
+  } catch (err) {
+    return fail(err, "addBlogFreeProductAction", "Couldn't add the blog post.");
+  }
+}
+
+/** Replace a blog product's cover image (multipart, reads `coverImage` from formData). */
+export async function replaceFreeProductCoverImageAction(
+  id: string,
+  formData: FormData,
+): Promise<FormActionResult> {
+  try {
+    const file = formData.get("coverImage");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, message: "Please choose an image." };
+    }
+    const res = await replaceFreeProductCoverImage(id, file);
+    if (!res.success) return { ok: false, message: res.message };
+    revalidateFreeProducts();
+    return { ok: true, message: "Cover image updated" };
+  } catch (err) {
+    return fail(err, "replaceFreeProductCoverImageAction", "Couldn't update the cover image.");
+  }
+}
+
+/** Edit a product's title/description/order (+ fileUrl for `link`, + content for `blog`). */
 export async function updateFreeProductAction(
   id: string,
   values: FreeProductEditValues,
-  isLink: boolean,
+  type: FreeProductType,
 ): Promise<FormActionResult> {
   const parsed = freeProductEditSchema.safeParse(values);
   if (!parsed.success) {
@@ -198,7 +252,7 @@ export async function updateFreeProductAction(
     };
   }
   try {
-    const res = await updateFreeProduct(id, freeProductEditPayload(parsed.data, isLink));
+    const res = await updateFreeProduct(id, freeProductEditPayload(parsed.data, type));
     if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
     revalidateFreeProducts();
     return { ok: true, message: "Product updated" };

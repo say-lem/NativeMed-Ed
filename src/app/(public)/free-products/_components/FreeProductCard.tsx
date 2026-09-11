@@ -15,19 +15,23 @@ export default function FreeProductCard({ product }: { product: FreeProduct }) {
         </p>
       </div>
 
-      <p className="text-xs sm:text-sm leading-[150%] text-secondary-100 line-clamp-4">
-        {product.description}
-      </p>
+      {product.description && (
+        <p className="text-xs sm:text-sm leading-[150%] text-secondary-100 line-clamp-4">
+          {product.description}
+        </p>
+      )}
 
-      <a
-        href={product.fileUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary-100 text-white text-sm font-semibold px-5 py-2.5 hover:bg-primary-100/90 transition-colors"
-      >
-        {isPdf ? <Download size={16} /> : <ExternalLink size={16} />}
-        {isPdf ? "Download" : "View"}
-      </a>
+      {product.fileUrl && (
+        <a
+          href={product.fileUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary-100 text-white text-sm font-semibold px-5 py-2.5 hover:bg-primary-100/90 transition-colors"
+        >
+          {isPdf ? <Download size={16} /> : <ExternalLink size={16} />}
+          {isPdf ? "Download" : "View"}
+        </a>
+      )}
     </div>
   );
 }

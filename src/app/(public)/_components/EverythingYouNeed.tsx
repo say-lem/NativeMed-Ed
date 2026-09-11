@@ -38,7 +38,7 @@ export default function EverythingYouNeed({
         <div className="relative w-full">
           <Image
             src={"/Images/everythingImage.svg"}
-            alt={`What you get: ${formatStatCount(displayedCaseNumber)} SCA cases, live classes, Case Bank, pre-recorded lectures, ${formatStatCount(testimonialsCount)} testimonies, and ${formatStatCount(registrarsCount)} GP registrars`}
+            alt={`What you get: ${formatStatCount(displayedCaseNumber)} SCA cases, live classes, Case Bank, pre-recorded lectures, ${formatStatCount(testimonialsCount)} testimonies, and trusted by ${formatStatCount(registrarsCount)} doctors`}
             width={752}
             height={415}
             className="block w-full h-auto"
@@ -89,7 +89,12 @@ export default function EverythingYouNeed({
               {formatStatCount(testimonialsCount)}
             </text>
 
-            {/* Top-right card — number and label */}
+            {/* Top-right card — kicker, number, and label read top-to-bottom as
+                "Trusted by 3k+ Doctors". Kicker sits the same 32.688 baseline
+                offset above the number as the label sits below it, for symmetry. */}
+            <text x="529.32" y="217.912" fill="#F7F4FB" fontSize="24">
+              Trusted by
+            </text>
             <text
               x="529.32"
               y="250.6"
@@ -101,7 +106,7 @@ export default function EverythingYouNeed({
               {formatStatCount(registrarsCount)}
             </text>
             <text x="529.32" y="283.288" fill="#F7F4FB" fontSize="24">
-              GP registrars
+              Doctors
             </text>
 
             {/* Bottom-left card — centred in a 240-wide card (0–240) */}

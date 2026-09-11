@@ -1,7 +1,9 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
+  BookOpen,
   ExternalLink,
   FileText,
   Link2,
@@ -13,9 +15,11 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
+import RichTextEditor from "@/components/shared/RichTextEditor";
 import type { FreeProduct } from "@/types/api";
 import FreeProductEditModal from "./FreeProductEditModal";
 import {
+  addBlogFreeProductAction,
   addLinkFreeProductAction,
   addPdfFreeProductAction,
   deleteFreeProductAction,
@@ -25,7 +29,19 @@ import {
 const fieldClass =
   "border-[0.5px] rounded-[8px] px-4 py-2.5 border-secondary-20 w-full outline-none focus:border-primary-100 text-black-others";
 
-type Kind = "link" | "pdf";
+type Kind = "link" | "pdf" | "blog";
+
+const KIND_LABEL: Record<Kind, string> = {
+  link: "External Link",
+  pdf: "PDF Upload",
+  blog: "Blog Post",
+};
+
+const TYPE_BADGE: Record<FreeProduct["type"], string> = {
+  link: "Link",
+  pdf: "PDF",
+  blog: "Blog",
+};
 
 export default function FreeProductsManager({ products }: { products: FreeProduct[] }) {
   const router = useRouter();
@@ -38,15 +54,19 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
   const [kind, setKind] = useState<Kind>("link");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [content, setContent] = useState("");
   const [fileUrl, setFileUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [coverImage, setCoverImage] = useState<File | null>(null);
   const [order, setOrder] = useState("");
 
   const resetForm = () => {
     setTitle("");
     setDescription("");
+    setContent("");
     setFileUrl("");
     setFile(null);
+    setCoverImage(null);
     setOrder("");
   };
 
@@ -55,7 +75,7 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
       toast.error("Title is required");
       return;
     }
-    if (description.trim().length < 5) {
+    if (kind !== "blog" && description.trim().length < 5) {
       toast.error("Description must be at least 5 characters");
       return;
     }
@@ -71,8 +91,9 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
           title: title.trim(),
           description: description.trim(),
           fileUrl: fileUrl.trim(),
+          order: order || "",
         });
-      } else {
+      } else if (kind === "pdf") {
         if (!file) {
           toast.error("Choose a PDF file");
           return;
@@ -83,6 +104,22 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
         fd.append("description", description.trim());
         fd.append("order", order || "0");
         res = await addPdfFreeProductAction(fd);
+      } else {
+        if (!coverImage) {
+          toast.error("Choose a cover image");
+          return;
+        }
+        if (content.trim().length < 20) {
+          toast.error("Content must be at least 20 characters");
+          return;
+        }
+        const fd = new FormData();
+        fd.append("coverImage", coverImage);
+        fd.append("title", title.trim());
+        fd.append("content", content.trim());
+        if (description.trim()) fd.append("description", description.trim());
+        fd.append("order", order || "0");
+        res = await addBlogFreeProductAction(fd);
       }
       if (res.ok) {
         toast.success(res.message ?? "Product added");
@@ -130,8 +167,8 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
       <div className="rounded-[16px] border border-[#EDEDED] p-4 sm:p-6">
         <h2 className="text-lg font-semibold text-black-others">Add Free Product</h2>
 
-        <div className="mt-4 inline-flex rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
-          {(["link", "pdf"] as Kind[]).map((k) => (
+        <div className="mt-4 inline-flex flex-wrap rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
+          {(["link", "pdf", "blog"] as Kind[]).map((k) => (
             <button
               key={k}
               type="button"
@@ -140,8 +177,10 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
                 kind === k ? "bg-white shadow-sm text-primary-100" : "text-subtle-text"
               }`}
             >
-              {k === "link" ? <Link2 size={15} /> : <FileText size={15} />}
-              {k === "link" ? "External Link" : "PDF Upload"}
+              {k === "link" && <Link2 size={15} />}
+              {k === "pdf" && <FileText size={15} />}
+              {k === "blog" && <BookOpen size={15} />}
+              {KIND_LABEL[k]}
             </button>
           ))}
         </div>
@@ -158,17 +197,23 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <label className="block text-sm text-[#080A0D]">Description</label>
+            <label className="block text-sm text-[#080A0D]">
+              Description {kind === "blog" && <span className="text-subtle-text">(optional)</span>}
+            </label>
             <textarea
               rows={3}
               className={`${fieldClass} resize-y`}
-              placeholder="A short summary of what candidates get"
+              placeholder={
+                kind === "blog"
+                  ? "Optional short excerpt shown above the content"
+                  : "A short summary of what candidates get"
+              }
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          {kind === "link" ? (
+          {kind === "link" && (
             <div className="space-y-2 md:col-span-2">
               <label className="block text-sm text-[#080A0D]">External URL</label>
               <input
@@ -178,36 +223,67 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
                 onChange={(e) => setFileUrl(e.target.value)}
               />
             </div>
-          ) : (
+          )}
+
+          {kind === "pdf" && (
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm text-[#080A0D]">PDF File</label>
+              <label className="flex items-center justify-between gap-3 rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 cursor-pointer">
+                <span className="text-sm text-subtle-text truncate">
+                  {file ? file.name : "Choose a PDF file"}
+                </span>
+                <Upload size={16} className="text-primary-100 shrink-0" />
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="hidden"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+              </label>
+            </div>
+          )}
+
+          {kind === "blog" && (
             <>
               <div className="space-y-2 md:col-span-2">
-                <label className="block text-sm text-[#080A0D]">PDF File</label>
+                <label className="block text-sm text-[#080A0D]">Cover Image</label>
                 <label className="flex items-center justify-between gap-3 rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 cursor-pointer">
                   <span className="text-sm text-subtle-text truncate">
-                    {file ? file.name : "Choose a PDF file"}
+                    {coverImage ? coverImage.name : "Choose a cover image"}
                   </span>
                   <Upload size={16} className="text-primary-100 shrink-0" />
                   <input
                     type="file"
-                    accept="application/pdf,.pdf"
+                    accept="image/jpeg,image/png,image/webp"
                     className="hidden"
-                    onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                    onChange={(e) => setCoverImage(e.target.files?.[0] ?? null)}
                   />
                 </label>
               </div>
-              <div className="space-y-2">
-                <label className="block text-sm text-[#080A0D]">
-                  Order <span className="text-subtle-text">(optional)</span>
-                </label>
-                <input
-                  className={fieldClass}
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={order}
-                  onChange={(e) => setOrder(e.target.value)}
+              <div className="space-y-2 md:col-span-2">
+                <label className="block text-sm text-[#080A0D]">Content</label>
+                <RichTextEditor
+                  value={content}
+                  onChange={setContent}
+                  placeholder="Write the blog post..."
                 />
               </div>
             </>
+          )}
+
+          {(kind === "pdf" || kind === "blog") && (
+            <div className="space-y-2">
+              <label className="block text-sm text-[#080A0D]">
+                Order <span className="text-subtle-text">(optional)</span>
+              </label>
+              <input
+                className={fieldClass}
+                inputMode="numeric"
+                placeholder="0"
+                value={order}
+                onChange={(e) => setOrder(e.target.value)}
+              />
+            </div>
           )}
         </div>
 
@@ -240,32 +316,47 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
                   key={product._id}
                   className="flex flex-wrap items-center justify-between gap-3 py-4"
                 >
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-sm font-semibold text-black-others truncate">
-                        {product.title}
-                      </p>
-                      <span className="rounded-full bg-primary-10 px-2 py-0.5 text-xs text-primary-100">
-                        {product.type === "pdf" ? "PDF" : "Link"}
-                      </span>
-                      {!product.isPublished && (
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-subtle-text">
-                          Draft
+                  <div className="flex items-center gap-3 min-w-0">
+                    {product.type === "blog" && product.coverImageUrl && (
+                      <Image
+                        src={product.coverImageUrl}
+                        alt=""
+                        width={56}
+                        height={40}
+                        className="size-10 rounded-[6px] object-cover shrink-0"
+                      />
+                    )}
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-black-others truncate">
+                          {product.title}
+                        </p>
+                        <span className="rounded-full bg-primary-10 px-2 py-0.5 text-xs text-primary-100">
+                          {TYPE_BADGE[product.type]}
                         </span>
+                        {!product.isPublished && (
+                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-subtle-text">
+                            Draft
+                          </span>
+                        )}
+                      </div>
+                      {product.description && (
+                        <p className="text-xs text-subtle-text line-clamp-1 mt-0.5">
+                          {product.description}
+                        </p>
+                      )}
+                      {product.type !== "blog" && product.fileUrl && (
+                        <a
+                          href={product.fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary-100 hover:underline break-all inline-flex items-center gap-1 mt-0.5"
+                        >
+                          <ExternalLink size={11} />
+                          {product.type === "pdf" ? "Download" : "View link"}
+                        </a>
                       )}
                     </div>
-                    <p className="text-xs text-subtle-text line-clamp-1 mt-0.5">
-                      {product.description}
-                    </p>
-                    <a
-                      href={product.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-primary-100 hover:underline break-all inline-flex items-center gap-1 mt-0.5"
-                    >
-                      <ExternalLink size={11} />
-                      {product.type === "pdf" ? "Download" : "View link"}
-                    </a>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <button

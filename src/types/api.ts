@@ -480,16 +480,25 @@ export interface YoutubeLinkInput {
   order?: number;
 }
 
-export type FreeProductType = "link" | "pdf";
+export type FreeProductType = "link" | "pdf" | "blog";
 
-/** GET /free-products (public) and /admin/free-products (admin, incl. drafts). For `pdf`
- *  products, `fileUrl` is a freshly-signed short-lived Cloudinary download link — never cache it. */
+/**
+ * GET /free-products (public) and /admin/free-products (admin, incl. drafts). Mixed types
+ * in one list, ordered by `order`. `description` is required for `link`/`pdf` but optional
+ * for `blog` (the written `content` carries the material instead).
+ *
+ * For `pdf` products, `fileUrl` is a freshly-signed short-lived Cloudinary download link —
+ * never cache it. `blog` products instead carry `content` (the article body) and
+ * `coverImageUrl` (a normal, cacheable CDN image URL — no signing needed).
+ */
 export interface FreeProduct {
   _id: string;
   title: string;
-  description: string;
+  description?: string;
   type: FreeProductType;
-  fileUrl: string;
+  fileUrl?: string;
+  content?: string;
+  coverImageUrl?: string;
   isPublished: boolean;
   order: number;
   createdBy: string;
@@ -502,13 +511,16 @@ export interface CreateLinkFreeProductInput {
   title: string;
   description: string;
   fileUrl: string;
+  order?: number;
 }
 
-/** Payload for PATCH /admin/free-products/:id. `fileUrl` is only accepted on `link` products. */
+/** Payload for PATCH /admin/free-products/:id. `fileUrl` only accepted on `link` products;
+ *  `content` only accepted on `blog` products — the backend 400s otherwise. */
 export interface UpdateFreeProductInput {
   title?: string;
   description?: string;
   fileUrl?: string;
+  content?: string;
   order?: number;
   isPublished?: boolean;
 }

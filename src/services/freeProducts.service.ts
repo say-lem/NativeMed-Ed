@@ -25,6 +25,28 @@ export async function getFreeProduct(id: string): Promise<ApiResponse<FreeProduc
   return res.data;
 }
 
+/**
+ * Fetches every published page in parallel (mirrors `getAllAdminCases`). There's no
+ * `type` filter on the backend — it returns every type mixed together — so splitting
+ * blogs from link/pdf resources for the public toggle has to happen after fetching
+ * the full set.
+ */
+export async function getAllFreeProducts(): Promise<FreeProduct[]> {
+  const first = await getFreeProducts(1, 50);
+  if (!first.success) return [];
+
+  const { items, totalPages } = first.data;
+  if (totalPages <= 1) return items;
+
+  const rest = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) => getFreeProducts(i + 2, 50)),
+  );
+
+  const all = [...items];
+  for (const res of rest) if (res.success) all.push(...res.data.items);
+  return all;
+}
+
 /** GET /admin/free-products — admin, paginated, every product incl. drafts. */
 export async function getAdminFreeProducts(
   page = 1,
@@ -52,6 +74,34 @@ export async function uploadPdfFreeProduct(
   const res = await api.post<ApiResponse<FreeProduct>>(
     "/admin/free-products/upload-pdf",
     formData,
+    { headers: { "Content-Type": undefined } },
+  );
+  return res.data;
+}
+
+/** POST /admin/free-products/upload-blog — admin, multipart. Creates a `blog` product. */
+export async function uploadBlogFreeProduct(
+  formData: FormData,
+): Promise<ApiResponse<FreeProduct>> {
+  const res = await api.post<ApiResponse<FreeProduct>>(
+    "/admin/free-products/upload-blog",
+    formData,
+    { headers: { "Content-Type": undefined } },
+  );
+  return res.data;
+}
+
+/** PATCH /admin/free-products/:id/cover-image — admin, multipart. Replaces a `blog`
+ *  product's cover image; 400 if the product isn't a `blog`. */
+export async function replaceFreeProductCoverImage(
+  id: string,
+  file: File,
+): Promise<ApiResponse<FreeProduct>> {
+  const fd = new FormData();
+  fd.append("coverImage", file);
+  const res = await api.patch<ApiResponse<FreeProduct>>(
+    `/admin/free-products/${id}/cover-image`,
+    fd,
     { headers: { "Content-Type": undefined } },
   );
   return res.data;
