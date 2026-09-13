@@ -9,7 +9,7 @@ import {
   SubscriptionsIcon,
 } from "./Icons";
 import { usePathname } from "next/navigation";
-import { GraduationCap, LogOutIcon } from "lucide-react";
+import { CalendarClock, GraduationCap, LogOutIcon } from "lucide-react";
 
 export default function SideNav() {
   const pathName = usePathname();
@@ -76,6 +76,16 @@ export default function SideNav() {
           label="Case Bank"
         />
 
+        <SideNavLink
+          icon={
+            <CalendarClock
+              size={20}
+              color={pathName === "/one-on-one" ? "#5925B3" : "#373737"}
+            />
+          }
+          href="/one-on-one"
+          label="1-on-1 Sessions"
+        />
         <SideNavLink
           icon={
             <SubscriptionsIcon

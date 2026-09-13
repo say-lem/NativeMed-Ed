@@ -242,8 +242,6 @@ function RegisterForm({ redirectTo }: { redirectTo?: string }) {
     defaultValues: {
       fullName: "",
       email: "",
-      phone: "",
-      telegramUsername: "",
       examSitting: "",
       password: "",
       agreeToTerms: false,
@@ -253,10 +251,10 @@ function RegisterForm({ redirectTo }: { redirectTo?: string }) {
   const onSubmit = (values: RegisterFormValues) => {
     setServerError(null);
     // agreeToTerms only gates the UI — the backend doesn't expect it in the payload.
-    const { fullName, email, phone, telegramUsername, examSitting, password } = values;
+    const { fullName, email, examSitting, password } = values;
     startTransition(async () => {
       const result = await registerAction(
-        { fullName, email, phone, telegramUsername, examSitting, password },
+        { fullName, email, examSitting, password },
         redirectTo,
       );
       if (!result.ok) {
@@ -373,30 +371,6 @@ function RegisterFields({
           {...register("email")}
         />
         <FieldError message={errors.email?.message} />
-      </div>
-      <div className="space-y-2">
-        <Label text="Phone" htmlFor="phone" />
-        <input
-          id="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+1234567890"
-          className={inputClass}
-          {...register("phone")}
-        />
-        <FieldError message={errors.phone?.message} />
-      </div>
-      <div className="space-y-2">
-        <Label text="Telegram Username" htmlFor="telegramUsername" />
-        <input
-          id="telegramUsername"
-          type="text"
-          autoComplete="off"
-          placeholder="@yourusername"
-          className={inputClass}
-          {...register("telegramUsername")}
-        />
-        <FieldError message={errors.telegramUsername?.message} />
       </div>
       <div className="space-y-2">
         <Label text="Exam Sitting" htmlFor="examSitting" />

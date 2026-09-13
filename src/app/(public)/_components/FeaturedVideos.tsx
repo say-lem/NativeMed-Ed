@@ -20,8 +20,8 @@ export default function FeaturedVideos({ videos }: { videos: YoutubeLink[] }) {
     <section className="px-4 sm:px-8 md:px-10 lg:px-15 pt-10 sm:pt-14 md:pt-18 lg:pt-24 pb-8 sm:pb-10">
       <div className="text-center mx-auto w-full sm:w-[85%] md:w-[65%] lg:w-[50%] mb-4 sm:mb-6 md:mb-8 lg:mb-12">
         <ButtonTag title="Videos" />
-        <TitleCase text="Watch & Learn" />
-        <SubtleText text="A closer look at our teaching style, mock sessions, and past classes." />
+        <TitleCase text="Explore Our Videos" />
+        <SubtleText text="SCA guidance, course insights, testimonials, and more from Native Medical Education." />
       </div>
 
       <div className="flex flex-wrap justify-center gap-4 sm:gap-6 lg:gap-8">

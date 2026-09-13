@@ -2,6 +2,7 @@ import DashboardHero from "./_components/Hero";
 import StatCards from "./_components/StatCards";
 import SubscriptionsSection from "./_components/SubscriptionsSection";
 import MyCoursesSection from "./_components/MyCoursesSection";
+import OneOnOneSection from "./_components/OneOnOneSection";
 import { getSessionUser } from "@/lib/current-user";
 
 export default async function DashboardPage() {
@@ -19,6 +20,7 @@ export default async function DashboardPage() {
 
       <SubscriptionsSection />
       <MyCoursesSection />
+      <OneOnOneSection />
     </div>
   );
 }

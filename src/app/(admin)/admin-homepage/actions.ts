@@ -6,6 +6,8 @@ import {
   addYoutubeLink,
   deleteYoutubeLink,
   updateHomepageStats,
+  updateLegalDisclaimer,
+  updateTermsAndConditions,
   updateYoutubeLink,
 } from "@/services/homepage.service";
 import {
@@ -24,6 +26,8 @@ import {
   youtubeLinkSchema,
   youtubeLinkPayload,
   type YoutubeLinkValues,
+  legalPageSchema,
+  type LegalPageValues,
 } from "@/lib/schemas/homepage";
 import {
   freeProductLinkSchema,
@@ -123,6 +127,54 @@ export async function deleteYoutubeLinkAction(id: string): Promise<FormActionRes
     return { ok: true, message: "Video deleted" };
   } catch (err) {
     return fail(err, "deleteYoutubeLinkAction", "Couldn't delete the video.");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Legal pages — terms & conditions, legal disclaimer
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function updateTermsAndConditionsAction(
+  values: LegalPageValues,
+): Promise<FormActionResult> {
+  const parsed = legalPageSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await updateTermsAndConditions(parsed.data.content);
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidatePath("/admin-homepage");
+    revalidatePath("/terms-and-conditions");
+    return { ok: true, message: "Terms and conditions updated" };
+  } catch (err) {
+    return fail(err, "updateTermsAndConditionsAction", "Couldn't update the terms and conditions.");
+  }
+}
+
+export async function updateLegalDisclaimerAction(
+  values: LegalPageValues,
+): Promise<FormActionResult> {
+  const parsed = legalPageSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await updateLegalDisclaimer(parsed.data.content);
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidatePath("/admin-homepage");
+    revalidatePath("/legal-disclaimer");
+    return { ok: true, message: "Legal disclaimer updated" };
+  } catch (err) {
+    return fail(err, "updateLegalDisclaimerAction", "Couldn't update the legal disclaimer.");
   }
 }
 

@@ -4,13 +4,16 @@ import AdminDashboardStat from "./_components/AdminDashboardStat";
 import AdminHero from "./_components/AdminHero";
 import RecentSubscribers from "./_components/RecentSubscribers";
 import UpcomingEventsWidget from "./_components/UpcomingEventsWidget";
+import FeedbackWidget from "./_components/FeedbackWidget";
 import AdminDashboardSkeleton from "./_components/AdminDashboardSkeleton";
 import RecentSubscribersSkeleton from "./_components/RecentSubscribersSkeleton";
 import UpcomingEventsWidgetSkeleton from "./_components/UpcomingEventsWidgetSkeleton";
+import FeedbackWidgetSkeleton from "./_components/FeedbackWidgetSkeleton";
 import { getAdminDashboard } from "@/services/admin.service";
 import { getSubscribers } from "@/services/subscriptions.service";
 import { getActivities } from "@/services/activities.service";
-import type { Activity, AdminDashboardStats, Subscriber } from "@/types/api";
+import { getAllFeedback } from "@/services/feedback.service";
+import type { Activity, AdminDashboardStats, Feedback, Subscriber } from "@/types/api";
 
 const RECENT_LIMIT = 5;
 
@@ -50,6 +53,18 @@ async function loadUpcomingEvents(): Promise<Activity[]> {
   }
 }
 
+/** Shown in full on the dashboard (not just a "recent" slice) — this is the admin's only
+ *  view of private feedback, there's no separate management page. */
+async function loadFeedback(): Promise<Feedback[]> {
+  try {
+    const res = await getAllFeedback(1, 100);
+    return res.success ? res.data.items : [];
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    return [];
+  }
+}
+
 // Async boundaries: stream each section in independently.
 async function DashboardStats() {
   const stats = await loadStats();
@@ -66,6 +81,11 @@ async function UpcomingEventsData() {
   return <UpcomingEventsWidget events={events} />;
 }
 
+async function FeedbackData() {
+  const feedback = await loadFeedback();
+  return <FeedbackWidget feedback={feedback} />;
+}
+
 export default function AdminDashboard() {
   return (
     <>
@@ -78,6 +98,9 @@ export default function AdminDashboard() {
       </Suspense>
       <Suspense fallback={<RecentSubscribersSkeleton />}>
         <RecentSubscribersData />
+      </Suspense>
+      <Suspense fallback={<FeedbackWidgetSkeleton />}>
+        <FeedbackData />
       </Suspense>
     </>
   );

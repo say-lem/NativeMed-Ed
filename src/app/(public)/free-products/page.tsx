@@ -4,7 +4,7 @@ import { getAllFreeProducts } from "@/services/freeProducts.service";
 import type { FreeProduct } from "@/types/api";
 
 export const metadata = {
-  title: "Free Products | Native Medical Education",
+  title: "Free Resources | Native Medical Education",
 };
 
 async function loadFreeProducts(): Promise<FreeProduct[]> {
@@ -29,7 +29,7 @@ export default async function FreeProductsPage() {
     <>
       <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-12 sm:pt-20 md:pt-28 pb-10 sm:pb-14 md:pb-16 flex flex-col items-center justify-center gap-3">
         <h1 className="text-center font-semibold text-3xl sm:text-4xl md:text-5xl lg:text-6xl tracking-[-2%] leading-[1.2] text-primary-100">
-          Free Products
+          Free Resources
         </h1>
         <p className="text-center text-subtle-text max-w-xl">
           Free resources for MRCGP SCA candidates — no account or payment required.

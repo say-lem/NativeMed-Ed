@@ -36,10 +36,14 @@ export default function HomepageStatsForm({
   caseNumber,
   testimonialsCount,
   registrarsCount,
+  contactEmail,
+  contactPhone,
 }: {
   caseNumber: number;
   testimonialsCount: number;
   registrarsCount: number;
+  contactEmail: string | null;
+  contactPhone: string | null;
 }) {
   const [pending, startTransition] = useTransition();
 
@@ -53,6 +57,8 @@ export default function HomepageStatsForm({
     defaultValues: {
       testimonialsCount: String(testimonialsCount),
       registrarsCount: String(registrarsCount),
+      contactEmail: contactEmail ?? "",
+      contactPhone: contactPhone ?? "",
     },
   });
 
@@ -117,6 +123,32 @@ export default function HomepageStatsForm({
             {...register("registrarsCount")}
           />
           <FieldError message={errors.registrarsCount?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label text="Contact Email (optional)" htmlFor="contactEmail" />
+          <input
+            id="contactEmail"
+            type="email"
+            placeholder="info@nativemed.co.uk"
+            className={inputClass}
+            {...register("contactEmail")}
+          />
+          <p className="text-xs text-subtle-text">Shown on the public Contact page.</p>
+          <FieldError message={errors.contactEmail?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label text="Contact Phone (optional)" htmlFor="contactPhone" />
+          <input
+            id="contactPhone"
+            type="tel"
+            placeholder="+447312537606"
+            className={inputClass}
+            {...register("contactPhone")}
+          />
+          <p className="text-xs text-subtle-text">Shown on the public Contact page.</p>
+          <FieldError message={errors.contactPhone?.message} />
         </div>
 
         <div className="sm:col-span-3 text-right">
