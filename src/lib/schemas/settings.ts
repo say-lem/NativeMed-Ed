@@ -6,10 +6,13 @@ export const profileSchema = z.object({
     .string()
     .min(1, "Full name is required")
     .min(2, "Full name must be at least 2 characters"),
+  /** Optional — no longer collected at registration (2026-09-13), so accounts created
+   *  since then have none until set here. `PATCH /auth/me` only validates the format
+   *  when the field is actually sent. */
   phone: z
     .string()
-    .min(1, "Phone is required")
-    .regex(/^\+?[0-9]{7,15}$/, "Enter a valid phone number"),
+    .refine((v) => v === "" || /^\+?[0-9]{7,15}$/.test(v), "Enter a valid phone number")
+    .optional(),
   /** `PATCH /auth/me` accepts this (unlike the admin edit endpoint, which strips it). */
   telegramUsername: z
     .string()

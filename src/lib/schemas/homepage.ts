@@ -6,10 +6,20 @@ const wholeNumberField = z
   .trim()
   .regex(/^\d+$/, "Must be a whole non-negative number");
 
-/** Mirrors the backend's Zod rules for PATCH /admin/homepage. */
+/** Mirrors the backend's Zod rules for PATCH /admin/homepage. `contactEmail`/`contactPhone`
+ *  are blank-allowed here — an empty value is omitted from the payload rather than sent,
+ *  so leaving them blank never overwrites an already-set value with an invalid one. */
 export const homepageStatsSchema = z.object({
   testimonialsCount: wholeNumberField,
   registrarsCount: wholeNumberField,
+  contactEmail: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v), "Enter a valid email"),
+  contactPhone: z
+    .string()
+    .trim()
+    .refine((v) => v === "" || v.length >= 7, "Phone must be at least 7 characters"),
 });
 
 export type HomepageStatsValues = z.infer<typeof homepageStatsSchema>;
@@ -20,6 +30,8 @@ export function homepageStatsPayload(
   return {
     testimonialsCount: Number(values.testimonialsCount),
     registrarsCount: Number(values.registrarsCount),
+    contactEmail: values.contactEmail === "" ? undefined : values.contactEmail,
+    contactPhone: values.contactPhone === "" ? undefined : values.contactPhone,
   };
 }
 
@@ -53,3 +65,14 @@ export function youtubeLinkPayload(values: YoutubeLinkValues): YoutubeLinkInput 
     order: values.order === "" ? undefined : Number(values.order),
   };
 }
+
+/** Mirrors the backend's Zod rules for PATCH /admin/homepage/{terms,legal-disclaimer}. */
+export const legalPageSchema = z.object({
+  content: z
+    .string()
+    .trim()
+    .min(1, "Content is required")
+    .max(20000, "Content must be 20000 characters or fewer"),
+});
+
+export type LegalPageValues = z.infer<typeof legalPageSchema>;

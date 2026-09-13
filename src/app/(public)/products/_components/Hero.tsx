@@ -1,4 +1,4 @@
-import ProductsCard from "@/components/shared/ProductsCard";
+import CatalogGrid from "./CatalogGrid";
 import Image from "next/image";
 import Link from "next/link";
 import { Gift } from "lucide-react";
@@ -41,7 +41,7 @@ export default function ProductsHero() {
             Browse Free Products
           </Link>
         </div>
-        <ProductsCard />
+        <CatalogGrid />
       </div>
     </section>
   );

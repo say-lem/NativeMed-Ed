@@ -43,9 +43,9 @@ export default function HomeHero({ isLoggedIn = false }: { isLoggedIn?: boolean 
       </p>
 
       <div className="mt-5 sm:mt-6 lg:mt-10 text-center">
-        <Link href={isLoggedIn ? "/dashboard" : "/register"}>
+        <Link href={isLoggedIn ? "/products" : "/products"}>
           <Button className="bg-primary-100 font-bold tracking-[-1%] leading-[120%] space-x-1">
-            <span>{isLoggedIn ? "Go to Dashboard" : "Start Learning"}</span>
+            <span>{isLoggedIn ? "Start Learning" : "Start Learning"}</span>
             <Image
               src="/Images/arrow_forward.png"
               alt="Arrow forward"

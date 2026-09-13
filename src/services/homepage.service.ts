@@ -4,6 +4,7 @@ import type {
   ApiResponse,
   HomepageData,
   HomepageSettings,
+  LegalPageContent,
   UpdateHomepageStatsInput,
   YoutubeLinkInput,
 } from "@/types/api";
@@ -51,6 +52,39 @@ export async function deleteYoutubeLink(
 ): Promise<ApiResponse<HomepageSettings>> {
   const res = await api.delete<ApiResponse<HomepageSettings>>(
     `/admin/homepage/youtube-links/${linkId}`,
+  );
+  return res.data;
+}
+
+/** GET /homepage/terms — public. Backs /terms-and-conditions and the admin editor. */
+export async function getTermsAndConditions(): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.get<ApiResponse<LegalPageContent>>("/homepage/terms");
+  return res.data;
+}
+
+/** PATCH /admin/homepage/terms — admin. First call creates it, later ones edit in place. */
+export async function updateTermsAndConditions(
+  content: string,
+): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.patch<ApiResponse<LegalPageContent>>("/admin/homepage/terms", {
+    content,
+  });
+  return res.data;
+}
+
+/** GET /homepage/legal-disclaimer — public. Backs /legal-disclaimer and the admin editor. */
+export async function getLegalDisclaimer(): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.get<ApiResponse<LegalPageContent>>("/homepage/legal-disclaimer");
+  return res.data;
+}
+
+/** PATCH /admin/homepage/legal-disclaimer — admin. Same create-on-first-save pattern as terms. */
+export async function updateLegalDisclaimer(
+  content: string,
+): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.patch<ApiResponse<LegalPageContent>>(
+    "/admin/homepage/legal-disclaimer",
+    { content },
   );
   return res.data;
 }

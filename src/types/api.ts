@@ -4,10 +4,13 @@ export interface User {
   _id: string;
   fullName: string;
   email: string;
-  phone: string;
+  /** No longer collected at registration (2026-09-13) — optional; set later via profile
+   *  settings or by an admin. Older accounts still have it from before the change. */
+  phone?: string;
   role: Role;
   mustChangePassword: boolean;
-  /** Stored with a leading "@" — the backend normalizes it on register. */
+  /** No longer collected at registration (2026-09-13) — optional profile-settings field.
+   *  Stored with a leading "@" — the backend normalizes it when set via `PATCH /auth/me`. */
   telegramUsername?: string;
   /** `MM/YY`, e.g. "03/26". Required at register; older accounts may lack it. */
   examSitting?: string;
@@ -441,6 +444,15 @@ export interface FeedbackInput {
   message: string;
 }
 
+/** GET /admin/reviews/feedback — admin. Private inbox item; never shown publicly. */
+export interface Feedback {
+  _id: string;
+  name?: string;
+  message: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface YoutubeLink {
   _id: string;
   title: string;
@@ -448,11 +460,14 @@ export interface YoutubeLink {
   order: number;
 }
 
-/** GET /homepage — public. `caseNumber` is always the live published-case count, never stored. */
+/** GET /homepage — public. `caseNumber` is always the live published-case count, never stored.
+ *  `contactEmail`/`contactPhone` are `null` until an admin sets them. */
 export interface HomepageData {
   caseNumber: number;
   testimonialsCount: number;
   registrarsCount: number;
+  contactEmail: string | null;
+  contactPhone: string | null;
   youtubeLinks: YoutubeLink[];
 }
 
@@ -462,6 +477,8 @@ export interface HomepageSettings {
   _id: string;
   testimonialsCount: number;
   registrarsCount: number;
+  contactEmail?: string;
+  contactPhone?: string;
   youtubeLinks: YoutubeLink[];
   createdAt: string;
   updatedAt: string;
@@ -471,6 +488,8 @@ export interface HomepageSettings {
 export interface UpdateHomepageStatsInput {
   testimonialsCount?: number;
   registrarsCount?: number;
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 /** Payload for POST /admin/homepage/youtube-links (all required) and PATCH .../:linkId (partial). */
@@ -478,6 +497,14 @@ export interface YoutubeLinkInput {
   title: string;
   url: string;
   order?: number;
+}
+
+/** GET /homepage/terms and /homepage/legal-disclaimer (public) — same shape from the
+ *  admin GET/PATCH equivalents. `content` is `""` and `updatedAt` is `null` until an
+ *  admin has ever saved one. */
+export interface LegalPageContent {
+  content: string;
+  updatedAt: string | null;
 }
 
 export type FreeProductType = "link" | "pdf" | "blog";
@@ -551,4 +578,111 @@ export interface ActivityInput {
   /** yyyy-mm-dd (native `<input type="date">` value) or full ISO. */
   date: string;
   description: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Catalog — GET /products (public). Everything a user can pay for, one flat list,
+// discriminated by `type`. Read-only; aggregates courses/booking/case-bank.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface CatalogCourseProduct {
+  type: "course";
+  _id: string;
+  title: string;
+  description?: string;
+  thumbnailUrl?: string;
+  pricing?: CoursePricing;
+}
+
+export interface CatalogOneOnOneProduct {
+  type: "one_on_one";
+  _id: string;
+  title: string;
+  description: string;
+  /** GBP pounds, informational only — booking has no payment gate. */
+  price: number;
+}
+
+/** Always exactly one entry, and it has no `_id` — the case bank isn't a persisted doc. */
+export interface CatalogCaseBankProduct {
+  type: "case_bank";
+  title: string;
+  description: string;
+  prices: PlanPrice[];
+  /** Live count of published cases — never stored. */
+  caseCount: number;
+}
+
+export type CatalogProduct =
+  | CatalogCourseProduct
+  | CatalogOneOnOneProduct
+  | CatalogCaseBankProduct;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Booking — one-on-one session products. Public reads at /booking; booking a
+// slot requires login; admin management at /admin/booking.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface BookingAvailableDate {
+  _id: string;
+  /** ISO 8601, day-only (time component is midnight UTC). */
+  date: string;
+  isBooked: boolean;
+}
+
+/** GET /booking, /booking/:id (public — `availableDates` pre-filtered to unbooked only)
+ *  and GET /admin/booking/products (admin — every date, booked or not). */
+export interface BookingProduct {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  /** Reusable HH:mm options offered on every date in the pool. */
+  availableTimes: string[];
+  availableDates: BookingAvailableDate[];
+  isPublished: boolean;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Payload for POST /admin/booking/products. */
+export interface CreateBookingProductInput {
+  title: string;
+  description: string;
+  price: number;
+  availableTimes?: string[];
+  isPublished?: boolean;
+}
+
+/** Payload for PATCH /admin/booking/products/:id. Replaces `availableTimes` wholesale
+ *  if provided — never a merge. */
+export type UpdateBookingProductInput = Partial<CreateBookingProductInput>;
+
+/** Payload for POST /booking/:id/book. `date` is yyyy-mm-dd, `time` one of the
+ *  product's `availableTimes`. */
+export interface BookSessionInput {
+  date: string;
+  time: string;
+}
+
+export interface SessionBooking {
+  _id: string;
+  productId: string;
+  userId: string;
+  date: string;
+  time: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** GET /admin/booking/bookings — productId/userId populated. */
+export interface AdminSessionBooking {
+  _id: string;
+  productId: { _id: string; title: string; price: number } | null;
+  userId: { _id: string; fullName: string; email: string } | null;
+  date: string;
+  time: string;
+  createdAt: string;
+  updatedAt: string;
 }

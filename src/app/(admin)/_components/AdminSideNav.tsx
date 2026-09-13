@@ -2,7 +2,7 @@
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import AdminSideNavLink from "./AdminSideNavLink";
-import { CalendarDays, GraduationCap, Home, Star, Users as UsersIcon } from "lucide-react";
+import { CalendarClock, CalendarDays, GraduationCap, Home, Star, Users as UsersIcon } from "lucide-react";
 import {
   CoursesIcon,
   DashboardIcon,
@@ -78,6 +78,11 @@ export default function AdminSideNav() {
           icon={<CalendarDays size={22} color={color("/admin-events")} />}
           href="/admin-events"
           label="Events"
+        />
+        <AdminSideNavLink
+          icon={<CalendarClock size={22} color={color("/admin-booking")} />}
+          href="/admin-booking"
+          label="1-on-1 Bookings"
         />
 
         <AdminSideNavLink

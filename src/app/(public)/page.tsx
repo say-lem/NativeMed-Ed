@@ -19,6 +19,8 @@ const EMPTY_HOMEPAGE_DATA: HomepageData = {
   caseNumber: 0,
   testimonialsCount: 0,
   registrarsCount: 0,
+  contactEmail: null,
+  contactPhone: null,
   youtubeLinks: [],
 };
 

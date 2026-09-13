@@ -111,6 +111,8 @@ export const config = {
     "/settings/:path*",
     "/payment",
     "/payment/:path*",
+    "/one-on-one",
+    "/one-on-one/:path*",
     // Admin area
     "/admin-dashboard",
     "/admin-dashboard/:path*",
@@ -132,5 +134,7 @@ export const config = {
     "/admin-events/:path*",
     "/admin-homepage",
     "/admin-homepage/:path*",
+    "/admin-booking",
+    "/admin-booking/:path*",
   ],
 };

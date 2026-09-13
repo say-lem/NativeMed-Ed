@@ -3,27 +3,37 @@ import { useState } from "react";
 import HomepageStatsForm from "./HomepageStatsForm";
 import YoutubeLinksManager from "./YoutubeLinksManager";
 import FreeProductsManager from "./FreeProductsManager";
-import type { FreeProduct, YoutubeLink } from "@/types/api";
+import LegalPagesManager from "./LegalPagesManager";
+import type { FreeProduct, LegalPageContent, YoutubeLink } from "@/types/api";
 
-type Tab = "homepage" | "free-products";
+type Tab = "homepage" | "free-products" | "legal-pages";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "homepage", label: "Homepage" },
   { id: "free-products", label: "Free Products" },
+  { id: "legal-pages", label: "Legal Pages" },
 ];
 
 export default function AdminHomepageTabs({
   caseNumber,
   testimonialsCount,
   registrarsCount,
+  contactEmail,
+  contactPhone,
   youtubeLinks,
   freeProducts,
+  terms,
+  legalDisclaimer,
 }: {
   caseNumber: number;
   testimonialsCount: number;
   registrarsCount: number;
+  contactEmail: string | null;
+  contactPhone: string | null;
   youtubeLinks: YoutubeLink[];
   freeProducts: FreeProduct[];
+  terms: LegalPageContent;
+  legalDisclaimer: LegalPageContent;
 }) {
   const [tab, setTab] = useState<Tab>("homepage");
 
@@ -44,17 +54,21 @@ export default function AdminHomepageTabs({
         ))}
       </div>
 
-      {tab === "homepage" ? (
+      {tab === "homepage" && (
         <div className="space-y-6">
           <HomepageStatsForm
             caseNumber={caseNumber}
             testimonialsCount={testimonialsCount}
             registrarsCount={registrarsCount}
+            contactEmail={contactEmail}
+            contactPhone={contactPhone}
           />
           <YoutubeLinksManager links={youtubeLinks} />
         </div>
-      ) : (
-        <FreeProductsManager products={freeProducts} />
+      )}
+      {tab === "free-products" && <FreeProductsManager products={freeProducts} />}
+      {tab === "legal-pages" && (
+        <LegalPagesManager terms={terms} legalDisclaimer={legalDisclaimer} />
       )}
     </div>
   );
