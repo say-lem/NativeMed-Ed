@@ -8,6 +8,7 @@ import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import CoursePurchase from "./_components/CoursePurchase";
 import { getCourse } from "@/services/courses.service";
 import { getPaymentPlans } from "@/services/payments.service";
+import { getHomepageData } from "@/services/homepage.service";
 import { getCourseAccess } from "@/lib/access";
 import { tierLabel } from "@/lib/tiers";
 import { formatDate } from "@/lib/date";
@@ -42,12 +43,24 @@ async function loadPlans(): Promise<PaymentPlan[]> {
   }
 }
 
+/** For the "payments paused" contact-admin message — falls back to null if unset/unavailable. */
+async function loadContactEmail(): Promise<string | null> {
+  try {
+    const res = await getHomepageData();
+    return res.success ? res.data.contactEmail : null;
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    return null;
+  }
+}
+
 export default async function CourseDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [course, plans, access] = await Promise.all([
+  const [course, plans, access, contactEmail] = await Promise.all([
     loadCourse(id),
     loadPlans(),
     getCourseAccess(id),
+    loadContactEmail(),
   ]);
 
   if (!course) {
@@ -133,7 +146,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
           <h2 className="font-semibold text-xl sm:text-2xl text-black-others">
             Choose your plan
           </h2>
-          <CoursePurchase course={course} plans={plans} />
+          <CoursePurchase course={course} plans={plans} contactEmail={contactEmail} />
         </div>
       )}
       </section>

@@ -132,3 +132,64 @@ export async function removeAvailableDateAction(
     return fail(err, "removeAvailableDateAction", "Couldn't remove the date.");
   }
 }
+
+const MAX_RANGE_DAYS = 366;
+
+/** Every yyyy-mm-dd from `from` to `to` inclusive. Both are yyyy-mm-dd (native date input
+ *  values), which `Date` parses as UTC midnight, so day math stays timezone-safe. */
+function enumerateDays(from: string, to: string): string[] {
+  const start = new Date(`${from}T00:00:00Z`);
+  const end = new Date(`${to}T00:00:00Z`);
+  const out: string[] = [];
+  for (let d = start; d.getTime() <= end.getTime(); d = new Date(d.getTime() + 86400000)) {
+    out.push(d.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+/**
+ * Adds every date in [from, to] inclusive — there's no bulk endpoint, so this loops the
+ * single-date one sequentially. A date already in the pool 400s; that's expected when
+ * ranges overlap, so it's counted as "skipped" rather than failing the whole batch.
+ */
+export async function addAvailableDateRangeAction(
+  productId: string,
+  from: string,
+  to: string,
+): Promise<FormActionResult> {
+  if (!from || !to) return { ok: false, message: "Choose both a start and end date." };
+  const start = new Date(`${from}T00:00:00Z`);
+  const end = new Date(`${to}T00:00:00Z`);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    return { ok: false, message: "Invalid date range." };
+  }
+  if (start.getTime() > end.getTime()) {
+    return { ok: false, message: "Start date must be on or before the end date." };
+  }
+
+  const days = enumerateDays(from, to);
+  if (days.length > MAX_RANGE_DAYS) {
+    return { ok: false, message: `That range is too large — please narrow it to ${MAX_RANGE_DAYS} days or fewer.` };
+  }
+
+  let added = 0;
+  let skipped = 0;
+  for (const day of days) {
+    try {
+      const res = await addAvailableDate(productId, day);
+      if (res.success) added++;
+      else skipped++;
+    } catch {
+      skipped++;
+    }
+  }
+
+  revalidateBooking();
+  if (added === 0) {
+    return { ok: false, message: `No dates added — all ${skipped} were already in the pool.` };
+  }
+  return {
+    ok: true,
+    message: skipped > 0 ? `Added ${added} dates (${skipped} already existed)` : `Added ${added} dates`,
+  };
+}

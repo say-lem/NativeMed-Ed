@@ -2,7 +2,12 @@
 
 import axios from "axios";
 import { revalidatePath } from "next/cache";
-import { deleteCourse, publishCourse } from "@/services/courses.service";
+import {
+  deleteCourse,
+  pauseCoursePayments,
+  publishCourse,
+  resumeCoursePayments,
+} from "@/services/courses.service";
 import type { ApiFailure, FormActionResult } from "@/types/api";
 
 /** Toggle a course between published and draft (PATCH /courses/:id/publish). */
@@ -24,6 +29,30 @@ export async function togglePublishCourseAction(
       return { ok: false, message: data?.message ?? "Couldn't update publish state." };
     }
     console.error("[togglePublishCourseAction] unexpected error:", err);
+    return { ok: false, message: "Something went wrong." };
+  }
+}
+
+/** Toggle new checkouts/plan changes for a course without touching visibility. */
+export async function togglePaymentsPausedAction(
+  id: string,
+  paused: boolean,
+): Promise<FormActionResult> {
+  try {
+    const res = paused ? await pauseCoursePayments(id) : await resumeCoursePayments(id);
+    if (!res.success) return { ok: false, message: res.message };
+    revalidatePath("/admin-courses");
+    return {
+      ok: true,
+      message: res.data.paymentsPaused ? "Payments paused" : "Payments resumed",
+    };
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const data = err.response?.data as ApiFailure | undefined;
+      console.error("[togglePaymentsPausedAction] axios error:", err.code, err.message);
+      return { ok: false, message: data?.message ?? "Couldn't update payment state." };
+    }
+    console.error("[togglePaymentsPausedAction] unexpected error:", err);
     return { ok: false, message: "Something went wrong." };
   }
 }

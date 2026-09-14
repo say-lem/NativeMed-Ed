@@ -2,7 +2,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { ChevronDown, ListVideo, Loader2, Trash2 } from "lucide-react";
+import { ChevronDown, ListVideo, Loader2, PauseCircle, PlayCircle, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { StatVideoIcon } from "../../admin-dashboard/_components/StatIcons";
 import Link from "next/link";
@@ -11,7 +11,11 @@ import { coursePriceRows } from "@/lib/price";
 import { useAdminList } from "../../_components/AdminListContext";
 import Pagination from "../../_components/Pagination";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
-import { deleteCourseAction, togglePublishCourseAction } from "../actions";
+import {
+  deleteCourseAction,
+  togglePaymentsPausedAction,
+  togglePublishCourseAction,
+} from "../actions";
 
 const PAGE_SIZE = 6;
 
@@ -24,6 +28,7 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
   const router = useRouter();
   const confirm = useConfirm();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [pausePendingId, setPausePendingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
@@ -34,6 +39,17 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
       if (res.ok) toast.success(res.message ?? "Updated");
       else toast.error(res.message ?? "Something went wrong");
       setPendingId(null);
+      router.refresh();
+    });
+  };
+
+  const togglePaymentsPaused = (course: Course) => {
+    setPausePendingId(course._id);
+    startTransition(async () => {
+      const res = await togglePaymentsPausedAction(course._id, !course.paymentsPaused);
+      if (res.ok) toast.success(res.message ?? "Updated");
+      else toast.error(res.message ?? "Something went wrong");
+      setPausePendingId(null);
       router.refresh();
     });
   };
@@ -138,8 +154,15 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
                     className="object-cover object-center"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
-                  <span className="absolute top-3 left-3 rounded-[100px] py-1.5 px-3 bg-[#00000080] border-[0.2px] border-white/80 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
-                    {course.isPublished ? "Published" : "Draft"}
+                  <span className="absolute top-3 left-3 flex items-center gap-1.5">
+                    <span className="rounded-[100px] py-1.5 px-3 bg-[#00000080] border-[0.2px] border-white/80 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
+                      {course.isPublished ? "Published" : "Draft"}
+                    </span>
+                    {course.paymentsPaused && (
+                      <span className="rounded-[100px] py-1.5 px-3 bg-[#C11616] border-[0.2px] border-white/80 text-xs font-semibold text-white leading-[150%] tracking-[-1%]">
+                        Payments Paused
+                      </span>
+                    )}
                   </span>
                   <button
                     type="button"
@@ -212,6 +235,25 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
                       </Link>
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => togglePaymentsPaused(course)}
+                    disabled={pausePendingId === course._id}
+                    className={`flex items-center justify-center gap-1.5 rounded-[8px] border text-sm font-medium py-2 cursor-pointer disabled:opacity-60 ${
+                      course.paymentsPaused
+                        ? "border-primary-100 text-primary-100 hover:bg-primary-10"
+                        : "border-gray-1 text-subtle-text hover:bg-gray-100"
+                    }`}
+                  >
+                    {pausePendingId === course._id ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : course.paymentsPaused ? (
+                      <PlayCircle size={14} />
+                    ) : (
+                      <PauseCircle size={14} />
+                    )}
+                    {course.paymentsPaused ? "Resume Payments" : "Pause Payments"}
+                  </button>
                   <Link
                     href={`/admin-courses/${course._id}/content`}
                     className="mt-3 flex items-center justify-center gap-1.5 rounded-[8px] border border-gray-1 text-sm font-medium text-black-others py-2 cursor-pointer hover:bg-gray-100"
