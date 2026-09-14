@@ -4,7 +4,16 @@ import { Button } from "@/components/ui/button";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 
-export default function PaymentCancelPage() {
+interface PageProps {
+  // `from` is set on the Stripe cancelUrl by the originating checkout action (e.g.
+  // one-on-one/[id]/actions.ts) so this page can point "back" somewhere relevant.
+  searchParams: Promise<{ from?: string }>;
+}
+
+export default async function PaymentCancelPage({ searchParams }: PageProps) {
+  const { from } = await searchParams;
+  const isBooking = from === "booking";
+
   return (
     <>
       <BannerBg color="#2D135C">
@@ -16,12 +25,17 @@ export default function PaymentCancelPage() {
         Payment cancelled
       </h1>
       <p className="max-w-md text-sm sm:text-base text-subtle-text leading-[150%]">
-        No charge was made. You can pick a plan and try again whenever you&apos;re
-        ready.
+        {isBooking
+          ? // The slot stays held until Stripe's checkout session actually expires (not
+            // immediately on cancel), so this deliberately doesn't promise it's free again yet.
+            "No charge was made. If you still want that session, head back and try booking again."
+          : "No charge was made. You can pick a plan and try again whenever you're ready."}
       </p>
       <div className="flex flex-col sm:flex-row gap-3 mt-2">
-        <Link href="/courses">
-          <Button className="font-bold bg-black-others">Back to courses</Button>
+        <Link href={isBooking ? "/one-on-one" : "/courses"}>
+          <Button className="font-bold bg-black-others">
+            {isBooking ? "Back to sessions" : "Back to courses"}
+          </Button>
         </Link>
       </div>
       </section>

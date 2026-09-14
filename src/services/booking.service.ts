@@ -4,12 +4,12 @@ import type {
   AdminBookingProduct,
   AdminSessionBooking,
   ApiResponse,
+  BookingCheckout,
   BookingProduct,
   BookSessionInput,
   CreateBookingProductInput,
   MyBooking,
   Paginated,
-  SessionBooking,
   UpdateBookingProductInput,
 } from "@/types/api";
 
@@ -52,12 +52,15 @@ export async function getBookingProduct(id: string): Promise<ApiResponse<Booking
   return res.data;
 }
 
-/** POST /booking/:id/book — auth required. No payment gate; reserves the date atomically. */
+/** POST /booking/:id/book — auth required. Reserves the (date, time) slot and starts a
+ *  Stripe Checkout session; the booking is `pending` until the webhook confirms payment
+ *  (see `confirmBookingPayment` on the backend). Redirect the browser to the returned
+ *  `url` — nothing is booked yet at this point. */
 export async function bookSession(
   id: string,
   input: BookSessionInput,
-): Promise<ApiResponse<SessionBooking>> {
-  const res = await api.post<ApiResponse<SessionBooking>>(`/booking/${id}/book`, input);
+): Promise<ApiResponse<BookingCheckout>> {
+  const res = await api.post<ApiResponse<BookingCheckout>>(`/booking/${id}/book`, input);
   return res.data;
 }
 

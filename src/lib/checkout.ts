@@ -11,8 +11,10 @@ export interface CheckoutActionResult {
   alreadySubscribed?: boolean;
 }
 
-/** Absolute origin of the current request, for Stripe's return URLs. */
-async function getOrigin(): Promise<string> {
+/** Absolute origin of the current request, for Stripe's return URLs. Exported for other
+ *  checkout flows outside `runCheckout` (e.g. booking) that need to build their own
+ *  success/cancel URLs. */
+export async function getOrigin(): Promise<string> {
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? "http";

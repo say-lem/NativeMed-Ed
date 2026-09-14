@@ -5,6 +5,7 @@ import {
   getCourseSubStatus,
 } from "@/services/subscriptions.service";
 import { checkEnrollment } from "@/services/enrollments.service";
+import { getMyBookings } from "@/services/booking.service";
 
 /**
  * Poll target for the success page. Access is granted by a Stripe **webhook**, which lands
@@ -16,6 +17,7 @@ import { checkEnrollment } from "@/services/enrollments.service";
 export async function checkPurchaseActive(
   type: string,
   courseId?: string,
+  sessionId?: string,
 ): Promise<{ active: boolean }> {
   try {
     if (type === "course") {
@@ -28,6 +30,17 @@ export async function checkPurchaseActive(
         (sub.success && sub.data.active) ||
         (enroll.success && enroll.data.enrolled);
       return { active: Boolean(active) };
+    }
+
+    if (type === "booking") {
+      // There's no per-booking status endpoint — the webhook confirms it as a plain
+      // `SessionBooking.status` flip, so match the checkout session id (unique per
+      // booking) against the user's own booking list to find the one just paid for.
+      if (!sessionId) return { active: false };
+      const res = await getMyBookings(1, 100);
+      if (!res.success) return { active: false };
+      const booking = res.data.items.find((b) => b.stripeCheckoutSessionId === sessionId);
+      return { active: booking?.status === "confirmed" };
     }
 
     const res = await getCaseBankStatus();
