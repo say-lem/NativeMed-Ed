@@ -42,10 +42,13 @@ export default async function CaseNav({
   slug,
   currentId,
   specialty,
+  rootPath = "/full-cases",
 }: {
   slug: string;
   currentId: string;
   specialty: string;
+  /** Lets the public case-bank preview reuse this exact nav with its own base path. */
+  rootPath?: string;
 }) {
   const { prev, next } = await loadNeighbors(slug, currentId, specialty);
   if (!prev && !next) return null;
@@ -57,7 +60,7 @@ export default async function CaseNav({
     >
       {prev ? (
         <Link
-          href={`/full-cases/${slug}/${prev._id}`}
+          href={`${rootPath}/${slug}/${prev._id}`}
           className="group flex-1 max-w-[48%] rounded-[12px] border border-gray-2 px-4 py-3 hover:border-primary-100 hover:bg-primary-10 transition-colors"
         >
           <span className="flex items-center gap-1 text-xs text-subtle-text">
@@ -73,7 +76,7 @@ export default async function CaseNav({
 
       {next ? (
         <Link
-          href={`/full-cases/${slug}/${next._id}`}
+          href={`${rootPath}/${slug}/${next._id}`}
           className="group flex-1 max-w-[48%] rounded-[12px] border border-gray-2 px-4 py-3 text-right hover:border-primary-100 hover:bg-primary-10 transition-colors"
         >
           <span className="flex items-center justify-end gap-1 text-xs text-subtle-text">

@@ -14,10 +14,11 @@ export default function UpcomingEvents({ events }: { events: Activity[] }) {
     events.length,
   );
 
-  // Render the list twice. The track sits at the midpoint by default, so
-  // forward (rightward) drift can wrap from 0 → half and reverse swipes
-  // can wrap from half → 0 — both invisible because the halves are identical.
-  const loop = [...events, ...events];
+  // Render the list twice so the auto-scroll can wrap seamlessly (the track sits at the
+  // midpoint by default, so drift in either direction wraps between the two identical
+  // halves invisibly). With only one event there's nothing to loop toward — duplicating
+  // it would just show the same card twice.
+  const loop = events.length > 1 ? [...events, ...events] : events;
 
   if (events.length === 0) return null;
 

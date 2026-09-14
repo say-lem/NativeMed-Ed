@@ -2,6 +2,7 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 // import CountDownToClass from "@/components/shared/Countdown";
+import { Markdown } from "@/components/shared/Markdown";
 import ProductsCard from "@/components/shared/ProductsCard";
 import TitleCase from "@/components/shared/TitleCase";
 import { Button } from "@/components/ui/button";
@@ -85,6 +86,20 @@ export default async function ProductByIdPage({ params }: PageProps) {
             </aside>
           </div>
         </aside>
+
+        {/* Longer write-up — outside the hero card, shown only when the admin has set one.
+            Stored as markdown from the admin's rich-text editor. */}
+        {course.detailedDescription && (
+          <aside className="px-0 sm:px-4 lg:px-10 pt-8 sm:pt-10 space-y-3">
+            <h2 className="font-semibold text-lg sm:text-xl lg:text-2xl text-black-others">
+              About this course
+            </h2>
+            <Markdown className="text-sm sm:text-base lg:text-lg text-[#373737]">
+              {course.detailedDescription}
+            </Markdown>
+          </aside>
+        )}
+
         <aside className="pt-10 sm:pt-12 lg:pt-16 space-y-6 sm:space-y-8">
           <TitleCase text="You Might Also Like" />
           <div className="px-0 sm:px-4 lg:px-10">

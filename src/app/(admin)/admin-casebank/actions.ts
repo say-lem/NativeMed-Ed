@@ -2,8 +2,25 @@
 
 import axios from "axios";
 import { revalidatePath } from "next/cache";
-import { deleteCase, duplicateCase } from "@/services/cases.service";
+import {
+  deleteCase,
+  duplicateCase,
+  updateCaseBankOverview,
+  updateCaseBankOverviewImage,
+} from "@/services/cases.service";
+import {
+  caseBankOverviewSchema,
+  caseBankOverviewPayload,
+  type CaseBankOverviewValues,
+} from "@/lib/schemas/caseBankOverview";
 import type { ApiFailure, FormActionResult } from "@/types/api";
+
+function revalidateCaseBank() {
+  revalidatePath("/admin-casebank");
+  revalidatePath("/free-cases");
+  revalidatePath("/products");
+  revalidatePath("/products/case-bank");
+}
 
 /** Permanently delete a case (DELETE /cases/:id). */
 export async function deleteCaseAction(
@@ -41,6 +58,58 @@ export async function duplicateCaseAction(
       return { ok: false, message: data?.message ?? "Couldn't duplicate the case." };
     }
     console.error("[duplicateCaseAction] unexpected error:", err);
+    return { ok: false, message: "Something went wrong." };
+  }
+}
+
+/** PATCH /cases/admin/overview — title/description of the case bank as a product. */
+export async function updateCaseBankOverviewAction(
+  values: CaseBankOverviewValues,
+): Promise<FormActionResult> {
+  const parsed = caseBankOverviewSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await updateCaseBankOverview(caseBankOverviewPayload(parsed.data));
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidateCaseBank();
+    return { ok: true, message: "Case bank overview updated" };
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const data = err.response?.data as ApiFailure | undefined;
+      console.error("[updateCaseBankOverviewAction] axios error:", err.code, err.message);
+      return { ok: false, message: data?.message ?? "Couldn't update the overview." };
+    }
+    console.error("[updateCaseBankOverviewAction] unexpected error:", err);
+    return { ok: false, message: "Something went wrong." };
+  }
+}
+
+/** PATCH /cases/admin/overview/image — cover image shown on the products page card. */
+export async function updateCaseBankOverviewImageAction(
+  formData: FormData,
+): Promise<FormActionResult> {
+  try {
+    const file = formData.get("image");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, message: "Please choose an image." };
+    }
+    const res = await updateCaseBankOverviewImage(file);
+    if (!res.success) return { ok: false, message: res.message };
+    revalidateCaseBank();
+    return { ok: true, message: "Cover image updated" };
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const data = err.response?.data as ApiFailure | undefined;
+      console.error("[updateCaseBankOverviewImageAction] axios error:", err.code, err.message);
+      return { ok: false, message: data?.message ?? "Couldn't update the cover image." };
+    }
+    console.error("[updateCaseBankOverviewImageAction] unexpected error:", err);
     return { ok: false, message: "Something went wrong." };
   }
 }

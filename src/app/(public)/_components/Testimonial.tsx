@@ -13,10 +13,11 @@ function Testimonial({ reviews }: { reviews: Review[] }) {
     reviews.length,
   );
 
-  // Render the list twice. The track sits at the midpoint by default, so
-  // forward (rightward) drift can wrap from 0 → half and reverse swipes
-  // can wrap from half → 0 — both invisible because the halves are identical.
-  const loop = [...reviews, ...reviews];
+  // Render the list twice so the auto-scroll can wrap seamlessly (the track sits at the
+  // midpoint by default, so drift in either direction wraps between the two identical
+  // halves invisibly). With only one review there's nothing to loop toward — duplicating
+  // it would just show the same card twice.
+  const loop = reviews.length > 1 ? [...reviews, ...reviews] : reviews;
 
   if (reviews.length === 0) return null;
 

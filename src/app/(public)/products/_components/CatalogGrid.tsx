@@ -6,10 +6,27 @@ import { courseBadgePrice } from "@/lib/price";
 import { getCatalog } from "@/services/catalog.service";
 import type { CatalogProduct } from "@/types/api";
 
-async function loadCatalog(): Promise<CatalogProduct[]> {
+// Only the truncated preview (`cutBy > 0`, currently the home page) cares about a
+// specific order — courses first, then the case bank, then one-on-one sessions — so
+// the handful shown there represent the product range rather than whatever order the
+// backend happens to return. The full /products grid shows everything regardless of
+// order, so it's left as-is.
+const TYPE_PRIORITY: Record<CatalogProduct["type"], number> = {
+  course: 0,
+  case_bank: 1,
+  one_on_one: 2,
+};
+
+async function loadCatalog(cutBy: number): Promise<CatalogProduct[]> {
   try {
     const res = await getCatalog();
-    return res.success ? res.data : [];
+    if (!res.success) return [];
+    if (cutBy <= 0) return res.data;
+    // Stable sort — items of the same type keep their original relative order.
+    const sorted = [...res.data].sort(
+      (a, b) => TYPE_PRIORITY[a.type] - TYPE_PRIORITY[b.type],
+    );
+    return sorted.slice(0, cutBy);
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;
     console.error("[catalog-grid] fetch error:", err.code, err.message);
@@ -30,8 +47,8 @@ function CtaBadge({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default async function CatalogGrid() {
-  const products = await loadCatalog();
+export default async function CatalogGrid({ cutBy = 0 }: { cutBy?: number }) {
+  const products = await loadCatalog(cutBy);
 
   if (products.length === 0) {
     return (
@@ -107,12 +124,22 @@ export default async function CatalogGrid() {
 
         // case_bank — always exactly one, no _id (not a persisted document)
         return (
-          <Link href="/full-cases" key="case_bank">
+          <Link href="/products/case-bank" key="case_bank">
             <div role="link" tabIndex={0} className={cardClass}>
-              <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg grid place-items-center">
-                <span className="grid place-items-center size-16 rounded-full bg-primary-100 text-white">
-                  <Layers size={28} />
-                </span>
+              <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg grid place-items-center overflow-hidden">
+                {product.imageUrl ? (
+                  <Image
+                    src={product.imageUrl}
+                    alt={`image of ${product.title}`}
+                    fill
+                    className="object-cover object-center"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                ) : (
+                  <span className="grid place-items-center size-16 rounded-full bg-primary-100 text-white">
+                    <Layers size={28} />
+                  </span>
+                )}
               </aside>
 
               <aside className="px-3 sm:px-4 lg:px-6 flex-1">
@@ -129,7 +156,7 @@ export default async function CatalogGrid() {
                 </div>
               </aside>
 
-              <CtaBadge>Subscribe</CtaBadge>
+              <CtaBadge>See Details</CtaBadge>
             </div>
           </Link>
         );

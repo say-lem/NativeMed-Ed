@@ -10,9 +10,16 @@ import type { Specialty } from "@/types/api";
 export default function SpecialtyBankClient({
   specialties,
   upsellPriceLabel = null,
+  rootPath = "/full-cases",
+  notice,
 }: {
   specialties: Specialty[];
   upsellPriceLabel?: string | null;
+  /** Lets the public case-bank preview reuse this exact page with its own base path. */
+  rootPath?: string;
+  /** Overrides the built-in "subscribe" upsell — used by the public preview, which
+   *  shows a different message depending on whether the visitor already has access. */
+  notice?: React.ReactNode;
 }) {
   const [query, setQuery] = useState("");
 
@@ -45,14 +52,16 @@ export default function SpecialtyBankClient({
         </div>
       </BannerBg>
 
-      {upsellPriceLabel !== null && (
-        <CaseBankUpsell priceLabel={upsellPriceLabel || undefined} />
-      )}
+      {notice ??
+        (upsellPriceLabel !== null && (
+          <CaseBankUpsell priceLabel={upsellPriceLabel || undefined} />
+        ))}
 
       <div className="px-4 sm:px-6 lg:px-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-5 lg:gap-6 py-6 sm:py-8">
         <MockCasesCards
           specialties={filtered}
           totalCases={totalCases}
+          rootPath={rootPath}
           emptyMessage={
             isSearching
               ? `No specialties match "${query.trim()}".`
