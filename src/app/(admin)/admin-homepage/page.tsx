@@ -1,6 +1,7 @@
 import AdminHomepageHero from "./_components/AdminHomepageHero";
 import AdminHomepageTabs from "./_components/AdminHomepageTabs";
 import {
+  getFaqs,
   getHomepageData,
   getLegalDisclaimer,
   getTermsAndConditions,
@@ -10,17 +11,19 @@ import { DEFAULT_LEGAL_DISCLAIMER, DEFAULT_TERMS_AND_CONDITIONS } from "@/lib/le
 import type { LegalPageContent } from "@/types/api";
 
 export default async function AdminHomepagePage() {
-  const [homepageRes, productsRes, termsRes, legalDisclaimerRes] = await Promise.all([
+  const [homepageRes, productsRes, termsRes, legalDisclaimerRes, faqsRes] = await Promise.all([
     getHomepageData(),
     getAdminFreeProducts(1, 100),
     getTermsAndConditions(),
     getLegalDisclaimer(),
+    getFaqs(),
   ]);
   if (!homepageRes.success) throw new Error(homepageRes.message);
   if (!productsRes.success) throw new Error(productsRes.message);
 
   const { caseNumber, testimonialsCount, registrarsCount, contactEmail, contactPhone, youtubeLinks } =
     homepageRes.data;
+  const faqs = faqsRes.success ? faqsRes.data : [];
 
   // Nothing saved yet -> pre-fill the editor with the copy that used to be hardcoded on
   // the public page, so the admin can review and save it in one click instead of starting blank.
@@ -46,6 +49,7 @@ export default async function AdminHomepagePage() {
         freeProducts={productsRes.data.items}
         terms={terms}
         legalDisclaimer={legalDisclaimer}
+        faqs={faqs}
       />
     </section>
   );

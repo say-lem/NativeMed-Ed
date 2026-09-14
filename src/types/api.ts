@@ -484,6 +484,7 @@ export interface HomepageSettings {
   contactEmail?: string;
   contactPhone?: string;
   youtubeLinks: YoutubeLink[];
+  faqs: Faq[];
   createdAt: string;
   updatedAt: string;
 }
@@ -500,6 +501,22 @@ export interface UpdateHomepageStatsInput {
 export interface YoutubeLinkInput {
   title: string;
   url: string;
+  order?: number;
+}
+
+/** GET /homepage/faqs (public) — sorted by `order`. */
+export interface Faq {
+  _id: string;
+  question: string;
+  answer: string;
+  order: number;
+}
+
+/** Payload for POST /admin/homepage/faqs (question/answer required) and PATCH .../:faqId
+ *  (partial — at least one field). */
+export interface FaqInput {
+  question?: string;
+  answer?: string;
   order?: number;
 }
 

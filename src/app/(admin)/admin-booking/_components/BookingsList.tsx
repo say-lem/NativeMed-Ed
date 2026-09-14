@@ -1,18 +1,54 @@
-import { formatDate } from "@/lib/date";
+"use client";
+import { useState } from "react";
+import { byBookingTimeAsc, formatDate, isBookingPast } from "@/lib/date";
 import { formatMoney } from "@/lib/price";
 import type { AdminSessionBooking } from "@/types/api";
+
+type View = "upcoming" | "past";
 
 const rowGrid = "grid grid-cols-[1fr_1.4fr_120px_90px] items-center gap-6";
 
 export default function BookingsList({ bookings }: { bookings: AdminSessionBooking[] }) {
+  const [view, setView] = useState<View>("upcoming");
+
+  // A booking counts as upcoming until an hour after its start time, so an in-progress
+  // session doesn't immediately drop into the past list.
+  const upcoming = bookings.filter((b) => !isBookingPast(b.date, b.time)).sort(byBookingTimeAsc);
+  const past = bookings
+    .filter((b) => isBookingPast(b.date, b.time))
+    .sort((a, b) => byBookingTimeAsc(b, a));
+
+  const shown = view === "upcoming" ? upcoming : past;
+
   return (
     <div className="rounded-[16px] border border-[#EDEDED] p-4 sm:p-6">
-      <h2 className="text-lg font-semibold text-black-others">
-        All bookings ({bookings.length})
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold text-black-others">All bookings ({bookings.length})</h2>
+        <div className="inline-flex rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
+          {(
+            [
+              { id: "upcoming", label: `Upcoming (${upcoming.length})` },
+              { id: "past", label: `Past (${past.length})` },
+            ] as const
+          ).map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setView(t.id)}
+              className={`px-4 py-1.5 rounded-[6px] text-sm font-semibold cursor-pointer ${
+                view === t.id ? "bg-white shadow-sm text-primary-100" : "text-subtle-text"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-      {bookings.length === 0 ? (
-        <p className="text-center text-subtle-text py-10">No bookings yet.</p>
+      {shown.length === 0 ? (
+        <p className="text-center text-subtle-text py-10">
+          {view === "upcoming" ? "No upcoming bookings." : "No past bookings."}
+        </p>
       ) : (
         <div className="overflow-x-auto mt-5">
           <div className="min-w-[700px] flex flex-col">
@@ -22,11 +58,8 @@ export default function BookingsList({ bookings }: { bookings: AdminSessionBooki
               <span className="text-sm font-semibold text-black-others">Date</span>
               <span className="text-sm font-semibold text-black-others">Time</span>
             </div>
-            {bookings.map((booking) => (
-              <div
-                key={booking._id}
-                className={`${rowGrid} border-b border-[#EDEDED] px-4 py-4`}
-              >
+            {shown.map((booking) => (
+              <div key={booking._id} className={`${rowGrid} border-b border-[#EDEDED] px-4 py-4`}>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-black-others truncate">
                     {booking.userId?.fullName ?? "Deleted user"}
