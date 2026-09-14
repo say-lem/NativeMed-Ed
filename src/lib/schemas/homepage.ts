@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { UpdateHomepageStatsInput, YoutubeLinkInput } from "@/types/api";
+import type { FaqInput, UpdateHomepageStatsInput, YoutubeLinkInput } from "@/types/api";
 
 const wholeNumberField = z
   .string()
@@ -76,3 +76,34 @@ export const legalPageSchema = z.object({
 });
 
 export type LegalPageValues = z.infer<typeof legalPageSchema>;
+
+/** Mirrors the backend's Zod rules for the FAQ admin endpoints. */
+export const faqSchema = z.object({
+  question: z
+    .string()
+    .trim()
+    .min(1, "Question is required")
+    .max(500, "Question must be 500 characters or fewer"),
+  answer: z
+    .string()
+    .trim()
+    .min(1, "Answer is required")
+    .max(5000, "Answer must be 5000 characters or fewer"),
+  order: z.string().trim().regex(/^$|^\d+$/, "Order must be a whole non-negative number"),
+});
+
+export type FaqValues = z.infer<typeof faqSchema>;
+
+export const emptyFaqValues: FaqValues = {
+  question: "",
+  answer: "",
+  order: "",
+};
+
+export function faqPayload(values: FaqValues): FaqInput {
+  return {
+    question: values.question,
+    answer: values.answer,
+    order: values.order === "" ? undefined : Number(values.order),
+  };
+}

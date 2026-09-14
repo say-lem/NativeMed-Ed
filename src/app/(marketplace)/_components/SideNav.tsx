@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import SideNavLink from "./SideNavLinks";
 import {
   CoursesIcon,
@@ -27,13 +28,15 @@ export default function SideNav() {
         {/* <p className="font-semibold leading-[150%] text-black-others mt-5">
           Native Medical Education
         </p> */}
-        <Image
-          src={"/Images/main_logo.png"}
-          alt="NativeMed Logo"
-          width={100}
-          height={100}
-          className="w-20 lg:w-28 mix-blend-multiply"
-        />
+        <Link href="/">
+          <Image
+            src={"/Images/main_logo.png"}
+            alt="NativeMed Logo"
+            width={100}
+            height={100}
+            className="w-20 lg:w-28 mix-blend-multiply"
+          />
+        </Link>
       </aside>
 
       <aside className="pt-7">

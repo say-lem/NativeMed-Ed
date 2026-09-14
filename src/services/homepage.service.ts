@@ -2,6 +2,8 @@ import "server-only";
 import { api } from "@/lib/api";
 import type {
   ApiResponse,
+  Faq,
+  FaqInput,
   HomepageData,
   HomepageSettings,
   LegalPageContent,
@@ -86,5 +88,37 @@ export async function updateLegalDisclaimer(
     "/admin/homepage/legal-disclaimer",
     { content },
   );
+  return res.data;
+}
+
+/** GET /homepage/faqs — public. Sorted by `order`. No separate admin GET — the admin editor
+ *  reads this same list. */
+export async function getFaqs(): Promise<ApiResponse<Faq[]>> {
+  const res = await api.get<ApiResponse<Faq[]>>("/homepage/faqs");
+  return res.data;
+}
+
+/** POST /admin/homepage/faqs — admin. Returns the full settings document (same as
+ *  youtube-links), not just the new FAQ. */
+export async function addFaq(input: FaqInput): Promise<ApiResponse<HomepageSettings>> {
+  const res = await api.post<ApiResponse<HomepageSettings>>("/admin/homepage/faqs", input);
+  return res.data;
+}
+
+/** PATCH /admin/homepage/faqs/:faqId — admin. Partial; at least one field. */
+export async function updateFaq(
+  faqId: string,
+  input: FaqInput,
+): Promise<ApiResponse<HomepageSettings>> {
+  const res = await api.patch<ApiResponse<HomepageSettings>>(
+    `/admin/homepage/faqs/${faqId}`,
+    input,
+  );
+  return res.data;
+}
+
+/** DELETE /admin/homepage/faqs/:faqId — admin. */
+export async function deleteFaq(faqId: string): Promise<ApiResponse<HomepageSettings>> {
+  const res = await api.delete<ApiResponse<HomepageSettings>>(`/admin/homepage/faqs/${faqId}`);
   return res.data;
 }

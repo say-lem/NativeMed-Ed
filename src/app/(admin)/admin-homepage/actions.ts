@@ -3,8 +3,11 @@
 import axios from "axios";
 import { revalidatePath } from "next/cache";
 import {
+  addFaq,
   addYoutubeLink,
+  deleteFaq,
   deleteYoutubeLink,
+  updateFaq,
   updateHomepageStats,
   updateLegalDisclaimer,
   updateTermsAndConditions,
@@ -28,6 +31,9 @@ import {
   type YoutubeLinkValues,
   legalPageSchema,
   type LegalPageValues,
+  faqSchema,
+  faqPayload,
+  type FaqValues,
 } from "@/lib/schemas/homepage";
 import {
   freeProductLinkSchema,
@@ -175,6 +181,62 @@ export async function updateLegalDisclaimerAction(
     return { ok: true, message: "Legal disclaimer updated" };
   } catch (err) {
     return fail(err, "updateLegalDisclaimerAction", "Couldn't update the legal disclaimer.");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FAQs
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function addFaqAction(values: FaqValues): Promise<FormActionResult> {
+  const parsed = faqSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await addFaq(faqPayload(parsed.data));
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidateHomepage();
+    return { ok: true, message: "FAQ added" };
+  } catch (err) {
+    return fail(err, "addFaqAction", "Couldn't add the FAQ.");
+  }
+}
+
+export async function updateFaqAction(
+  id: string,
+  values: FaqValues,
+): Promise<FormActionResult> {
+  const parsed = faqSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await updateFaq(id, faqPayload(parsed.data));
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidateHomepage();
+    return { ok: true, message: "FAQ updated" };
+  } catch (err) {
+    return fail(err, "updateFaqAction", "Couldn't update the FAQ.");
+  }
+}
+
+export async function deleteFaqAction(id: string): Promise<FormActionResult> {
+  try {
+    const res = await deleteFaq(id);
+    if (!res.success) return { ok: false, message: res.message };
+    revalidateHomepage();
+    return { ok: true, message: "FAQ deleted" };
+  } catch (err) {
+    return fail(err, "deleteFaqAction", "Couldn't delete the FAQ.");
   }
 }
 

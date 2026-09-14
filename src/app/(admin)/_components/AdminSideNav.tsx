@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AdminSideNavLink from "./AdminSideNavLink";
 import { CalendarClock, CalendarDays, GraduationCap, Home, Star, Users as UsersIcon } from "lucide-react";
@@ -23,13 +24,15 @@ export default function AdminSideNav() {
   return (
     <div>
       <aside className="flex items-center px-5 justify-center">
-        <Image
-          src={"/Images/main_logo.png"}
-          alt="NativeMed Logo"
-          width={100}
-          height={100}
-          className="w-20 lg:w-28 mix-blend-multiply"
-        />
+        <Link href="/">
+          <Image
+            src={"/Images/main_logo.png"}
+            alt="NativeMed Logo"
+            width={100}
+            height={100}
+            className="w-20 lg:w-28 mix-blend-multiply"
+          />
+        </Link>
       </aside>
 
       <aside className="pt-7">

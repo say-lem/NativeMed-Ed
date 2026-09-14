@@ -4,14 +4,16 @@ import HomepageStatsForm from "./HomepageStatsForm";
 import YoutubeLinksManager from "./YoutubeLinksManager";
 import FreeProductsManager from "./FreeProductsManager";
 import LegalPagesManager from "./LegalPagesManager";
-import type { FreeProduct, LegalPageContent, YoutubeLink } from "@/types/api";
+import FaqsManager from "./FaqsManager";
+import type { Faq, FreeProduct, LegalPageContent, YoutubeLink } from "@/types/api";
 
-type Tab = "homepage" | "free-products" | "legal-pages";
+type Tab = "homepage" | "free-products" | "legal-pages" | "faqs";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "homepage", label: "Homepage" },
   { id: "free-products", label: "Free Products" },
   { id: "legal-pages", label: "Legal Pages" },
+  { id: "faqs", label: "FAQs" },
 ];
 
 export default function AdminHomepageTabs({
@@ -24,6 +26,7 @@ export default function AdminHomepageTabs({
   freeProducts,
   terms,
   legalDisclaimer,
+  faqs,
 }: {
   caseNumber: number;
   testimonialsCount: number;
@@ -34,6 +37,7 @@ export default function AdminHomepageTabs({
   freeProducts: FreeProduct[];
   terms: LegalPageContent;
   legalDisclaimer: LegalPageContent;
+  faqs: Faq[];
 }) {
   const [tab, setTab] = useState<Tab>("homepage");
 
@@ -70,6 +74,7 @@ export default function AdminHomepageTabs({
       {tab === "legal-pages" && (
         <LegalPagesManager terms={terms} legalDisclaimer={legalDisclaimer} />
       )}
+      {tab === "faqs" && <FaqsManager faqs={faqs} />}
     </div>
   );
 }
