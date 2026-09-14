@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
+import { useController, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { ChevronDown, Loader2, Upload } from "lucide-react";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/schemas/course";
 import { applyFieldErrors } from "@/lib/form-errors";
 import { LogoLoaderOverlay } from "@/components/shared/LogoLoader";
+import RichTextEditor from "@/components/shared/RichTextEditor";
 import { saveCourseAction, uploadCourseThumbnailAction } from "../actions";
 
 const fieldClass =
@@ -88,12 +89,20 @@ export default function UploadCourseForm({
     register,
     handleSubmit,
     setError,
+    control,
     formState: { errors },
   } = useForm<CourseFormValues>({
     // On edit the Drive links are optional — they're never returned by the API, so they
     // can't be prefilled, and an empty field is omitted from the PATCH.
     resolver: zodResolver(makeCourseSchema(isEdit ? "edit" : "create")),
     defaultValues: initialValues ?? emptyCourseValues,
+  });
+
+  // Stores markdown (bold/italic/headings/lists) — rendered back with the shared
+  // <Markdown> component wherever the detail page displays it.
+  const { field: detailedDescriptionField } = useController({
+    name: "detailedDescription",
+    control,
   });
 
   const onCover = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,7 +332,25 @@ export default function UploadCourseForm({
             className={`${fieldClass} resize-none`}
             {...register("description")}
           />
+          <p className="text-xs text-subtle-text">
+            Shown on course cards and listings — keep it brief.
+          </p>
           <FieldError message={errors.description?.message} />
+        </div>
+
+        {/* Detailed description */}
+        <div className="space-y-2">
+          <Label text="Detailed Description" />
+          <RichTextEditor
+            value={detailedDescriptionField.value ?? ""}
+            onChange={detailedDescriptionField.onChange}
+            placeholder="Enter a longer write-up for the course detail page (optional)"
+          />
+          <p className="text-xs text-subtle-text">
+            Shown on the course detail page only, not on cards. Leave blank to show just the
+            short description above.
+          </p>
+          <FieldError message={errors.detailedDescription?.message} />
         </div>
 
         <div className="flex flex-wrap justify-end gap-3 pt-2">

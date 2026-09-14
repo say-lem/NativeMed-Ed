@@ -21,6 +21,7 @@ export default function CasesListClient({
   totalResults,
   showSpecialty,
   initialSearch,
+  rootPath = "/full-cases",
 }: {
   title: string;
   parentSlug: string;
@@ -30,11 +31,13 @@ export default function CasesListClient({
   totalResults: number;
   showSpecialty: boolean;
   initialSearch: string;
+  /** Lets the public case-bank preview reuse this exact page with its own base path. */
+  rootPath?: string;
 }) {
   const router = useRouter();
   const [input, setInput] = useState(initialSearch);
   const [isPending, startTransition] = useTransition();
-  const basePath = `/full-cases/${parentSlug}`;
+  const basePath = `${rootPath}/${parentSlug}`;
 
   useEffect(() => {
     const trimmed = input.trim();
@@ -100,6 +103,7 @@ export default function CasesListClient({
           cases={cases}
           parentSlug={parentSlug}
           showSpecialty={showSpecialty}
+          rootPath={rootPath}
         />
 
         <Pagination

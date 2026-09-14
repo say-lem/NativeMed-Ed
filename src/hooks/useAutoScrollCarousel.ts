@@ -19,6 +19,10 @@ export function useAutoScrollCarousel(itemCount: number, pxPerSecond = 40) {
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
+    // A single item isn't duplicated by the caller (nothing to loop), so there's no
+    // second half to drift/wrap toward — auto-scrolling here would just make the one
+    // card jitter against its own width instead of sitting still.
+    if (itemCount <= 1) return;
 
     const initPos = () => {
       track.scrollLeft = track.scrollWidth / 2;
@@ -53,7 +57,7 @@ export function useAutoScrollCarousel(itemCount: number, pxPerSecond = 40) {
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", initPos);
     };
-  }, [pxPerSecond]);
+  }, [pxPerSecond, itemCount]);
 
   useEffect(() => {
     const track = trackRef.current;
