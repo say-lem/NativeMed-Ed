@@ -5,17 +5,21 @@ import { CalendarDays, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import { formatMoney } from "@/lib/price";
-import type { BookingProduct } from "@/types/api";
+import type { AdminBookingProduct } from "@/types/api";
 import BookingProductFormModal from "./BookingProductFormModal";
 import ManageDatesModal from "./ManageDatesModal";
 import { deleteBookingProductAction, setBookingProductPublishedAction } from "../actions";
 
-export default function BookingProductsManager({ products }: { products: BookingProduct[] }) {
+export default function BookingProductsManager({
+  products,
+}: {
+  products: AdminBookingProduct[];
+}) {
   const router = useRouter();
   const confirm = useConfirm();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
-  const [editing, setEditing] = useState<BookingProduct | null>(null);
+  const [editing, setEditing] = useState<AdminBookingProduct | null>(null);
   const [managingDatesId, setManagingDatesId] = useState<string | null>(null);
   const [, startAction] = useTransition();
 
@@ -23,7 +27,7 @@ export default function BookingProductsManager({ products }: { products: Booking
   // additions/removals immediately after each `router.refresh()`, instead of going stale.
   const managingDates = products.find((p) => p._id === managingDatesId) ?? null;
 
-  const togglePublished = (product: BookingProduct) => {
+  const togglePublished = (product: AdminBookingProduct) => {
     setBusyId(product._id);
     startAction(async () => {
       const res = await setBookingProductPublishedAction(product._id, !product.isPublished);
@@ -34,7 +38,7 @@ export default function BookingProductsManager({ products }: { products: Booking
     });
   };
 
-  const remove = async (product: BookingProduct) => {
+  const remove = async (product: AdminBookingProduct) => {
     const ok = await confirm({
       title: "Delete session product?",
       message: `"${product.title}" and every booking made against it will be permanently removed.`,
@@ -73,7 +77,11 @@ export default function BookingProductsManager({ products }: { products: Booking
         ) : (
           products.map((product) => {
             const busy = busyId === product._id;
-            const availableCount = product.availableDates.filter((d) => !d.isBooked).length;
+            // A date is still "open" if at least one of the product's times hasn't been
+            // booked on it — per-date/per-time availability, not the old whole-date flag.
+            const availableCount = product.availableDates.filter(
+              (d) => d.bookedTimes.length < product.availableTimes.length,
+            ).length;
             return (
               <div
                 key={product._id}

@@ -29,7 +29,8 @@ export default function OneOnOneCard({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-9 px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12">
       {products.map((product) => {
-        const openDates = product.availableDates.filter((d) => !d.isBooked).length;
+        // The public list already omits dates with zero available times.
+        const openDates = product.availableDates.length;
         return (
           <Link
             key={product._id}

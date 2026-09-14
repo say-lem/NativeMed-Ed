@@ -46,7 +46,7 @@ function Founder() {
                 FOUNDER
               </p>
             </div>
-          </aside>
+          </aside>1
         <aside className="w-full md:basis-3/5">
           <TitleCase text="About The Founder" />
           {aboutFounder({

@@ -39,7 +39,8 @@ export default async function OneOnOneSection() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {products.map((product) => {
-          const openDates = product.availableDates.filter((d) => !d.isBooked).length;
+          // The public list already omits dates with zero available times.
+          const openDates = product.availableDates.length;
           return (
             <Link
               key={product._id}

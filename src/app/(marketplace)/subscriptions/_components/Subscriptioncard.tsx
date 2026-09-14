@@ -15,9 +15,12 @@ export default function SubscriptionCard({ sub }: { sub: Subscription }) {
   const isCourse = sub.type === "course";
   const title = isCourse ? sub.courseId?.title ?? "Course" : "Case Bank Access";
   const thumb = isCourse ? sub.courseId?.thumbnailUrl : undefined;
-  const meta = statusMeta(sub.status);
-  // `past_due` keeps access, so the period end is still meaningful.
-  const endLabel = sub.cancelAtPeriodEnd ? "Access until" : "Renews on";
+  const meta = statusMeta(sub.status, sub.currentPeriodEnd);
+  // `past_due` keeps access, so the period end is still meaningful. Once `statusMeta` has
+  // relabelled a stale active/past_due as Expired, say so here too rather than showing a
+  // "Renews on"/"Access until" date that's already in the past.
+  const endLabel =
+    meta.label === "Expired" ? "Expired on" : sub.cancelAtPeriodEnd ? "Access until" : "Renews on";
 
   return (
     <div className="rounded-[16px] overflow-hidden courseBorder pb-4 bg-white flex flex-col">

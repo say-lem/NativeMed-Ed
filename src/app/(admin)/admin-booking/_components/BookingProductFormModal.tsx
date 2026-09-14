@@ -11,7 +11,7 @@ import {
   emptyBookingProductValues,
   type BookingProductValues,
 } from "@/lib/schemas/booking";
-import type { BookingProduct } from "@/types/api";
+import type { AdminBookingProduct } from "@/types/api";
 import { addBookingProductAction, updateBookingProductAction } from "../actions";
 
 const inputClass =
@@ -38,7 +38,7 @@ export default function BookingProductFormModal({
   onClose,
   onSaved,
 }: {
-  product?: BookingProduct;
+  product?: AdminBookingProduct;
   onClose: () => void;
   onSaved: () => void;
 }) {

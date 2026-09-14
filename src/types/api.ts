@@ -253,6 +253,10 @@ export interface Course {
   pricing?: CoursePricing;
   thumbnailUrl?: string;
   isPublished?: boolean;
+  /** New checkouts/plan changes are blocked while true — visibility (`isPublished`) and
+   *  existing subscriptions are untouched. Show the "payment not available" message
+   *  instead of a plan picker when set. */
+  paymentsPaused?: boolean;
   createdBy?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -623,15 +627,22 @@ export type CatalogProduct =
 // slot requires login; admin management at /admin/booking.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** One of the product's `availableTimes`, tagged for a specific date. */
+export interface BookingTimeSlot {
+  time: string;
+  isAvailable: boolean;
+}
+
+/** GET /booking, /booking/:id (public). Only dates with at least one available time are
+ *  included at all; `times` covers every one of the product's `availableTimes` so the
+ *  frontend can render the full set and disable the ones already booked on that date. */
 export interface BookingAvailableDate {
   _id: string;
   /** ISO 8601, day-only (time component is midnight UTC). */
   date: string;
-  isBooked: boolean;
+  times: BookingTimeSlot[];
 }
 
-/** GET /booking, /booking/:id (public — `availableDates` pre-filtered to unbooked only)
- *  and GET /admin/booking/products (admin — every date, booked or not). */
 export interface BookingProduct {
   _id: string;
   title: string;
@@ -644,6 +655,19 @@ export interface BookingProduct {
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+/** GET /admin/booking/products (admin) — the raw stored date entry, every date regardless
+ *  of booking state. `bookedTimes` is the subset of the product's `availableTimes` already
+ *  taken on this specific date. */
+export interface AdminBookingAvailableDate {
+  _id: string;
+  date: string;
+  bookedTimes: string[];
+}
+
+export interface AdminBookingProduct extends Omit<BookingProduct, "availableDates"> {
+  availableDates: AdminBookingAvailableDate[];
 }
 
 /** Payload for POST /admin/booking/products. */
@@ -681,6 +705,18 @@ export interface AdminSessionBooking {
   _id: string;
   productId: { _id: string; title: string; price: number } | null;
   userId: { _id: string; fullName: string; email: string } | null;
+  date: string;
+  time: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** GET /booking/me — auth. The signed-in user's own bookings, newest date first.
+ *  `productId` is `null` if the session product was since deleted. */
+export interface MyBooking {
+  _id: string;
+  productId: { _id: string; title: string; description: string; price: number } | null;
+  userId: string;
   date: string;
   time: string;
   createdAt: string;

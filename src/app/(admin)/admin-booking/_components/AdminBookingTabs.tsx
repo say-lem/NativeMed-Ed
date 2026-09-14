@@ -2,7 +2,7 @@
 import { useState } from "react";
 import BookingProductsManager from "./BookingProductsManager";
 import BookingsList from "./BookingsList";
-import type { AdminSessionBooking, BookingProduct } from "@/types/api";
+import type { AdminBookingProduct, AdminSessionBooking } from "@/types/api";
 
 type Tab = "products" | "bookings";
 
@@ -15,7 +15,7 @@ export default function AdminBookingTabs({
   products,
   bookings,
 }: {
-  products: BookingProduct[];
+  products: AdminBookingProduct[];
   bookings: AdminSessionBooking[];
 }) {
   const [tab, setTab] = useState<Tab>("products");

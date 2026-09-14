@@ -1,11 +1,13 @@
 import "server-only";
 import { api } from "@/lib/api";
 import type {
+  AdminBookingProduct,
   AdminSessionBooking,
   ApiResponse,
   BookingProduct,
   BookSessionInput,
   CreateBookingProductInput,
+  MyBooking,
   Paginated,
   SessionBooking,
   UpdateBookingProductInput,
@@ -59,6 +61,17 @@ export async function bookSession(
   return res.data;
 }
 
+/** GET /booking/me — auth. The signed-in user's own bookings, newest date first. */
+export async function getMyBookings(
+  page = 1,
+  limit = 20,
+): Promise<ApiResponse<Paginated<MyBooking>>> {
+  const res = await api.get<ApiResponse<Paginated<MyBooking>>>("/booking/me", {
+    params: { page, limit },
+  });
+  return res.data;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Admin — products
 // ─────────────────────────────────────────────────────────────────────────────
@@ -67,18 +80,22 @@ export async function bookSession(
 export async function getAdminBookingProducts(
   page = 1,
   limit = 20,
-): Promise<ApiResponse<Paginated<BookingProduct>>> {
-  const res = await api.get<ApiResponse<Paginated<BookingProduct>>>("/admin/booking/products", {
-    params: { page, limit },
-  });
+): Promise<ApiResponse<Paginated<AdminBookingProduct>>> {
+  const res = await api.get<ApiResponse<Paginated<AdminBookingProduct>>>(
+    "/admin/booking/products",
+    { params: { page, limit } },
+  );
   return res.data;
 }
 
 /** POST /admin/booking/products — admin. */
 export async function createBookingProduct(
   input: CreateBookingProductInput,
-): Promise<ApiResponse<BookingProduct>> {
-  const res = await api.post<ApiResponse<BookingProduct>>("/admin/booking/products", input);
+): Promise<ApiResponse<AdminBookingProduct>> {
+  const res = await api.post<ApiResponse<AdminBookingProduct>>(
+    "/admin/booking/products",
+    input,
+  );
   return res.data;
 }
 
@@ -86,8 +103,8 @@ export async function createBookingProduct(
 export async function updateBookingProduct(
   id: string,
   input: UpdateBookingProductInput,
-): Promise<ApiResponse<BookingProduct>> {
-  const res = await api.patch<ApiResponse<BookingProduct>>(
+): Promise<ApiResponse<AdminBookingProduct>> {
+  const res = await api.patch<ApiResponse<AdminBookingProduct>>(
     `/admin/booking/products/${id}`,
     input,
   );
@@ -98,8 +115,8 @@ export async function updateBookingProduct(
 export async function setBookingProductPublished(
   id: string,
   isPublished: boolean,
-): Promise<ApiResponse<BookingProduct>> {
-  const res = await api.patch<ApiResponse<BookingProduct>>(
+): Promise<ApiResponse<AdminBookingProduct>> {
+  const res = await api.patch<ApiResponse<AdminBookingProduct>>(
     `/admin/booking/products/${id}/${isPublished ? "publish" : "unpublish"}`,
   );
   return res.data;
@@ -119,20 +136,20 @@ export async function deleteBookingProduct(id: string): Promise<ApiResponse<null
 export async function addAvailableDate(
   id: string,
   date: string,
-): Promise<ApiResponse<BookingProduct>> {
-  const res = await api.post<ApiResponse<BookingProduct>>(
+): Promise<ApiResponse<AdminBookingProduct>> {
+  const res = await api.post<ApiResponse<AdminBookingProduct>>(
     `/admin/booking/products/${id}/dates`,
     { date },
   );
   return res.data;
 }
 
-/** DELETE /admin/booking/products/:id/dates/:dateId — admin. 400 if already booked. */
+/** DELETE /admin/booking/products/:id/dates/:dateId — admin. 400 if the date has any bookings. */
 export async function removeAvailableDate(
   id: string,
   dateId: string,
-): Promise<ApiResponse<BookingProduct>> {
-  const res = await api.delete<ApiResponse<BookingProduct>>(
+): Promise<ApiResponse<AdminBookingProduct>> {
+  const res = await api.delete<ApiResponse<AdminBookingProduct>>(
     `/admin/booking/products/${id}/dates/${dateId}`,
   );
   return res.data;

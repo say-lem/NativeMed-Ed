@@ -5,22 +5,38 @@ import { Loader2, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import { formatDate } from "@/lib/date";
-import type { BookingProduct } from "@/types/api";
-import { addAvailableDateAction, removeAvailableDateAction } from "../actions";
+import type { AdminBookingProduct } from "@/types/api";
+import {
+  addAvailableDateAction,
+  addAvailableDateRangeAction,
+  removeAvailableDateAction,
+} from "../actions";
 
 const inputClass =
   "border-[0.5px] rounded-[8px] px-4 py-2.5 border-secondary-20 w-full outline-none focus:border-primary-100 text-black-others";
+
+type Mode = "single" | "range";
+
+/** UTC yyyy-mm-dd, matching how dates are stored — used as the date inputs' `min` so a
+ *  past date can't be added to the pool in the first place. */
+function todayValue(): string {
+  const now = new Date();
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}-${String(now.getUTCDate()).padStart(2, "0")}`;
+}
 
 export default function ManageDatesModal({
   product,
   onClose,
 }: {
-  product: BookingProduct;
+  product: AdminBookingProduct;
   onClose: () => void;
 }) {
   const router = useRouter();
   const confirm = useConfirm();
+  const [mode, setMode] = useState<Mode>("single");
   const [date, setDate] = useState("");
+  const [rangeFrom, setRangeFrom] = useState("");
+  const [rangeTo, setRangeTo] = useState("");
   const [adding, startAdd] = useTransition();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [, startRemove] = useTransition();
@@ -42,6 +58,24 @@ export default function ManageDatesModal({
         router.refresh();
       } else {
         toast.error(res.message ?? "Couldn't add the date.");
+      }
+    });
+  };
+
+  const addRange = () => {
+    if (!rangeFrom || !rangeTo) {
+      toast.error("Choose both a start and end date");
+      return;
+    }
+    startAdd(async () => {
+      const res = await addAvailableDateRangeAction(product._id, rangeFrom, rangeTo);
+      if (res.ok) {
+        toast.success(res.message ?? "Dates added");
+        setRangeFrom("");
+        setRangeTo("");
+        router.refresh();
+      } else {
+        toast.error(res.message ?? "Couldn't add that range.");
       }
     });
   };
@@ -89,23 +123,79 @@ export default function ManageDatesModal({
         <h2 className="text-lg font-semibold text-black-others">Manage Dates</h2>
         <p className="mt-1 text-sm text-subtle-text">{product.title}</p>
 
-        <div className="mt-5 flex items-center gap-2">
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className={inputClass}
-          />
-          <button
-            type="button"
-            onClick={add}
-            disabled={adding}
-            className="shrink-0 grid place-items-center size-10 rounded-[8px] bg-primary-100 text-white cursor-pointer disabled:opacity-60"
-            aria-label="Add date"
-          >
-            {adding ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
-          </button>
+        <div className="mt-5 inline-flex rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
+          {(["single", "range"] as Mode[]).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className={`px-4 py-1.5 rounded-[6px] text-sm font-medium cursor-pointer ${
+                mode === m ? "bg-white shadow-sm text-primary-100" : "text-subtle-text"
+              }`}
+            >
+              {m === "single" ? "Single Date" : "Date Range"}
+            </button>
+          ))}
         </div>
+
+        {mode === "single" ? (
+          <div className="mt-3 flex items-center gap-2">
+            <input
+              type="date"
+              min={todayValue()}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className={inputClass}
+            />
+            <button
+              type="button"
+              onClick={add}
+              disabled={adding}
+              className="shrink-0 grid place-items-center size-10 rounded-[8px] bg-primary-100 text-white cursor-pointer disabled:opacity-60"
+              aria-label="Add date"
+            >
+              {adding ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            </button>
+          </div>
+        ) : (
+          <div className="mt-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <div className="flex-1 space-y-1">
+                <label className="text-xs text-subtle-text">From</label>
+                <input
+                  type="date"
+                  min={todayValue()}
+                  value={rangeFrom}
+                  onChange={(e) => setRangeFrom(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+              <div className="flex-1 space-y-1">
+                <label className="text-xs text-subtle-text">To</label>
+                <input
+                  type="date"
+                  min={rangeFrom || todayValue()}
+                  value={rangeTo}
+                  onChange={(e) => setRangeTo(e.target.value)}
+                  className={inputClass}
+                />
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={addRange}
+              disabled={adding}
+              className="w-full flex items-center justify-center gap-1.5 rounded-[8px] bg-primary-100 text-white text-sm font-semibold py-2.5 cursor-pointer disabled:opacity-60"
+            >
+              {adding && <Loader2 size={14} className="animate-spin" />}
+              {adding ? "Adding..." : "Add Every Date in Range"}
+            </button>
+            <p className="text-xs text-subtle-text">
+              Adds every day from start to end, inclusive. Dates already in the pool are
+              skipped automatically.
+            </p>
+          </div>
+        )}
 
         <div className="mt-5 divide-y divide-[#EDEDED] max-h-[300px] overflow-y-auto">
           {sorted.length === 0 ? (
@@ -114,21 +204,36 @@ export default function ManageDatesModal({
             sorted.map((d) => {
               const busy = busyId === d._id;
               const label = formatDate(d.date);
+              const hasBookings = d.bookedTimes.length > 0;
               return (
                 <div key={d._id} className="flex items-center justify-between gap-3 py-3">
-                  <div className="flex items-center gap-2">
+                  <div className="min-w-0">
                     <span className="text-sm text-black-others">{label}</span>
-                    {d.isBooked && (
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-subtle-text">
-                        Booked
-                      </span>
+                    {product.availableTimes.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {product.availableTimes.map((time) => {
+                          const isBooked = d.bookedTimes.includes(time);
+                          return (
+                            <span
+                              key={time}
+                              className={`text-xs rounded-full px-2 py-0.5 ${
+                                isBooked
+                                  ? "bg-gray-100 text-subtle-text line-through"
+                                  : "bg-primary-10 text-primary-100"
+                              }`}
+                            >
+                              {time}
+                            </span>
+                          );
+                        })}
+                      </div>
                     )}
                   </div>
                   <button
                     type="button"
                     onClick={() => remove(d._id, label)}
-                    disabled={busy || d.isBooked}
-                    title={d.isBooked ? "Booked dates can't be removed here" : "Remove date"}
+                    disabled={busy || hasBookings}
+                    title={hasBookings ? "Dates with bookings can't be removed here" : "Remove date"}
                     className="shrink-0 grid place-items-center size-8 rounded-[8px] border border-[#FFC9C9] text-[#C11616] hover:bg-[#FFE6E6] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {busy ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}

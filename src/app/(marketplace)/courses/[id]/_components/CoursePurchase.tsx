@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, MailWarning } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { startCourseCheckout } from "../actions";
@@ -30,9 +30,11 @@ const TIER_FALLBACK_DESCRIPTION: Record<CourseTier, string> = {
 export default function CoursePurchase({
   course,
   plans,
+  contactEmail,
 }: {
   course: Course;
   plans: PaymentPlan[];
+  contactEmail: string | null;
 }) {
   /**
    * Tier name/description come from `/payments/plans` (course plans return `prices: []`),
@@ -103,6 +105,29 @@ export default function CoursePurchase({
       toast.error(res.message ?? "Couldn't start checkout.");
     });
   };
+
+  // Admin has paused new checkouts/plan changes for this course. Existing subscribers keep
+  // access — this only blocks someone new from clicking through to pay.
+  if (course.paymentsPaused) {
+    return (
+      <div className="flex items-start gap-3 rounded-[16px] border border-[#FFC9C9] bg-[#FFF5F5] p-5">
+        <MailWarning size={20} className="text-[#C11616] shrink-0 mt-0.5" />
+        <p className="text-sm sm:text-base leading-[150%] text-[#7A1010]">
+          Payment is not available at this time for this course. Please contact admin team
+          for more info
+          {contactEmail && (
+            <>
+              <br />
+              email:{" "}
+              <a href={`mailto:${contactEmail}`} className="font-semibold underline">
+                {contactEmail}
+              </a>
+            </>
+          )}
+        </p>
+      </div>
+    );
+  }
 
   // No tier has a price — the course isn't buyable. Real case: legacy courses came through
   // the 2026-08-10 migration with no `pricing` object at all.
