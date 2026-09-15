@@ -12,9 +12,7 @@ const fustat = Fustat({
 
 export const metadata: Metadata = {
   title: "Native Med",
-  icons: {
-    icon: "/Images/main_logo.png",
-  },
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({
