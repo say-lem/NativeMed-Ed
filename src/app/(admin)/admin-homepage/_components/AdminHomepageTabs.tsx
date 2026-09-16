@@ -4,16 +4,19 @@ import HomepageStatsForm from "./HomepageStatsForm";
 import YoutubeLinksManager from "./YoutubeLinksManager";
 import FreeProductsManager from "./FreeProductsManager";
 import LegalPagesManager from "./LegalPagesManager";
+import LegalPageEditor from "./LegalPageEditor";
 import FaqsManager from "./FaqsManager";
+import { updateFounderBioAction } from "../actions";
 import type { Faq, FreeProduct, LegalPageContent, YoutubeLink } from "@/types/api";
 
-type Tab = "homepage" | "free-products" | "legal-pages" | "faqs";
+type Tab = "homepage" | "free-products" | "legal-pages" | "faqs" | "founder";
 
 const TABS: { id: Tab; label: string }[] = [
   { id: "homepage", label: "Homepage" },
   { id: "free-products", label: "Free Products" },
   { id: "legal-pages", label: "Legal Pages" },
   { id: "faqs", label: "FAQs" },
+  { id: "founder", label: "About the Founder" },
 ];
 
 export default function AdminHomepageTabs({
@@ -26,7 +29,9 @@ export default function AdminHomepageTabs({
   freeProducts,
   terms,
   legalDisclaimer,
+  privacyPolicy,
   faqs,
+  founderBio,
 }: {
   caseNumber: number;
   testimonialsCount: number;
@@ -37,7 +42,9 @@ export default function AdminHomepageTabs({
   freeProducts: FreeProduct[];
   terms: LegalPageContent;
   legalDisclaimer: LegalPageContent;
+  privacyPolicy: LegalPageContent;
   faqs: Faq[];
+  founderBio: LegalPageContent;
 }) {
   const [tab, setTab] = useState<Tab>("homepage");
 
@@ -72,9 +79,22 @@ export default function AdminHomepageTabs({
       )}
       {tab === "free-products" && <FreeProductsManager products={freeProducts} />}
       {tab === "legal-pages" && (
-        <LegalPagesManager terms={terms} legalDisclaimer={legalDisclaimer} />
+        <LegalPagesManager
+          terms={terms}
+          legalDisclaimer={legalDisclaimer}
+          privacyPolicy={privacyPolicy}
+        />
       )}
       {tab === "faqs" && <FaqsManager faqs={faqs} />}
+      {tab === "founder" && (
+        <LegalPageEditor
+          key="founder-bio"
+          title="About the Founder"
+          initialContent={founderBio.content}
+          updatedAt={founderBio.updatedAt}
+          action={updateFounderBioAction}
+        />
+      )}
     </div>
   );
 }

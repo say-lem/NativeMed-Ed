@@ -8,8 +8,10 @@ import {
   deleteFaq,
   deleteYoutubeLink,
   updateFaq,
+  updateFounderBio,
   updateHomepageStats,
   updateLegalDisclaimer,
+  updatePrivacyPolicy,
   updateTermsAndConditions,
   updateYoutubeLink,
 } from "@/services/homepage.service";
@@ -181,6 +183,54 @@ export async function updateLegalDisclaimerAction(
     return { ok: true, message: "Legal disclaimer updated" };
   } catch (err) {
     return fail(err, "updateLegalDisclaimerAction", "Couldn't update the legal disclaimer.");
+  }
+}
+
+export async function updatePrivacyPolicyAction(
+  values: LegalPageValues,
+): Promise<FormActionResult> {
+  const parsed = legalPageSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await updatePrivacyPolicy(parsed.data.content);
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidatePath("/admin-homepage");
+    revalidatePath("/privacy-policy");
+    return { ok: true, message: "Privacy policy updated" };
+  } catch (err) {
+    return fail(err, "updatePrivacyPolicyAction", "Couldn't update the privacy policy.");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// About the Founder
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function updateFounderBioAction(
+  values: LegalPageValues,
+): Promise<FormActionResult> {
+  const parsed = legalPageSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await updateFounderBio(parsed.data.content);
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidatePath("/admin-homepage");
+    revalidatePath("/about");
+    return { ok: true, message: "Founder's bio updated" };
+  } catch (err) {
+    return fail(err, "updateFounderBioAction", "Couldn't update the founder's bio.");
   }
 }
 

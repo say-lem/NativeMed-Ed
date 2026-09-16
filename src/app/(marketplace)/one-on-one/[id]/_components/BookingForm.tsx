@@ -4,9 +4,10 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import type { BookingProduct, BookingTimeSlot } from "@/types/api";
+import type { BookingProduct, BookingTimeSlot, User } from "@/types/api";
 import { bookSessionAction } from "../actions";
 import AvailabilityCalendar from "./AvailabilityCalendar";
+import RequestSlotForm from "./RequestSlotForm";
 
 /** yyyy-mm-dd from an ISO string, for the backend's `date` field. */
 function toDateValue(iso: string): string {
@@ -19,7 +20,13 @@ function toMinutes(time: string): number {
   return h * 60 + m;
 }
 
-export default function BookingForm({ product }: { product: BookingProduct }) {
+export default function BookingForm({
+  product,
+  user,
+}: {
+  product: BookingProduct;
+  user: User | null;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -88,11 +95,7 @@ export default function BookingForm({ product }: { product: BookingProduct }) {
   };
 
   if (dateEntries.length === 0) {
-    return (
-      <p className="text-sm text-subtle-text">
-        No dates are currently available for this session. Please check back soon.
-      </p>
-    );
+    return <RequestSlotForm productId={product._id} user={user} />;
   }
 
   return (

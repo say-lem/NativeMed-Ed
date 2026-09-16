@@ -694,6 +694,11 @@ export interface BookingProduct {
   _id: string;
   title: string;
   description: string;
+  /** Longer-form write-up shown on the session's detail page — `description` stays the
+   *  short summary used in listings/cards. Markdown, same convention as course/case-bank
+   *  overview `detailedDescription`. */
+  detailedDescription?: string;
+  imageUrl?: string;
   price: number;
   /** Reusable HH:mm options offered on every date in the pool. */
   availableTimes: string[];
@@ -721,6 +726,7 @@ export interface AdminBookingProduct extends Omit<BookingProduct, "availableDate
 export interface CreateBookingProductInput {
   title: string;
   description: string;
+  detailedDescription?: string;
   price: number;
   availableTimes?: string[];
   isPublished?: boolean;
@@ -793,6 +799,51 @@ export interface MyBooking {
   time: string;
   stripeCheckoutSessionId?: string;
   status: SessionBookingStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Slot availability requests — a user reaching out about a BookingProduct that
+// currently has no open (date, time) slot. Only accepted when the product genuinely
+// has nothing bookable — POST /booking/:id/request-slot 400s otherwise.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type SlotRequestStatus = "pending" | "resolved";
+
+/** Payload for POST /booking/:id/request-slot. `preferredDates` — 1 to 10 dates,
+ *  yyyy-mm-dd (coerced to Date backend-side). `examSitting` is `MM/YY`, same format/regex
+ *  as `User.examSitting`. */
+export interface RequestSlotAvailabilityInput {
+  name: string;
+  email: string;
+  examSitting: string;
+  preferredDates: string[];
+}
+
+export interface SlotAvailabilityRequest {
+  _id: string;
+  productId: string;
+  userId: string;
+  name: string;
+  email: string;
+  examSitting: string;
+  preferredDates: string[];
+  status: SlotRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** GET /admin/booking/slot-requests — productId/userId populated. */
+export interface AdminSlotAvailabilityRequest {
+  _id: string;
+  productId: { _id: string; title: string } | null;
+  userId: { _id: string; fullName: string; email: string } | null;
+  name: string;
+  email: string;
+  examSitting: string;
+  preferredDates: string[];
+  status: SlotRequestStatus;
   createdAt: string;
   updatedAt: string;
 }

@@ -1,22 +1,29 @@
 "use client";
 import { useState } from "react";
 import LegalPageEditor from "./LegalPageEditor";
-import { updateLegalDisclaimerAction, updateTermsAndConditionsAction } from "../actions";
+import {
+  updateLegalDisclaimerAction,
+  updatePrivacyPolicyAction,
+  updateTermsAndConditionsAction,
+} from "../actions";
 import type { LegalPageContent } from "@/types/api";
 
-type LegalTab = "terms" | "legal-disclaimer";
+type LegalTab = "terms" | "legal-disclaimer" | "privacy-policy";
 
 const TABS: { id: LegalTab; label: string }[] = [
   { id: "terms", label: "Terms & Conditions" },
   { id: "legal-disclaimer", label: "Legal Disclaimer" },
+  { id: "privacy-policy", label: "Privacy Policy" },
 ];
 
 export default function LegalPagesManager({
   terms,
   legalDisclaimer,
+  privacyPolicy,
 }: {
   terms: LegalPageContent;
   legalDisclaimer: LegalPageContent;
+  privacyPolicy: LegalPageContent;
 }) {
   const [tab, setTab] = useState<LegalTab>("terms");
 
@@ -37,7 +44,7 @@ export default function LegalPagesManager({
         ))}
       </div>
 
-      {tab === "terms" ? (
+      {tab === "terms" && (
         <LegalPageEditor
           key="terms"
           title="Terms & Conditions"
@@ -45,13 +52,23 @@ export default function LegalPagesManager({
           updatedAt={terms.updatedAt}
           action={updateTermsAndConditionsAction}
         />
-      ) : (
+      )}
+      {tab === "legal-disclaimer" && (
         <LegalPageEditor
           key="legal-disclaimer"
           title="Legal Disclaimer"
           initialContent={legalDisclaimer.content}
           updatedAt={legalDisclaimer.updatedAt}
           action={updateLegalDisclaimerAction}
+        />
+      )}
+      {tab === "privacy-policy" && (
+        <LegalPageEditor
+          key="privacy-policy"
+          title="Privacy Policy"
+          initialContent={privacyPolicy.content}
+          updatedAt={privacyPolicy.updatedAt}
+          action={updatePrivacyPolicyAction}
         />
       )}
     </div>

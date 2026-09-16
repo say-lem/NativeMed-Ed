@@ -2,21 +2,38 @@ import AdminHomepageHero from "./_components/AdminHomepageHero";
 import AdminHomepageTabs from "./_components/AdminHomepageTabs";
 import {
   getFaqs,
+  getFounderBio,
   getHomepageData,
   getLegalDisclaimer,
+  getPrivacyPolicy,
   getTermsAndConditions,
 } from "@/services/homepage.service";
 import { getAdminFreeProducts } from "@/services/freeProducts.service";
-import { DEFAULT_LEGAL_DISCLAIMER, DEFAULT_TERMS_AND_CONDITIONS } from "@/lib/legal-content";
+import {
+  DEFAULT_FOUNDER_BIO,
+  DEFAULT_LEGAL_DISCLAIMER,
+  DEFAULT_PRIVACY_POLICY,
+  DEFAULT_TERMS_AND_CONDITIONS,
+} from "@/lib/legal-content";
 import type { LegalPageContent } from "@/types/api";
 
 export default async function AdminHomepagePage() {
-  const [homepageRes, productsRes, termsRes, legalDisclaimerRes, faqsRes] = await Promise.all([
+  const [
+    homepageRes,
+    productsRes,
+    termsRes,
+    legalDisclaimerRes,
+    privacyPolicyRes,
+    faqsRes,
+    founderBioRes,
+  ] = await Promise.all([
     getHomepageData(),
     getAdminFreeProducts(1, 100),
     getTermsAndConditions(),
     getLegalDisclaimer(),
+    getPrivacyPolicy(),
     getFaqs(),
+    getFounderBio(),
   ]);
   if (!homepageRes.success) throw new Error(homepageRes.message);
   if (!productsRes.success) throw new Error(productsRes.message);
@@ -35,6 +52,14 @@ export default async function AdminHomepagePage() {
     legalDisclaimerRes.success && legalDisclaimerRes.data.content
       ? legalDisclaimerRes.data
       : { content: DEFAULT_LEGAL_DISCLAIMER, updatedAt: null };
+  const privacyPolicy: LegalPageContent =
+    privacyPolicyRes.success && privacyPolicyRes.data.content
+      ? privacyPolicyRes.data
+      : { content: DEFAULT_PRIVACY_POLICY, updatedAt: null };
+  const founderBio: LegalPageContent =
+    founderBioRes.success && founderBioRes.data.content
+      ? founderBioRes.data
+      : { content: DEFAULT_FOUNDER_BIO, updatedAt: null };
 
   return (
     <section>
@@ -49,7 +74,9 @@ export default async function AdminHomepagePage() {
         freeProducts={productsRes.data.items}
         terms={terms}
         legalDisclaimer={legalDisclaimer}
+        privacyPolicy={privacyPolicy}
         faqs={faqs}
+        founderBio={founderBio}
       />
     </section>
   );

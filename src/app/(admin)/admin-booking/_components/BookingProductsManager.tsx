@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { CalendarDays, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
@@ -87,7 +88,23 @@ export default function BookingProductsManager({
                 key={product._id}
                 className="flex flex-wrap items-center justify-between gap-3 py-4"
               >
-                <div className="min-w-0">
+                <div className="flex items-center gap-3 min-w-0">
+                  {product.imageUrl ? (
+                    <div className="relative size-11 rounded-[8px] overflow-hidden shrink-0 border border-[#EDEDED]">
+                      <Image
+                        src={product.imageUrl}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="44px"
+                      />
+                    </div>
+                  ) : (
+                    <span className="grid place-items-center size-11 rounded-[8px] bg-primary-10 text-primary-100 shrink-0">
+                      <CalendarDays size={18} />
+                    </span>
+                  )}
+                  <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="text-sm font-semibold text-black-others truncate">
                       {product.title}
@@ -109,6 +126,7 @@ export default function BookingProductsManager({
                     {product.availableTimes.length} time
                     {product.availableTimes.length === 1 ? "" : "s"}
                   </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <button

@@ -3,8 +3,13 @@
 import axios from "axios";
 import { revalidatePath } from "next/cache";
 import { getOrigin } from "@/lib/checkout";
-import { bookSession } from "@/services/booking.service";
-import type { ApiFailure } from "@/types/api";
+import { bookSession, requestSlotAvailability } from "@/services/booking.service";
+import {
+  slotAvailabilityRequestSchema,
+  slotAvailabilityRequestPayload,
+  type SlotAvailabilityRequestValues,
+} from "@/lib/schemas/booking";
+import type { ApiFailure, FormActionResult } from "@/types/api";
 
 export interface BookSessionActionResult {
   ok: boolean;
@@ -51,6 +56,37 @@ export async function bookSessionAction(
       return { ok: false, message: data?.message ?? "Couldn't book that session." };
     }
     console.error("[bookSessionAction] unexpected error:", err);
+    return { ok: false, message: "Something went wrong." };
+  }
+}
+
+/**
+ * Lets a user reach out about a session with no open slot right now. The backend only
+ * accepts this when the product genuinely has nothing bookable — 400s otherwise.
+ */
+export async function requestSlotAvailabilityAction(
+  productId: string,
+  values: SlotAvailabilityRequestValues,
+): Promise<FormActionResult> {
+  const parsed = slotAvailabilityRequestSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await requestSlotAvailability(productId, slotAvailabilityRequestPayload(parsed.data));
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    return { ok: true, message: res.message };
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const data = err.response?.data as ApiFailure | undefined;
+      console.error("[requestSlotAvailabilityAction] axios error:", err.code, err.message);
+      return { ok: false, message: data?.message ?? "Couldn't send your request." };
+    }
+    console.error("[requestSlotAvailabilityAction] unexpected error:", err);
     return { ok: false, message: "Something went wrong." };
   }
 }
