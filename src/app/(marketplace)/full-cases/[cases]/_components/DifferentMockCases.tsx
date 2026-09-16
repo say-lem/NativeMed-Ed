@@ -34,10 +34,13 @@ export default function DifferentMockCases({
   cases,
   parentSlug,
   showSpecialty = false,
+  rootPath = "/full-cases",
 }: {
   cases: Case[];
   parentSlug: string;
   showSpecialty?: boolean;
+  /** Lets the public case-bank preview reuse this exact list with its own base path. */
+  rootPath?: string;
 }) {
   if (cases.length === 0) {
     return (
@@ -55,7 +58,7 @@ export default function DifferentMockCases({
 
         return (
           <Link
-            href={`/full-cases/${parentSlug}/${c._id}`}
+            href={`${rootPath}/${parentSlug}/${c._id}`}
             key={c._id}
             className="flex justify-between border-b-[0.5px] px-2 sm:px-4 py-4 sm:py-6 border-gray-2 gap-4"
           >

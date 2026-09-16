@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Markdown } from "@/components/shared/Markdown";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import CoursePurchase from "./_components/CoursePurchase";
@@ -139,6 +140,19 @@ export default async function CourseDetailPage({ params }: PageProps) {
           )}
         </aside>
       </div>
+
+      {/* Longer write-up — outside the hero card, shown only when the admin has set one.
+          Stored as markdown from the admin's rich-text editor. */}
+      {course.detailedDescription && (
+        <div className="space-y-3">
+          <h2 className="font-semibold text-xl sm:text-2xl text-black-others">
+            About this course
+          </h2>
+          <Markdown className="text-sm sm:text-base text-[#373737]">
+            {course.detailedDescription}
+          </Markdown>
+        </div>
+      )}
 
       {/* No access → choose a plan (access users get the CTA in the top bar) */}
       {!access.hasAccess && (

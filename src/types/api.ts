@@ -220,6 +220,30 @@ export interface CaseInput {
   furtherResources: FurtherResource[];
 }
 
+/** GET /cases/overview (public) and GET /cases/admin/overview (admin) — the case bank
+ *  presented as a product (title/description/cover image), independent of individual
+ *  cases. A singleton — always exactly one. `imageUrl` is absent until an admin uploads
+ *  one; `title`/`description` default to "Case Bank Access" / a generic blurb.
+ *  `detailedDescription` is a longer write-up for the case bank's own product page
+ *  (`/products/case-bank`) — absent until an admin sets it, and deliberately NOT part
+ *  of the catalog listing (same split as `Course.detailedDescription`). */
+export interface CaseBankOverview {
+  _id: string;
+  title: string;
+  description: string;
+  detailedDescription?: string;
+  imageUrl?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Payload for PATCH /cases/admin/overview — at least one field required. */
+export interface UpdateCaseBankOverviewInput {
+  title?: string;
+  description?: string;
+  detailedDescription?: string;
+}
+
 /** Course access tier (`type: "course"` subscriptions + enrollments). Renamed by the
  *  backend 2026-08-07 from `pdf_only`/`pdf_drive`. Labels live in `@/lib/tiers`. */
 export type CourseTier = "mocksessions_only" | "mocksession_and_lectures";
@@ -248,7 +272,10 @@ export type CoursePricing = Partial<Record<CourseTier, TierPricing>>;
 export interface Course {
   _id: string;
   title: string;
+  /** Short summary — shown on course cards/listings. */
   description?: string;
+  /** Longer-form write-up — shown on the course detail page only, never inside a card. */
+  detailedDescription?: string;
   /** Absent on some legacy courses — treat as "not purchasable". */
   pricing?: CoursePricing;
   thumbnailUrl?: string;
@@ -282,6 +309,7 @@ export interface AdminCourse extends Course {
 export interface CourseInput {
   title: string;
   description?: string;
+  detailedDescription?: string;
   pricing?: CoursePricing;
   /** Full Drive folder URL or a raw folder ID — backend extracts the ID. */
   lecturesDriveFolderId?: string;
@@ -624,11 +652,13 @@ export interface CatalogOneOnOneProduct {
   price: number;
 }
 
-/** Always exactly one entry, and it has no `_id` — the case bank isn't a persisted doc. */
+/** Always exactly one entry, and it has no `_id` — the case bank isn't a persisted doc.
+ *  `title`/`description`/`imageUrl` come from the admin-editable `CaseBankOverview`. */
 export interface CatalogCaseBankProduct {
   type: "case_bank";
   title: string;
   description: string;
+  imageUrl?: string | null;
   prices: PlanPrice[];
   /** Live count of published cases — never stored. */
   caseCount: number;

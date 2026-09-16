@@ -2,7 +2,7 @@ import ButtonTag from "@/components/shared/ButtonTag";
 import SubtleText from "@/components/shared/SubtleText";
 import Image from "next/image";
 import Link from "next/link";
-import ProductsCard from "@/components/shared/ProductsCard";
+import CatalogGrid from "@/app/(public)/products/_components/CatalogGrid";
 import TitleCase from "@/components/shared/TitleCase";
 
 export default function WhatYouGet() {
@@ -14,7 +14,7 @@ export default function WhatYouGet() {
         <SubtleText text="From live classes and pre-recorded lectures to high-quality SCA cases and personalised coaching — everything you need to prepare for the SCA, all in one place." />
       </div>
 
-      <ProductsCard cutBy={3} />
+      <CatalogGrid cutBy={3} />
 
       <Link
         href="/products"
