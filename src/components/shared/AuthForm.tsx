@@ -300,8 +300,8 @@ function RegisterForm({ redirectTo }: { redirectTo?: string }) {
                 className="text-primary-100 font-bold"
               >
                 Terms &amp; Conditions
-              </Link>{" "}
-              and{" "}
+              </Link>
+              ,{" "}
               <Link
                 href="/legal-disclaimer"
                 target="_blank"
@@ -309,6 +309,15 @@ function RegisterForm({ redirectTo }: { redirectTo?: string }) {
                 className="text-primary-100 font-bold"
               >
                 Legal Disclaimer
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-100 font-bold"
+              >
+                Privacy Policy
               </Link>
               .
             </span>

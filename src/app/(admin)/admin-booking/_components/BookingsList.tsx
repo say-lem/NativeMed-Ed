@@ -1,12 +1,13 @@
 "use client";
 import { useState } from "react";
+import { bookingStatusMeta } from "@/lib/booking-status";
 import { byBookingTimeAsc, formatDate, isBookingPast } from "@/lib/date";
 import { formatMoney } from "@/lib/price";
 import type { AdminSessionBooking } from "@/types/api";
 
 type View = "upcoming" | "past";
 
-const rowGrid = "grid grid-cols-[1fr_1.4fr_120px_90px] items-center gap-6";
+const rowGrid = "grid grid-cols-[1fr_1.4fr_120px_90px_110px] items-center gap-6";
 
 export default function BookingsList({ bookings }: { bookings: AdminSessionBooking[] }) {
   const [view, setView] = useState<View>("upcoming");
@@ -57,33 +58,50 @@ export default function BookingsList({ bookings }: { bookings: AdminSessionBooki
               <span className="text-sm font-semibold text-black-others">Session</span>
               <span className="text-sm font-semibold text-black-others">Date</span>
               <span className="text-sm font-semibold text-black-others">Time</span>
+              <span className="text-sm font-semibold text-black-others">Status</span>
             </div>
-            {shown.map((booking) => (
-              <div key={booking._id} className={`${rowGrid} border-b border-[#EDEDED] px-4 py-4`}>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-black-others truncate">
-                    {booking.userId?.fullName ?? "Deleted user"}
-                  </p>
-                  <p className="text-xs text-subtle-text truncate">
-                    {booking.userId?.email ?? "—"}
-                  </p>
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm text-black-others truncate">
-                    {booking.productId?.title ?? "Deleted product"}
-                  </p>
-                  {booking.productId && (
-                    <p className="text-xs text-subtle-text">
-                      {formatMoney(booking.productId.price)}
+            {shown.map((booking) => {
+              const statusMeta = bookingStatusMeta(booking.status);
+              return (
+                <div key={booking._id} className={`${rowGrid} border-b border-[#EDEDED] px-4 py-4`}>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-black-others truncate">
+                      {booking.userId?.fullName ?? "Deleted user"}
                     </p>
-                  )}
+                    <p className="text-xs text-subtle-text truncate">
+                      {booking.userId?.email ?? "—"}
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm text-black-others truncate">
+                      {booking.productId?.title ?? "Deleted product"}
+                    </p>
+                    {booking.productId && (
+                      <p className="text-xs text-subtle-text">
+                        {formatMoney(booking.productId.price)}
+                      </p>
+                    )}
+                  </div>
+                  <p className="text-sm text-black-others whitespace-nowrap">
+                    {formatDate(booking.date)}
+                  </p>
+                  <p className="text-sm text-black-others whitespace-nowrap">{booking.time}</p>
+                  <div>
+                    {statusMeta ? (
+                      <span
+                        className={`rounded-full text-xs font-semibold px-2.5 py-1 ${statusMeta.className}`}
+                      >
+                        {statusMeta.label}
+                      </span>
+                    ) : (
+                      <span className="rounded-full text-xs font-semibold px-2.5 py-1 bg-green-100 text-green-700">
+                        Confirmed
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <p className="text-sm text-black-others whitespace-nowrap">
-                  {formatDate(booking.date)}
-                </p>
-                <p className="text-sm text-black-others whitespace-nowrap">{booking.time}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

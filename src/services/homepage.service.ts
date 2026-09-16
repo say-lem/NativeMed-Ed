@@ -91,6 +91,41 @@ export async function updateLegalDisclaimer(
   return res.data;
 }
 
+/** GET /homepage/privacy-policy — public. Backs /privacy-policy and the admin editor. */
+export async function getPrivacyPolicy(): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.get<ApiResponse<LegalPageContent>>("/homepage/privacy-policy");
+  return res.data;
+}
+
+/** PATCH /admin/homepage/privacy-policy — admin. Same create-on-first-save pattern as terms. */
+export async function updatePrivacyPolicy(
+  content: string,
+): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.patch<ApiResponse<LegalPageContent>>(
+    "/admin/homepage/privacy-policy",
+    { content },
+  );
+  return res.data;
+}
+
+/** GET /homepage/founder-bio — public. Backs the About page's "About the Founder" section
+ *  and the admin editor. */
+export async function getFounderBio(): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.get<ApiResponse<LegalPageContent>>("/homepage/founder-bio");
+  return res.data;
+}
+
+/** PATCH /admin/homepage/founder-bio — admin. Same create-on-first-save pattern as terms. */
+export async function updateFounderBio(
+  content: string,
+): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.patch<ApiResponse<LegalPageContent>>(
+    "/admin/homepage/founder-bio",
+    { content },
+  );
+  return res.data;
+}
+
 /** GET /homepage/faqs — public. Sorted by `order`. No separate admin GET — the admin editor
  *  reads this same list. */
 export async function getFaqs(): Promise<ApiResponse<Faq[]>> {

@@ -694,6 +694,11 @@ export interface BookingProduct {
   _id: string;
   title: string;
   description: string;
+  /** Longer-form write-up shown on the session's detail page — `description` stays the
+   *  short summary used in listings/cards. Markdown, same convention as course/case-bank
+   *  overview `detailedDescription`. */
+  detailedDescription?: string;
+  imageUrl?: string;
   price: number;
   /** Reusable HH:mm options offered on every date in the pool. */
   availableTimes: string[];
@@ -721,6 +726,7 @@ export interface AdminBookingProduct extends Omit<BookingProduct, "availableDate
 export interface CreateBookingProductInput {
   title: string;
   description: string;
+  detailedDescription?: string;
   price: number;
   availableTimes?: string[];
   isPublished?: boolean;
@@ -731,10 +737,28 @@ export interface CreateBookingProductInput {
 export type UpdateBookingProductInput = Partial<CreateBookingProductInput>;
 
 /** Payload for POST /booking/:id/book. `date` is yyyy-mm-dd, `time` one of the
- *  product's `availableTimes`. */
+ *  product's `availableTimes`. `successUrl`/`cancelUrl` default backend-side if omitted —
+ *  always pass them explicitly (same convention as `CheckoutInput`) so Stripe returns to
+ *  the right origin. */
 export interface BookSessionInput {
   date: string;
   time: string;
+  successUrl?: string;
+  cancelUrl?: string;
+}
+
+/** `pending` — checkout started, not yet paid (or abandoned and not yet expired).
+ *  `confirmed` — Stripe confirmed payment via webhook. `cancelled` — checkout expired
+ *  unpaid; the slot was released back into the pool. */
+export type SessionBookingStatus = "pending" | "confirmed" | "cancelled";
+
+/** POST /booking/:id/book response — a booking is NOT confirmed at this point. Redirect
+ *  the browser to `url` to complete payment; the booking becomes `confirmed` only once
+ *  Stripe's webhook fires. `url` mirrors Stripe's own type (`string | null`). */
+export interface BookingCheckout {
+  bookingId: string;
+  sessionId: string;
+  url: string | null;
 }
 
 export interface SessionBooking {
@@ -743,6 +767,8 @@ export interface SessionBooking {
   userId: string;
   date: string;
   time: string;
+  status: SessionBookingStatus;
+  stripeCheckoutSessionId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -754,18 +780,70 @@ export interface AdminSessionBooking {
   userId: { _id: string; fullName: string; email: string } | null;
   date: string;
   time: string;
+  status: SessionBookingStatus;
+  stripeCheckoutSessionId?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-/** GET /booking/me — auth. The signed-in user's own bookings, newest date first.
- *  `productId` is `null` if the session product was since deleted. */
+/** GET /booking/me — auth. The signed-in user's own bookings, newest date first, ANY
+ *  status — a `pending` entry hasn't been paid for (yet); a `cancelled` one expired
+ *  unpaid. `productId` is `null` if the session product was since deleted.
+ *  `stripeCheckoutSessionId` is how `/payment/success` matches a returning Stripe
+ *  redirect back to the specific booking it just paid for. */
 export interface MyBooking {
   _id: string;
   productId: { _id: string; title: string; description: string; price: number } | null;
   userId: string;
   date: string;
   time: string;
+  stripeCheckoutSessionId?: string;
+  status: SessionBookingStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Slot availability requests — a user reaching out about a BookingProduct that
+// currently has no open (date, time) slot. Only accepted when the product genuinely
+// has nothing bookable — POST /booking/:id/request-slot 400s otherwise.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type SlotRequestStatus = "pending" | "resolved";
+
+/** Payload for POST /booking/:id/request-slot. `preferredDates` — 1 to 10 dates,
+ *  yyyy-mm-dd (coerced to Date backend-side). `examSitting` is `MM/YY`, same format/regex
+ *  as `User.examSitting`. */
+export interface RequestSlotAvailabilityInput {
+  name: string;
+  email: string;
+  examSitting: string;
+  preferredDates: string[];
+}
+
+export interface SlotAvailabilityRequest {
+  _id: string;
+  productId: string;
+  userId: string;
+  name: string;
+  email: string;
+  examSitting: string;
+  preferredDates: string[];
+  status: SlotRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** GET /admin/booking/slot-requests — productId/userId populated. */
+export interface AdminSlotAvailabilityRequest {
+  _id: string;
+  productId: { _id: string; title: string } | null;
+  userId: { _id: string; fullName: string; email: string } | null;
+  name: string;
+  email: string;
+  examSitting: string;
+  preferredDates: string[];
+  status: SlotRequestStatus;
   createdAt: string;
   updatedAt: string;
 }

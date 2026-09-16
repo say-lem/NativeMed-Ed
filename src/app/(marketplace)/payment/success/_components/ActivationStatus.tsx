@@ -13,9 +13,11 @@ type State = "waiting" | "active" | "timeout";
 export default function ActivationStatus({
   type,
   courseId,
+  sessionId,
 }: {
   type: string;
   courseId?: string;
+  sessionId?: string;
 }) {
   const [state, setState] = useState<State>("waiting");
   const [attempt, setAttempt] = useState(0);
@@ -29,7 +31,7 @@ export default function ActivationStatus({
   const runPolling = useCallback(
     async (run: { cancelled: boolean }) => {
       for (let i = 1; i <= MAX_ATTEMPTS; i++) {
-        const res = await checkPurchaseActive(type, courseId);
+        const res = await checkPurchaseActive(type, courseId, sessionId);
         if (run.cancelled) return;
 
         setAttempt(i);
@@ -44,7 +46,7 @@ export default function ActivationStatus({
       }
       setState("timeout");
     },
-    [type, courseId],
+    [type, courseId, sessionId],
   );
 
   useEffect(() => {
@@ -72,8 +74,21 @@ export default function ActivationStatus({
   };
 
   const isCourse = type === "course" && Boolean(courseId);
-  const destination = isCourse ? `/my-courses/${courseId}` : "/full-cases";
-  const destinationLabel = isCourse ? "Go to course" : "Explore Case Bank";
+  const isBooking = type === "booking";
+  const destination = isCourse
+    ? `/my-courses/${courseId}`
+    : isBooking
+      ? "/one-on-one"
+      : "/full-cases";
+  const destinationLabel = isCourse
+    ? "Go to course"
+    : isBooking
+      ? "My bookings"
+      : "Explore Case Bank";
+  // Booking isn't a subscription, so the secondary CTA elsewhere in this component
+  // points somewhere relevant instead of "My subscriptions".
+  const secondaryHref = isBooking ? "/dashboard" : "/subscriptions";
+  const secondaryLabel = isBooking ? "Dashboard" : "My subscriptions";
 
   if (state === "waiting") {
     return (
@@ -101,7 +116,11 @@ export default function ActivationStatus({
           You&apos;re all set
         </h1>
         <p className="max-w-md text-sm sm:text-base text-subtle-text leading-[150%]">
-          Your access is active. {isCourse && "Course materials are shared to your Google Drive — check your email if you don't see them yet."}
+          {isBooking
+            ? "Your session is booked and confirmed — we'll be in touch with the details."
+            : "Your access is active."}{" "}
+          {isCourse &&
+            "Course materials are shared to your Google Drive — check your email if you don't see them yet."}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 mt-2">
           <Link href={destination}>
@@ -109,12 +128,12 @@ export default function ActivationStatus({
               {destinationLabel}
             </Button>
           </Link>
-          <Link href="/subscriptions">
+          <Link href={secondaryHref}>
             <Button
               variant="outline"
               className="font-bold border-black-others text-black-others"
             >
-              My subscriptions
+              {secondaryLabel}
             </Button>
           </Link>
         </div>
@@ -142,12 +161,12 @@ export default function ActivationStatus({
         >
           Check again
         </Button>
-        <Link href="/subscriptions">
+        <Link href={secondaryHref}>
           <Button
             variant="outline"
             className="font-bold border-black-others text-black-others"
           >
-            My subscriptions
+            {secondaryLabel}
           </Button>
         </Link>
       </div>

@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
 import { formatMoney } from "@/lib/price";
@@ -37,14 +38,29 @@ export default function OneOnOneCard({
             href={`/one-on-one/${product._id}`}
             className="rounded-[16px] overflow-hidden courseBorder p-4 sm:p-5 bg-white hover:scale-105 transition-transform cursor-pointer flex flex-col gap-3"
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="grid place-items-center size-11 rounded-full bg-primary-10 text-primary-100 shrink-0">
-                <CalendarDays size={20} />
-              </span>
-              <span className="rounded-full bg-black-others text-white text-xs font-semibold px-3 py-1.5">
-                {formatMoney(product.price)}
-              </span>
-            </div>
+            {product.imageUrl ? (
+              <div className="relative w-full aspect-video rounded-[10px] overflow-hidden">
+                <Image
+                  src={product.imageUrl}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                />
+                <span className="absolute top-2 right-2 rounded-full bg-black-others text-white text-xs font-semibold px-3 py-1.5">
+                  {formatMoney(product.price)}
+                </span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-2">
+                <span className="grid place-items-center size-11 rounded-full bg-primary-10 text-primary-100 shrink-0">
+                  <CalendarDays size={20} />
+                </span>
+                <span className="rounded-full bg-black-others text-white text-xs font-semibold px-3 py-1.5">
+                  {formatMoney(product.price)}
+                </span>
+              </div>
+            )}
 
             <p className="text-base sm:text-lg lg:text-xl font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
               {product.title}

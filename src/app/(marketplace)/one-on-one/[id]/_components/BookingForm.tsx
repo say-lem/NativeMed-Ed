@@ -1,13 +1,13 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/date";
-import type { BookingProduct, BookingTimeSlot } from "@/types/api";
+import type { BookingProduct, BookingTimeSlot, User } from "@/types/api";
 import { bookSessionAction } from "../actions";
 import AvailabilityCalendar from "./AvailabilityCalendar";
+import RequestSlotForm from "./RequestSlotForm";
 
 /** yyyy-mm-dd from an ISO string, for the backend's `date` field. */
 function toDateValue(iso: string): string {
@@ -20,10 +20,15 @@ function toMinutes(time: string): number {
   return h * 60 + m;
 }
 
-export default function BookingForm({ product }: { product: BookingProduct }) {
+export default function BookingForm({
+  product,
+  user,
+}: {
+  product: BookingProduct;
+  user: User | null;
+}) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [booked, setBooked] = useState(false);
 
   // UTC throughout, matching how dates are stored/compared everywhere else in this
   // feature (the backend strips dates to UTC midnight) — mixing in local time for "now"
@@ -78,34 +83,19 @@ export default function BookingForm({ product }: { product: BookingProduct }) {
     }
     startTransition(async () => {
       const res = await bookSessionAction(product._id, { date, time });
-      if (res.ok) {
-        toast.success(res.message ?? "Session booked");
-        setBooked(true);
-        router.refresh();
-      } else {
-        toast.error(res.message ?? "Couldn't book that session.");
+      if (res.ok && res.url) {
+        // The slot is only held, not booked, until Stripe confirms payment — send the
+        // browser straight to checkout rather than showing a local "booked" state.
+        window.location.assign(res.url);
+        return;
       }
+      toast.error(res.message ?? "Couldn't book that session.");
+      router.refresh();
     });
   };
 
-  if (booked) {
-    return (
-      <div className="flex flex-col items-center text-center gap-3 rounded-[16px] border border-primary-20 p-6 sm:p-8">
-        <CheckCircle2 className="size-12 text-green-500" />
-        <h3 className="text-lg font-semibold text-black-others">Session booked</h3>
-        <p className="text-subtle-text text-sm leading-[150%] max-w-sm">
-          We&apos;ll be in touch by email to confirm your {formatDate(date)} session at {time}.
-        </p>
-      </div>
-    );
-  }
-
   if (dateEntries.length === 0) {
-    return (
-      <p className="text-sm text-subtle-text">
-        No dates are currently available for this session. Please check back soon.
-      </p>
-    );
+    return <RequestSlotForm productId={product._id} user={user} />;
   }
 
   return (
@@ -157,7 +147,7 @@ export default function BookingForm({ product }: { product: BookingProduct }) {
         className="w-full sm:w-auto font-bold text-sm sm:text-base bg-black-others disabled:opacity-60"
       >
         {pending && <Loader2 className="size-4 animate-spin" />}
-        {pending ? "Booking..." : "Book Session"}
+        {pending ? "Redirecting to payment..." : "Book Session"}
       </Button>
     </div>
   );
