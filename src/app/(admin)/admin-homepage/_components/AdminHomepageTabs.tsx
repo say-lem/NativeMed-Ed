@@ -4,10 +4,9 @@ import HomepageStatsForm from "./HomepageStatsForm";
 import YoutubeLinksManager from "./YoutubeLinksManager";
 import FreeProductsManager from "./FreeProductsManager";
 import LegalPagesManager from "./LegalPagesManager";
-import LegalPageEditor from "./LegalPageEditor";
+import FounderBioEditor from "./FounderBioEditor";
 import FaqsManager from "./FaqsManager";
-import { updateFounderBioAction } from "../actions";
-import type { Faq, FreeProduct, LegalPageContent, YoutubeLink } from "@/types/api";
+import type { Faq, FounderBioContent, FreeProduct, LegalPageContent, YoutubeLink } from "@/types/api";
 
 type Tab = "homepage" | "free-products" | "legal-pages" | "faqs" | "founder";
 
@@ -44,7 +43,7 @@ export default function AdminHomepageTabs({
   legalDisclaimer: LegalPageContent;
   privacyPolicy: LegalPageContent;
   faqs: Faq[];
-  founderBio: LegalPageContent;
+  founderBio: FounderBioContent;
 }) {
   const [tab, setTab] = useState<Tab>("homepage");
 
@@ -86,15 +85,7 @@ export default function AdminHomepageTabs({
         />
       )}
       {tab === "faqs" && <FaqsManager faqs={faqs} />}
-      {tab === "founder" && (
-        <LegalPageEditor
-          key="founder-bio"
-          title="About the Founder"
-          initialContent={founderBio.content}
-          updatedAt={founderBio.updatedAt}
-          action={updateFounderBioAction}
-        />
-      )}
+      {tab === "founder" && <FounderBioEditor founderBio={founderBio} />}
     </div>
   );
 }

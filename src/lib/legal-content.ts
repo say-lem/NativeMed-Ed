@@ -389,3 +389,19 @@ Dr Ohaa is deeply committed to medical education, healthcare management, and min
 As an educator and mentor, Dr Ohaa is known for his approachable teaching style, deep clinical knowledge, and unwavering dedication to his students' success. He understands the complexities of preparing for the SCA and MRCGP, and his goal is to provide the support, insights, and tools doctors need to succeed, not just in exams, but in their professional lives.
 
 Through Native Medical Education, Dr Ohaa strives to nurture a generation of healthcare professionals who are not only skilled and knowledgeable but also compassionate and patient-focused. His work is driven by a belief in the power of education to transform careers and improve the quality of care delivered to patients everywhere.`;
+
+/**
+ * Seed copy for the block shown under the founder's photo — combines what used to be
+ * separate hardcoded elements (name, qualifications, laurels, "FOUNDER" label) in
+ * Founder.tsx into the one editable `title` field the backend now stores. Markdown,
+ * same as DEFAULT_FOUNDER_BIO — blank-line-separated groups: name, then qualifications,
+ * then the founder label (the public page styles the first/last groups specially).
+ */
+export const DEFAULT_FOUNDER_TITLE = `Dr Clinton Ohaa
+
+**MBBS, MRCS, MRCGP, MBA**
+with distinction
+(Healthcare management)
+PGCert (Medical Education)
+
+FOUNDER`;

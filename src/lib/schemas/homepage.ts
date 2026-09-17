@@ -77,6 +77,23 @@ export const legalPageSchema = z.object({
 
 export type LegalPageValues = z.infer<typeof legalPageSchema>;
 
+/** Mirrors the backend's Zod rules for PATCH /admin/homepage/founder-bio. The backend
+ *  accepts either field alone, but the admin editor always submits both together. */
+export const founderBioSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "Title is required")
+    .max(200, "Title must be 200 characters or fewer"),
+  content: z
+    .string()
+    .trim()
+    .min(1, "Content is required")
+    .max(20000, "Content must be 20000 characters or fewer"),
+});
+
+export type FounderBioValues = z.infer<typeof founderBioSchema>;
+
 /** Mirrors the backend's Zod rules for the FAQ admin endpoints. */
 export const faqSchema = z.object({
   question: z

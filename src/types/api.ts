@@ -556,6 +556,23 @@ export interface LegalPageContent {
   updatedAt: string | null;
 }
 
+/** GET /homepage/founder-bio (public) and its admin GET/PATCH equivalent — the About
+ *  page's "About the Founder" section. `title` is the short line shown under the photo
+ *  (e.g. "Dr Clinton Ohaa — MBBS, MRCS, MRCGP, MBA"); `content` is the longer bio prose.
+ *  Both `title` and `imageUrl` are `null` until an admin has ever set them. */
+export interface FounderBioContent {
+  content: string;
+  title: string | null;
+  imageUrl: string | null;
+  updatedAt: string | null;
+}
+
+/** Payload for PATCH /admin/homepage/founder-bio — at least one field required. */
+export interface UpdateFounderBioInput {
+  content?: string;
+  title?: string;
+}
+
 export type FreeProductType = "link" | "pdf" | "blog";
 
 /**
