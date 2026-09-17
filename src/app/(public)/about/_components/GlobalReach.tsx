@@ -4,7 +4,7 @@ const items = [
   {
     icon: <Globe size={26} />,
     title: "Supporting Doctors in the UK and Beyond",
-    text: "We operate for every students all over the World.",
+    text: "SCA-focused medical education and consultation skills training for doctors in the UK and internationally.",
   },
   {
     icon: <ShieldCheck size={26} />,
