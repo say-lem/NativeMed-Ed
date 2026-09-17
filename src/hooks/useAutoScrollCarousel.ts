@@ -100,6 +100,11 @@ export function useAutoScrollCarousel(itemCount: number, pxPerSecond = 40) {
   }, [itemCount]);
 
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    // Don't capture the pointer when the press starts on a link/button inside a card —
+    // setPointerCapture retargets the subsequent click to the track, silently swallowing
+    // taps on things like the "View course info" link before they can navigate.
+    if ((e.target as HTMLElement).closest("a, button")) return;
+
     interactRef.current = true;
     if (e.pointerType === "mouse") {
       const track = trackRef.current;

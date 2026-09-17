@@ -23,7 +23,7 @@ export default function FreeProductCard({ product }: { product: FreeProduct }) {
 
       {product.fileUrl && (
         <a
-          href={product.fileUrl}
+          href={isPdf ? `/api/free-products/${product._id}/download` : product.fileUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="mt-auto inline-flex items-center justify-center gap-2 rounded-full bg-primary-100 text-white text-sm font-semibold px-5 py-2.5 hover:bg-primary-100/90 transition-colors"
