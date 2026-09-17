@@ -63,7 +63,7 @@ export async function getAdminCourse(
   return res.data;
 }
 
-/** POST /courses — admin. Create a course. Requires both pricing tiers + both Drive links. */
+/** POST /courses — admin. Create a course. Requires the Drive link + at least one price. */
 export async function createCourse(
   payload: CourseInput,
 ): Promise<ApiResponse<AdminCourse>> {
@@ -71,8 +71,8 @@ export async function createCourse(
   return res.data;
 }
 
-/** PATCH /courses/:id — admin. Partial update; `pricing` merges per tier/interval, so send
- *  only what changed. Omitted Drive links keep their stored value. */
+/** PATCH /courses/:id — admin. Partial update; `pricing` merges per interval, so send
+ *  only what changed. Omitted Drive link keeps its stored value. */
 export async function updateCourse(
   id: string,
   payload: Partial<CourseInput>,
@@ -142,9 +142,13 @@ export async function updateCourseThumbnail(
 
 /* ------------------------------------------------------------------ *
  * Course Content (lessons) — /courses/:courseId/content
+ * Lives in its own backend module now (`src/modules/content`), but the
+ * route paths are unchanged. No more tier gating on reads — any enrolled
+ * user (or the course's creator/admin) can read every lesson.
  * ------------------------------------------------------------------ */
 
-/** GET /courses/:courseId/content — admin. All lessons for a course. */
+/** GET /courses/:courseId/content — auth (enrolled user or admin). All lessons for a
+ *  course, sorted by `order`. PDF `fileUrl`s are freshly-signed on every call. */
 export async function getCourseContent(
   courseId: string,
 ): Promise<ApiResponse<Lesson[]>> {
@@ -154,7 +158,8 @@ export async function getCourseContent(
   return res.data;
 }
 
-/** POST /courses/:courseId/content/upload-pdf — admin, multipart. A PDF lesson (Cloudinary). */
+/** POST /courses/:courseId/content/upload-pdf — admin, multipart. A PDF lesson (Cloudinary,
+ *  max 50MB, `application/pdf` only). */
 export async function uploadPdfLesson(
   courseId: string,
   payload: { file: File; title: string; order: number },
@@ -172,29 +177,31 @@ export async function uploadPdfLesson(
   return res.data;
 }
 
-/** POST /courses/:courseId/content/drive-link — admin, JSON. A video lesson (Google-Drive link). */
+/** POST /courses/:courseId/content/drive-link — admin, JSON. A video or audio lesson
+ *  (Google-Drive share link the admin adds manually — never uploaded through us). */
 export async function addDriveLesson(
   courseId: string,
   payload: {
     title: string;
+    type: "video" | "audio";
     fileUrl: string;
     order: number;
-    duration?: string;
-    type?: string;
+    duration?: number; // seconds
   },
 ): Promise<ApiResponse<Lesson>> {
   const res = await api.post<ApiResponse<Lesson>>(
     `/courses/${courseId}/content/drive-link`,
-    { type: "video", ...payload },
+    payload,
   );
   return res.data;
 }
 
-/** PATCH /courses/:courseId/content/:id — admin. Partial lesson update. */
+/** PATCH /courses/:courseId/content/:id — admin. Metadata only (title/order/duration) —
+ *  never re-uploads the file; delete + re-add to replace one. */
 export async function updateLesson(
   courseId: string,
   id: string,
-  payload: Partial<Pick<Lesson, "title" | "order" | "duration" | "fileUrl">>,
+  payload: Partial<Pick<Lesson, "title" | "order" | "duration">>,
 ): Promise<ApiResponse<Lesson>> {
   const res = await api.patch<ApiResponse<Lesson>>(
     `/courses/${courseId}/content/${id}`,
@@ -203,7 +210,8 @@ export async function updateLesson(
   return res.data;
 }
 
-/** DELETE /courses/:courseId/content/:id — admin. Remove a lesson. */
+/** DELETE /courses/:courseId/content/:id — admin. PDFs also remove the Cloudinary asset;
+ *  video/audio only remove the DB record (the Drive file itself isn't touched). */
 export async function deleteLesson(
   courseId: string,
   id: string,

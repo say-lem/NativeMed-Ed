@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Subscription } from "@/types/api";
-import { tierLabel } from "@/lib/tiers";
 import { statusMeta, type StatusTone } from "@/lib/subscription-status";
 import { formatDate } from "@/lib/date";
 
@@ -48,11 +47,6 @@ export default function SubscriptionCard({ sub }: { sub: Subscription }) {
           <span className="rounded-full bg-primary-10 text-primary-100 px-2 py-1 capitalize">
             {sub.billingInterval}
           </span>
-          {isCourse && sub.tier && (
-            <span className="rounded-full bg-primary-10 text-primary-100 px-2 py-1">
-              {tierLabel(sub.tier)}
-            </span>
-          )}
         </div>
 
         {sub.currentPeriodEnd && (

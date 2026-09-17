@@ -6,6 +6,24 @@ import type { Lesson } from "@/types/api";
 const fieldClass =
   "w-full rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 text-sm text-black-others placeholder:text-[#B7B7B9] outline-none focus:border-primary-100";
 
+function parseDuration(v: string): number | undefined {
+  const s = v.trim();
+  if (!s) return undefined;
+  const parts = s.split(":").map((p) => Number(p));
+  if (parts.some((n) => !Number.isFinite(n) || n < 0)) return undefined;
+  if (parts.length === 1) return Math.round(parts[0]);
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  return undefined;
+}
+
+function formatDuration(seconds?: number): string {
+  if (seconds == null) return "";
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
 export default function LessonEditModal({
   lesson,
   saving,
@@ -15,24 +33,18 @@ export default function LessonEditModal({
   lesson: Lesson;
   saving: boolean;
   onClose: () => void;
-  onSave: (payload: {
-    title: string;
-    duration?: string;
-    fileUrl?: string;
-  }) => void;
+  onSave: (payload: { title: string; duration?: number }) => void;
 }) {
-  const isVideo = lesson.type?.toLowerCase() === "video";
+  const type = lesson.type?.toLowerCase();
+  const hasDuration = type === "video" || type === "audio";
   const [title, setTitle] = useState(lesson.title ?? "");
-  const [duration, setDuration] = useState(lesson.duration ?? "");
-  const [fileUrl, setFileUrl] = useState(lesson.fileUrl ?? "");
+  const [duration, setDuration] = useState(formatDuration(lesson.duration));
 
   const submit = () => {
     if (!title.trim()) return;
     onSave({
       title: title.trim(),
-      ...(isVideo
-        ? { duration: duration.trim() || undefined, fileUrl: fileUrl.trim() }
-        : {}),
+      ...(hasDuration ? { duration: parseDuration(duration) } : {}),
     });
   };
 
@@ -70,30 +82,25 @@ export default function LessonEditModal({
             />
           </div>
 
-          {isVideo && (
-            <>
-              <div className="space-y-2">
-                <label className="block text-sm text-[#080A0D]">
-                  Google-Drive Link
-                </label>
-                <input
-                  className={fieldClass}
-                  value={fileUrl}
-                  onChange={(e) => setFileUrl(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="block text-sm text-[#080A0D]">
-                  Duration <span className="text-subtle-text">(optional)</span>
-                </label>
-                <input
-                  className={fieldClass}
-                  placeholder="e.g., 12:30"
-                  value={duration}
-                  onChange={(e) => setDuration(e.target.value)}
-                />
-              </div>
-            </>
+          {hasDuration && (
+            <div className="space-y-2">
+              <label className="block text-sm text-[#080A0D]">
+                Duration <span className="text-subtle-text">(optional, mm:ss)</span>
+              </label>
+              <input
+                className={fieldClass}
+                placeholder="e.g., 12:30"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+              />
+            </div>
+          )}
+
+          {lesson.fileUrl && (
+            <p className="text-xs text-subtle-text">
+              The file itself can&apos;t be replaced here — delete this lesson and add a
+              new one instead.
+            </p>
           )}
         </div>
 
