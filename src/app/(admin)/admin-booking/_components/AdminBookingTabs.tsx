@@ -2,23 +2,33 @@
 import { useState } from "react";
 import BookingProductsManager from "./BookingProductsManager";
 import BookingsList from "./BookingsList";
-import type { AdminBookingProduct, AdminSessionBooking } from "@/types/api";
+import SlotAvailabilityRequestsList from "./SlotAvailabilityRequestsList";
+import type {
+  AdminBookingProduct,
+  AdminSessionBooking,
+  AdminSlotAvailabilityRequest,
+} from "@/types/api";
 
-type Tab = "products" | "bookings";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "products", label: "Products" },
-  { id: "bookings", label: "Bookings" },
-];
+type Tab = "products" | "bookings" | "requests";
 
 export default function AdminBookingTabs({
   products,
   bookings,
+  slotRequests,
 }: {
   products: AdminBookingProduct[];
   bookings: AdminSessionBooking[];
+  slotRequests: AdminSlotAvailabilityRequest[];
 }) {
   const [tab, setTab] = useState<Tab>("products");
+
+  const pendingRequests = slotRequests.filter((r) => r.status === "pending").length;
+
+  const TABS: { id: Tab; label: string }[] = [
+    { id: "products", label: "Products" },
+    { id: "bookings", label: "Bookings" },
+    { id: "requests", label: `Requests${pendingRequests > 0 ? ` (${pendingRequests})` : ""}` },
+  ];
 
   return (
     <div className="px-4 sm:px-6 lg:px-10 mt-6 mb-10 space-y-6">
@@ -39,6 +49,7 @@ export default function AdminBookingTabs({
 
       {tab === "products" && <BookingProductsManager products={products} />}
       {tab === "bookings" && <BookingsList bookings={bookings} />}
+      {tab === "requests" && <SlotAvailabilityRequestsList requests={slotRequests} />}
     </div>
   );
 }

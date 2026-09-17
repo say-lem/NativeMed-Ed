@@ -3,13 +3,13 @@ import { Globe, ShieldCheck } from "lucide-react";
 const items = [
   {
     icon: <Globe size={26} />,
-    title: "Operating All over the World",
-    text: "We operate for every students all over the World.",
+    title: "Supporting Doctors in the UK and Beyond",
+    text: "SCA-focused medical education and consultation skills training for doctors in the UK and internationally.",
   },
   {
     icon: <ShieldCheck size={26} />,
-    title: "Trusted by doctors for doctors",
-    text: "Trusted by doctors that have passed their SCA",
+    title: "Trusted by Doctors.",
+    text: "Trusted by doctors preparing for the the SCA and those who have successfully passed.",
   },
 ];
 

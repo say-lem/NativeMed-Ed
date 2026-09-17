@@ -6,9 +6,12 @@ import {
   addAvailableDate,
   createBookingProduct,
   deleteBookingProduct,
+  deleteSlotAvailabilityRequest,
   removeAvailableDate,
+  resolveSlotAvailabilityRequest,
   setBookingProductPublished,
   updateBookingProduct,
+  updateBookingProductImage,
 } from "@/services/booking.service";
 import {
   bookingProductSchema,
@@ -17,6 +20,8 @@ import {
   type BookingProductValues,
 } from "@/lib/schemas/booking";
 import type { ApiFailure, FormActionResult } from "@/types/api";
+
+type SaveBookingProductResult = FormActionResult & { productId?: string };
 
 function fail(err: unknown, tag: string, fallback: string): FormActionResult {
   if (axios.isAxiosError(err)) {
@@ -37,7 +42,7 @@ function revalidateBooking() {
 
 export async function addBookingProductAction(
   values: BookingProductValues,
-): Promise<FormActionResult> {
+): Promise<SaveBookingProductResult> {
   const parsed = bookingProductSchema.safeParse(values);
   if (!parsed.success) {
     return {
@@ -50,7 +55,7 @@ export async function addBookingProductAction(
     const res = await createBookingProduct(bookingProductPayload(parsed.data));
     if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
     revalidateBooking();
-    return { ok: true, message: "Session product added" };
+    return { ok: true, message: "Session product added", productId: res.data._id };
   } catch (err) {
     return fail(err, "addBookingProductAction", "Couldn't add the session product.");
   }
@@ -75,6 +80,24 @@ export async function updateBookingProductAction(
     return { ok: true, message: "Session product updated" };
   } catch (err) {
     return fail(err, "updateBookingProductAction", "Couldn't update the session product.");
+  }
+}
+
+/** PATCH /admin/booking/products/:id/image — cover image shown on the products page card
+ *  and the session's own detail page. */
+export async function uploadBookingProductImageAction(
+  id: string,
+  formData: FormData,
+): Promise<FormActionResult> {
+  try {
+    const file = formData.get("image");
+    if (!(file instanceof File) || file.size === 0) return { ok: true };
+    const res = await updateBookingProductImage(id, file);
+    if (!res.success) return { ok: false, message: res.message };
+    revalidateBooking();
+    return { ok: true, message: "Cover image updated" };
+  } catch (err) {
+    return fail(err, "uploadBookingProductImageAction", "Cover upload failed.");
   }
 }
 
@@ -192,4 +215,30 @@ export async function addAvailableDateRangeAction(
     ok: true,
     message: skipped > 0 ? `Added ${added} dates (${skipped} already existed)` : `Added ${added} dates`,
   };
+}
+
+export async function resolveSlotAvailabilityRequestAction(
+  requestId: string,
+): Promise<FormActionResult> {
+  try {
+    const res = await resolveSlotAvailabilityRequest(requestId);
+    if (!res.success) return { ok: false, message: res.message };
+    revalidateBooking();
+    return { ok: true, message: "Marked resolved" };
+  } catch (err) {
+    return fail(err, "resolveSlotAvailabilityRequestAction", "Couldn't mark the request resolved.");
+  }
+}
+
+export async function deleteSlotAvailabilityRequestAction(
+  requestId: string,
+): Promise<FormActionResult> {
+  try {
+    const res = await deleteSlotAvailabilityRequest(requestId);
+    if (!res.success) return { ok: false, message: res.message };
+    revalidateBooking();
+    return { ok: true, message: "Request deleted" };
+  } catch (err) {
+    return fail(err, "deleteSlotAvailabilityRequestAction", "Couldn't delete the request.");
+  }
 }

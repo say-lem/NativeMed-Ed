@@ -3,13 +3,16 @@ import { api } from "@/lib/api";
 import type {
   AdminBookingProduct,
   AdminSessionBooking,
+  AdminSlotAvailabilityRequest,
   ApiResponse,
+  BookingCheckout,
   BookingProduct,
   BookSessionInput,
   CreateBookingProductInput,
   MyBooking,
   Paginated,
-  SessionBooking,
+  RequestSlotAvailabilityInput,
+  SlotAvailabilityRequest,
   UpdateBookingProductInput,
 } from "@/types/api";
 
@@ -52,12 +55,15 @@ export async function getBookingProduct(id: string): Promise<ApiResponse<Booking
   return res.data;
 }
 
-/** POST /booking/:id/book — auth required. No payment gate; reserves the date atomically. */
+/** POST /booking/:id/book — auth required. Reserves the (date, time) slot and starts a
+ *  Stripe Checkout session; the booking is `pending` until the webhook confirms payment
+ *  (see `confirmBookingPayment` on the backend). Redirect the browser to the returned
+ *  `url` — nothing is booked yet at this point. */
 export async function bookSession(
   id: string,
   input: BookSessionInput,
-): Promise<ApiResponse<SessionBooking>> {
-  const res = await api.post<ApiResponse<SessionBooking>>(`/booking/${id}/book`, input);
+): Promise<ApiResponse<BookingCheckout>> {
+  const res = await api.post<ApiResponse<BookingCheckout>>(`/booking/${id}/book`, input);
   return res.data;
 }
 
@@ -69,6 +75,20 @@ export async function getMyBookings(
   const res = await api.get<ApiResponse<Paginated<MyBooking>>>("/booking/me", {
     params: { page, limit },
   });
+  return res.data;
+}
+
+/** POST /booking/:id/request-slot — auth. Only accepted when the product genuinely has
+ *  no open (date, time) slot right now — 400s otherwise (the user should just book
+ *  directly instead). Emails the admin; doesn't reserve anything. */
+export async function requestSlotAvailability(
+  id: string,
+  input: RequestSlotAvailabilityInput,
+): Promise<ApiResponse<SlotAvailabilityRequest>> {
+  const res = await api.post<ApiResponse<SlotAvailabilityRequest>>(
+    `/booking/${id}/request-slot`,
+    input,
+  );
   return res.data;
 }
 
@@ -107,6 +127,22 @@ export async function updateBookingProduct(
   const res = await api.patch<ApiResponse<AdminBookingProduct>>(
     `/admin/booking/products/${id}`,
     input,
+  );
+  return res.data;
+}
+
+/** PATCH /admin/booking/products/:id/image — admin, multipart field `image` (resized
+ *  800×450). */
+export async function updateBookingProductImage(
+  id: string,
+  file: File,
+): Promise<ApiResponse<{ imageUrl: string }>> {
+  const fd = new FormData();
+  fd.append("image", file);
+  const res = await api.patch<ApiResponse<{ imageUrl: string }>>(
+    `/admin/booking/products/${id}/image`,
+    fd,
+    { headers: { "Content-Type": undefined } },
   );
   return res.data;
 }
@@ -168,5 +204,37 @@ export async function getAdminBookings(
     "/admin/booking/bookings",
     { params: { page, limit } },
   );
+  return res.data;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin — slot availability requests
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** GET /admin/booking/slot-requests — admin, paginated, newest first. */
+export async function getAdminSlotAvailabilityRequests(
+  page = 1,
+  limit = 20,
+): Promise<ApiResponse<Paginated<AdminSlotAvailabilityRequest>>> {
+  const res = await api.get<ApiResponse<Paginated<AdminSlotAvailabilityRequest>>>(
+    "/admin/booking/slot-requests",
+    { params: { page, limit } },
+  );
+  return res.data;
+}
+
+/** PATCH /admin/booking/slot-requests/:id/resolve — admin. */
+export async function resolveSlotAvailabilityRequest(
+  id: string,
+): Promise<ApiResponse<AdminSlotAvailabilityRequest>> {
+  const res = await api.patch<ApiResponse<AdminSlotAvailabilityRequest>>(
+    `/admin/booking/slot-requests/${id}/resolve`,
+  );
+  return res.data;
+}
+
+/** DELETE /admin/booking/slot-requests/:id — admin. */
+export async function deleteSlotAvailabilityRequest(id: string): Promise<ApiResponse<null>> {
+  const res = await api.delete<ApiResponse<null>>(`/admin/booking/slot-requests/${id}`);
   return res.data;
 }

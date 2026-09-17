@@ -34,6 +34,7 @@ export async function getSessionUser(): Promise<User | null> {
     role: payload.role,
     fullName: profile?.fullName ?? nameFromEmail(payload.email),
     phone: profile?.phone ?? "",
+    examSitting: profile?.examSitting,
     mustChangePassword: profile?.mustChangePassword ?? false,
     isActive: profile?.isActive,
   };

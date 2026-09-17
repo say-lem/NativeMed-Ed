@@ -9,9 +9,11 @@ const blockStyles =
 // Backend content often separates lines with a single "\n", which markdown would
 // collapse into one run-on paragraph. Turn those into hard breaks (trailing two
 // spaces) so the text renders the way it was authored. Blank-line-separated
-// paragraphs are untouched.
+// paragraphs are untouched. A line already ending in "\" is a hard break the
+// RichTextEditor itself emitted — left alone, since adding trailing spaces after the
+// backslash stops it being recognised as an escape and prints a literal "\".
 function preserveLineBreaks(md: string): string {
-  return md.replace(/([^\n])\n(?!\n)/g, "$1  \n");
+  return md.replace(/([^\n\\])\n(?!\n)/g, "$1  \n");
 }
 
 export function Markdown({

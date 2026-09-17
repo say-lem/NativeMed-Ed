@@ -4,9 +4,11 @@ import type {
   ApiResponse,
   Faq,
   FaqInput,
+  FounderBioContent,
   HomepageData,
   HomepageSettings,
   LegalPageContent,
+  UpdateFounderBioInput,
   UpdateHomepageStatsInput,
   YoutubeLinkInput,
 } from "@/types/api";
@@ -87,6 +89,57 @@ export async function updateLegalDisclaimer(
   const res = await api.patch<ApiResponse<LegalPageContent>>(
     "/admin/homepage/legal-disclaimer",
     { content },
+  );
+  return res.data;
+}
+
+/** GET /homepage/privacy-policy — public. Backs /privacy-policy and the admin editor. */
+export async function getPrivacyPolicy(): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.get<ApiResponse<LegalPageContent>>("/homepage/privacy-policy");
+  return res.data;
+}
+
+/** PATCH /admin/homepage/privacy-policy — admin. Same create-on-first-save pattern as terms. */
+export async function updatePrivacyPolicy(
+  content: string,
+): Promise<ApiResponse<LegalPageContent>> {
+  const res = await api.patch<ApiResponse<LegalPageContent>>(
+    "/admin/homepage/privacy-policy",
+    { content },
+  );
+  return res.data;
+}
+
+/** GET /homepage/founder-bio — public. Backs the About page's "About the Founder" section
+ *  and the admin editor. `title`/`imageUrl` are `null` until an admin has set them. */
+export async function getFounderBio(): Promise<ApiResponse<FounderBioContent>> {
+  const res = await api.get<ApiResponse<FounderBioContent>>("/homepage/founder-bio");
+  return res.data;
+}
+
+/** PATCH /admin/homepage/founder-bio — admin. Partial; at least one of content/title. */
+export async function updateFounderBio(
+  input: UpdateFounderBioInput,
+): Promise<ApiResponse<FounderBioContent>> {
+  const res = await api.patch<ApiResponse<FounderBioContent>>(
+    "/admin/homepage/founder-bio",
+    input,
+  );
+  return res.data;
+}
+
+/** PATCH /admin/homepage/founder-bio/image — admin, multipart field `image` (resized to a
+ *  800×800 square, face-cropped). Own endpoint so it can use multer without interfering
+ *  with the JSON body PATCH above. */
+export async function updateFounderImage(
+  file: File,
+): Promise<ApiResponse<{ imageUrl: string }>> {
+  const fd = new FormData();
+  fd.append("image", file);
+  const res = await api.patch<ApiResponse<{ imageUrl: string }>>(
+    "/admin/homepage/founder-bio/image",
+    fd,
+    { headers: { "Content-Type": undefined } },
   );
   return res.data;
 }

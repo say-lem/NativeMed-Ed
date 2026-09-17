@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { CalendarClock } from "lucide-react";
+import { bookingStatusMeta } from "@/lib/booking-status";
 import { byBookingTimeAsc, formatDate, isBookingPast } from "@/lib/date";
 import { formatMoney } from "@/lib/price";
 import type { MyBooking } from "@/types/api";
@@ -8,6 +9,7 @@ import type { MyBooking } from "@/types/api";
 type View = "upcoming" | "past";
 
 function BookingCard({ booking, past }: { booking: MyBooking; past: boolean }) {
+  const statusMeta = bookingStatusMeta(booking.status);
   return (
     <div
       className={`rounded-[16px] courseBorder p-4 sm:p-5 bg-white flex flex-col gap-3 ${
@@ -18,11 +20,20 @@ function BookingCard({ booking, past }: { booking: MyBooking; past: boolean }) {
         <span className="grid place-items-center size-11 rounded-full bg-primary-10 text-primary-100 shrink-0">
           <CalendarClock size={20} />
         </span>
-        {booking.productId && (
-          <span className="rounded-full bg-black-others text-white text-xs font-semibold px-3 py-1.5">
-            {formatMoney(booking.productId.price)}
-          </span>
-        )}
+        <div className="flex items-center gap-1.5">
+          {statusMeta && (
+            <span
+              className={`rounded-full text-xs font-semibold px-3 py-1.5 ${statusMeta.className}`}
+            >
+              {statusMeta.label}
+            </span>
+          )}
+          {booking.productId && (
+            <span className="rounded-full bg-black-others text-white text-xs font-semibold px-3 py-1.5">
+              {formatMoney(booking.productId.price)}
+            </span>
+          )}
+        </div>
       </div>
 
       <p className="text-base sm:text-lg font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">

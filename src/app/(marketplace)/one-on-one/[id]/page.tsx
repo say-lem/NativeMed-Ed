@@ -1,10 +1,13 @@
 import axios from "axios";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
+import { Markdown } from "@/components/shared/Markdown";
 import BookingForm from "./_components/BookingForm";
 import { getBookingProduct } from "@/services/booking.service";
+import { getSessionUser } from "@/lib/current-user";
 import { formatMoney } from "@/lib/price";
 import type { BookingProduct } from "@/types/api";
 
@@ -28,7 +31,7 @@ async function loadProduct(id: string): Promise<BookingProduct | null> {
 
 export default async function OneOnOneDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const product = await loadProduct(id);
+  const [product, user] = await Promise.all([loadProduct(id), getSessionUser()]);
 
   if (!product) {
     return (
@@ -61,18 +64,45 @@ export default async function OneOnOneDetailPage({ params }: PageProps) {
           <ChevronLeft size={18} /> Back to 1-on-1 sessions
         </Link>
 
-        <div className="authFormBorder rounded-[16px] p-4 sm:p-6 flex flex-col gap-3">
-          <p className="text-xl font-bold text-black-others">{formatMoney(product.price)}</p>
-          <p className="font-light text-sm sm:text-base lg:text-lg leading-[150%] text-[#373737] whitespace-pre-line">
-            {product.description}
-          </p>
+        <div className="authFormBorder rounded-[16px] p-4 sm:p-6 flex flex-col md:flex-row gap-4 sm:gap-6">
+          {product.imageUrl && (
+            <div className="relative w-full md:basis-2/5 min-h-[35vh] sm:min-h-[40vh] md:min-h-0 shrink-0 rounded-[12px] overflow-hidden">
+              <Image
+                src={product.imageUrl}
+                alt={`image of ${product.title}`}
+                fill
+                className="object-cover object-center"
+                sizes="(max-width: 768px) 100vw, 40vw"
+                priority
+              />
+            </div>
+          )}
+          <div className="flex flex-col gap-3 justify-center">
+            <p className="text-xl font-bold text-black-others">{formatMoney(product.price)}</p>
+            <p className="font-light text-sm sm:text-base lg:text-lg leading-[150%] text-[#373737] whitespace-pre-line">
+              {product.description}
+            </p>
+          </div>
         </div>
+
+        {/* Longer write-up — outside the hero card, shown only when the admin has set
+            one. Stored as markdown from the admin's rich-text editor. */}
+        {product.detailedDescription && (
+          <div className="space-y-3">
+            <h2 className="font-semibold text-lg sm:text-xl lg:text-2xl text-black-others">
+              About this session
+            </h2>
+            <Markdown className="text-sm sm:text-base lg:text-lg text-[#373737]">
+              {product.detailedDescription}
+            </Markdown>
+          </div>
+        )}
 
         <div className="space-y-5">
           <h2 className="font-semibold text-xl sm:text-2xl text-black-others">
             Pick a date and time
           </h2>
-          <BookingForm product={product} />
+          <BookingForm product={product} user={user} />
         </div>
       </section>
     </>

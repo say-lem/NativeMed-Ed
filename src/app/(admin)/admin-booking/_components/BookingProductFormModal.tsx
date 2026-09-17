@@ -1,18 +1,26 @@
 "use client";
 import { useState, useTransition } from "react";
-import { useForm } from "react-hook-form";
+import Image from "next/image";
+import { useController, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { applyFieldErrors } from "@/lib/form-errors";
+import RichTextEditor from "@/components/shared/RichTextEditor";
 import {
   bookingProductSchema,
   emptyBookingProductValues,
   type BookingProductValues,
 } from "@/lib/schemas/booking";
 import type { AdminBookingProduct } from "@/types/api";
-import { addBookingProductAction, updateBookingProductAction } from "../actions";
+import {
+  addBookingProductAction,
+  updateBookingProductAction,
+  uploadBookingProductImageAction,
+} from "../actions";
+
+const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
 
 const inputClass =
   "border-[0.5px] rounded-[8px] px-4 py-2.5 border-secondary-20 w-full outline-none focus:border-primary-100 text-black-others";
@@ -45,12 +53,15 @@ export default function BookingProductFormModal({
   const [pending, startTransition] = useTransition();
   const [newTime, setNewTime] = useState("");
   const [times, setTimes] = useState<string[]>(product ? [...product.availableTimes] : []);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(product?.imageUrl ?? null);
 
   const {
     register,
     handleSubmit,
     setError,
     setValue,
+    control,
     formState: { errors },
   } = useForm<BookingProductValues>({
     resolver: zodResolver(bookingProductSchema),
@@ -58,11 +69,27 @@ export default function BookingProductFormModal({
       ? {
           title: product.title,
           description: product.description,
+          detailedDescription: product.detailedDescription ?? "",
           price: String(product.price),
           availableTimes: [...product.availableTimes],
         }
       : emptyBookingProductValues,
   });
+
+  // Stores markdown (bold/italic/headings/lists) — rendered back with the shared
+  // <Markdown> component on the session's own detail page.
+  const { field: detailedDescriptionField } = useController({
+    name: "detailedDescription",
+    control,
+  });
+
+  const onImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    if (f) {
+      setImageFile(f);
+      setImagePreview(URL.createObjectURL(f));
+    }
+  };
 
   const addTime = () => {
     if (!newTime) return;
@@ -82,16 +109,31 @@ export default function BookingProductFormModal({
 
   const onSubmit = (values: BookingProductValues) => {
     startTransition(async () => {
-      const res = product
-        ? await updateBookingProductAction(product._id, values)
-        : await addBookingProductAction(values);
-      if (res.ok) {
-        toast.success(res.message ?? "Saved");
-        onSaved();
+      let id: string | undefined = product?._id;
+      let ok: boolean;
+      let message: string | undefined;
+      let fieldErrors: Record<string, string[]> | undefined;
+      if (product) {
+        const res = await updateBookingProductAction(product._id, values);
+        ({ ok, message, fieldErrors } = res);
+      } else {
+        const res = await addBookingProductAction(values);
+        ({ ok, message, fieldErrors } = res);
+        id = res.productId;
+      }
+      if (!ok) {
+        applyFieldErrors(fieldErrors, setError);
+        toast.error(message ?? "Couldn't save the session product.");
         return;
       }
-      applyFieldErrors(res.fieldErrors, setError);
-      toast.error(res.message ?? "Couldn't save the session product.");
+      if (imageFile && id) {
+        const fd = new FormData();
+        fd.append("image", imageFile);
+        const up = await uploadBookingProductImageAction(id, fd);
+        if (!up.ok) toast.warning(up.message ?? "Cover upload failed");
+      }
+      toast.success(message ?? "Saved");
+      onSaved();
     });
   };
 
@@ -107,7 +149,7 @@ export default function BookingProductFormModal({
         onClick={onClose}
         className="absolute inset-0 bg-black/50 cursor-default"
       />
-      <div className="relative z-10 w-full max-w-md rounded-2xl bg-white p-6 sm:p-8 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="relative z-10 w-full max-w-lg rounded-2xl bg-white p-6 sm:p-8 shadow-xl max-h-[90vh] overflow-y-auto">
         <button
           type="button"
           onClick={onClose}
@@ -130,6 +172,39 @@ export default function BookingProductFormModal({
           className="mt-5 flex flex-col gap-4"
         >
           <div className="space-y-2">
+            <Label text="Cover Image" htmlFor="bp-image" />
+            <div className="flex flex-wrap items-center gap-3">
+              {imagePreview && (
+                <div className="relative size-16 rounded-[8px] overflow-hidden shrink-0 border border-[#EDEDED]">
+                  <Image
+                    src={imagePreview}
+                    alt="Session cover preview"
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                  />
+                </div>
+              )}
+              <label className="flex-1 min-w-[160px] flex items-center justify-between gap-3 rounded-[8px] border-[0.5px] border-secondary-20 px-4 py-3 cursor-pointer">
+                <span className="text-sm text-subtle-text truncate">
+                  {imageFile ? imageFile.name : "Choose a cover image"}
+                </span>
+                <Upload size={16} className="text-primary-100 shrink-0" />
+                <input
+                  id="bp-image"
+                  type="file"
+                  accept={IMAGE_ACCEPT}
+                  className="hidden"
+                  onChange={onImage}
+                />
+              </label>
+            </div>
+            <p className="text-xs text-subtle-text">
+              Shown on the session card and its own detail page. Optional.
+            </p>
+          </div>
+
+          <div className="space-y-2">
             <Label text="Title" htmlFor="bp-title" />
             <input
               id="bp-title"
@@ -151,6 +226,20 @@ export default function BookingProductFormModal({
               {...register("description")}
             />
             <FieldError message={errors.description?.message} />
+          </div>
+
+          <div className="space-y-2">
+            <Label text="Detailed Description" htmlFor="bp-detailed-description" />
+            <RichTextEditor
+              value={detailedDescriptionField.value ?? ""}
+              onChange={detailedDescriptionField.onChange}
+              placeholder="Longer write-up for the session's own detail page (optional)"
+            />
+            <p className="text-xs text-subtle-text">
+              Shown on the session&apos;s detail page only, not on the browse card. Leave
+              blank to show just the short description above.
+            </p>
+            <FieldError message={errors.detailedDescription?.message} />
           </div>
 
           <div className="space-y-2">

@@ -3,8 +3,10 @@ import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import ActivationStatus from "./_components/ActivationStatus";
 
 interface PageProps {
-  // `type`/`courseId` are set on the Stripe successUrl by lib/checkout.ts;
-  // `session_id` is Stripe's own placeholder (unused — access comes from the webhook).
+  // `type`/`courseId` are set on the Stripe successUrl by lib/checkout.ts. `session_id` is
+  // Stripe's own placeholder — unused for case_bank/course (access comes from the webhook
+  // alone), but a booking's poll needs it to identify which booking was just paid for
+  // (see one-on-one/[id]/actions.ts and payment/success/actions.ts).
   searchParams: Promise<{
     type?: string;
     courseId?: string;
@@ -13,7 +15,7 @@ interface PageProps {
 }
 
 export default async function PaymentSuccessPage({ searchParams }: PageProps) {
-  const { type, courseId } = await searchParams;
+  const { type, courseId, session_id: sessionId } = await searchParams;
 
   return (
     <>
@@ -21,7 +23,7 @@ export default async function PaymentSuccessPage({ searchParams }: PageProps) {
         <BannerTitleCase text="Payment" />
       </BannerBg>
       <section className="px-4 sm:px-8 lg:px-15 py-16 sm:py-24 flex flex-col items-center">
-        <ActivationStatus type={type ?? "case_bank"} courseId={courseId} />
+        <ActivationStatus type={type ?? "case_bank"} courseId={courseId} sessionId={sessionId} />
       </section>
     </>
   );

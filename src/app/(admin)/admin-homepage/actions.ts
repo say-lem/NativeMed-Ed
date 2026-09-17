@@ -8,8 +8,11 @@ import {
   deleteFaq,
   deleteYoutubeLink,
   updateFaq,
+  updateFounderBio,
+  updateFounderImage,
   updateHomepageStats,
   updateLegalDisclaimer,
+  updatePrivacyPolicy,
   updateTermsAndConditions,
   updateYoutubeLink,
 } from "@/services/homepage.service";
@@ -31,6 +34,8 @@ import {
   type YoutubeLinkValues,
   legalPageSchema,
   type LegalPageValues,
+  founderBioSchema,
+  type FounderBioValues,
   faqSchema,
   faqPayload,
   type FaqValues,
@@ -181,6 +186,71 @@ export async function updateLegalDisclaimerAction(
     return { ok: true, message: "Legal disclaimer updated" };
   } catch (err) {
     return fail(err, "updateLegalDisclaimerAction", "Couldn't update the legal disclaimer.");
+  }
+}
+
+export async function updatePrivacyPolicyAction(
+  values: LegalPageValues,
+): Promise<FormActionResult> {
+  const parsed = legalPageSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await updatePrivacyPolicy(parsed.data.content);
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidatePath("/admin-homepage");
+    revalidatePath("/privacy-policy");
+    return { ok: true, message: "Privacy policy updated" };
+  } catch (err) {
+    return fail(err, "updatePrivacyPolicyAction", "Couldn't update the privacy policy.");
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// About the Founder
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function updateFounderBioAction(
+  values: FounderBioValues,
+): Promise<FormActionResult> {
+  const parsed = founderBioSchema.safeParse(values);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      message: "Please check the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const res = await updateFounderBio(parsed.data);
+    if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
+    revalidatePath("/admin-homepage");
+    revalidatePath("/about");
+    return { ok: true, message: "Founder's bio updated" };
+  } catch (err) {
+    return fail(err, "updateFounderBioAction", "Couldn't update the founder's bio.");
+  }
+}
+
+/** PATCH /admin/homepage/founder-bio/image — the photo shown next to the founder's bio. */
+export async function updateFounderImageAction(formData: FormData): Promise<FormActionResult> {
+  try {
+    const file = formData.get("image");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, message: "Please choose an image." };
+    }
+    const res = await updateFounderImage(file);
+    if (!res.success) return { ok: false, message: res.message };
+    revalidatePath("/admin-homepage");
+    revalidatePath("/about");
+    return { ok: true, message: "Founder's photo updated" };
+  } catch (err) {
+    return fail(err, "updateFounderImageAction", "Couldn't update the founder's photo.");
   }
 }
 
