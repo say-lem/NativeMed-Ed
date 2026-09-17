@@ -7,6 +7,7 @@ import {
   FileText,
   GripVertical,
   Loader2,
+  Music,
   Pencil,
   Plus,
   Trash2,
@@ -27,24 +28,54 @@ import {
 const fieldClass =
   "w-full rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 text-sm text-black-others placeholder:text-[#B7B7B9] outline-none focus:border-primary-100";
 
-type Kind = "pdf" | "video";
+type Kind = "pdf" | "video" | "audio";
 
-function isVideo(type: string): boolean {
-  return type?.toLowerCase() === "video";
+const KIND_META: Record<Kind, { label: string; icon: typeof FileText }> = {
+  pdf: { label: "PDF", icon: FileText },
+  video: { label: "Video (Drive link)", icon: Video },
+  audio: { label: "Audio (Drive link)", icon: Music },
+};
+
+function typeOf(type: string): Kind {
+  const t = type?.toLowerCase();
+  return t === "video" || t === "audio" ? t : "pdf";
 }
 
 function TypeBadge({ type }: { type: string }) {
-  const video = isVideo(type);
+  const kind = typeOf(type);
+  const { icon: Icon, label } = KIND_META[kind];
+  const cls =
+    kind === "video"
+      ? "bg-[#EEF2FF] text-[#3538CD]"
+      : kind === "audio"
+        ? "bg-[#F3E8FF] text-[#7E22CE]"
+        : "bg-[#FFF4E5] text-[#B25E09]";
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2.5 py-[2px] rounded-full text-xs font-semibold ${
-        video ? "bg-[#EEF2FF] text-[#3538CD]" : "bg-[#FFF4E5] text-[#B25E09]"
-      }`}
-    >
-      {video ? <Video size={12} /> : <FileText size={12} />}
-      {video ? "Video" : "PDF"}
+    <span className={`inline-flex items-center gap-1 px-2.5 py-[2px] rounded-full text-xs font-semibold ${cls}`}>
+      <Icon size={12} />
+      {label.split(" ")[0]}
     </span>
   );
+}
+
+/** "mm:ss" ↔ seconds — the backend stores duration in seconds, but that's an unfriendly
+ *  unit for an admin to type directly. */
+function parseDuration(v: string): number | undefined {
+  const s = v.trim();
+  if (!s) return undefined;
+  const parts = s.split(":").map((p) => Number(p));
+  if (parts.some((n) => !Number.isFinite(n) || n < 0)) return undefined;
+  if (parts.length === 1) return Math.round(parts[0]);
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  return undefined;
+}
+
+function formatDuration(seconds?: number): string {
+  if (seconds == null) return "";
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 export default function ContentManager({
@@ -140,14 +171,15 @@ export default function ContentManager({
         res = await addPdfLessonAction(courseId, fd);
       } else {
         if (!fileUrl.trim()) {
-          toast.error("Add the video link");
+          toast.error("Add the Drive link");
           return;
         }
         res = await addDriveLessonAction(courseId, {
           title: title.trim(),
+          type: kind,
           fileUrl: fileUrl.trim(),
           order: ord,
-          duration: duration.trim() || undefined,
+          duration: parseDuration(duration),
         });
       }
       if (res.ok) {
@@ -160,11 +192,7 @@ export default function ContentManager({
     });
   };
 
-  const saveEdit = (payload: {
-    title: string;
-    duration?: string;
-    fileUrl?: string;
-  }) => {
+  const saveEdit = (payload: { title: string; duration?: number }) => {
     if (!editing) return;
     const id = editing._id;
     startEdit(async () => {
@@ -204,22 +232,25 @@ export default function ContentManager({
         <h2 className="text-lg font-semibold text-black-others">Add Lesson</h2>
 
         {/* Type toggle */}
-        <div className="mt-4 inline-flex rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
-          {(["pdf", "video"] as Kind[]).map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setKind(k)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-[6px] text-sm font-medium cursor-pointer ${
-                kind === k
-                  ? "bg-white shadow-sm text-primary-100"
-                  : "text-subtle-text"
-              }`}
-            >
-              {k === "pdf" ? <FileText size={15} /> : <Video size={15} />}
-              {k === "pdf" ? "PDF" : "Video (Drive link)"}
-            </button>
-          ))}
+        <div className="mt-4 inline-flex flex-wrap rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
+          {(Object.keys(KIND_META) as Kind[]).map((k) => {
+            const { label, icon: Icon } = KIND_META[k];
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setKind(k)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-[6px] text-sm font-medium cursor-pointer ${
+                  kind === k
+                    ? "bg-white shadow-sm text-primary-100"
+                    : "text-subtle-text"
+                }`}
+              >
+                <Icon size={15} />
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -264,7 +295,7 @@ export default function ContentManager({
               </div>
               <div className="space-y-2">
                 <label className="block text-sm text-[#080A0D]">
-                  Duration <span className="text-subtle-text">(optional)</span>
+                  Duration <span className="text-subtle-text">(optional, mm:ss)</span>
                 </label>
                 <input
                   className={fieldClass}
@@ -340,9 +371,9 @@ export default function ContentManager({
                   </p>
                   <div className="mt-1 flex items-center gap-3">
                     <TypeBadge type={l.type} />
-                    {l.duration && (
+                    {l.duration != null && (
                       <span className="text-xs text-subtle-text">
-                        {l.duration}
+                        {formatDuration(l.duration)}
                       </span>
                     )}
                   </div>

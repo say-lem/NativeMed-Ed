@@ -46,9 +46,11 @@ export default async function LessonViewerPage({ params }: PageProps) {
   const lesson = lessons.find((l) => l._id === lessonId);
   if (!lesson) redirect(`/my-courses/${id}`);
 
-  // Only PDFs are viewed in-app. Video lessons are Google-Drive links opened
+  // Only PDFs are viewed in-app. Video/audio lessons are Google-Drive links opened
   // externally from the lesson list — never rendered here.
-  if (lesson.type === "video") redirect(`/my-courses/${id}`);
+  if (lesson.type === "video" || lesson.type === "audio") {
+    redirect(`/my-courses/${id}`);
+  }
 
   return (
     <>
