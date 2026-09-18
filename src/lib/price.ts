@@ -1,4 +1,4 @@
-import type { Course } from "@/types/api";
+import type { Course, LiveCourse } from "@/types/api";
 
 /**
  * Course price formatting + lookup.
@@ -77,4 +77,11 @@ export function coursePriceLabel(course: Course): string {
   return intervals
     .map((iv) => `${formatMoney(priceFor(course, iv)!)}/${INTERVAL_SHORT[iv] ?? iv}`)
     .join(" · ");
+}
+
+/** Live courses are a single one-time price, not a subscription — no "from"/interval
+ *  needed. "—" when the course has no price set yet (shouldn't happen post-create, since
+ *  price is required, but legacy/incomplete drafts are possible). */
+export function liveCourseBadgePrice(course: LiveCourse): string {
+  return course.price != null ? formatMoney(course.price) : "—";
 }

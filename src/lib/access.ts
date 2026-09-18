@@ -2,6 +2,7 @@ import "server-only";
 import axios from "axios";
 import { getCourseSubStatus } from "@/services/subscriptions.service";
 import { checkEnrollment } from "@/services/enrollments.service";
+import { checkLiveCourseEnrollment } from "@/services/liveCourses.service";
 
 export interface CourseAccess {
   hasAccess: boolean;
@@ -47,6 +48,27 @@ export async function getCourseAccess(courseId: string): Promise<CourseAccess> {
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;
     console.error("[course-access] fetch error:", err.code, err.message);
+    return { hasAccess: false };
+  }
+}
+
+export interface LiveCourseAccess {
+  hasAccess: boolean;
+  accessGrantedAt?: string;
+}
+
+/**
+ * A user has access to a live course via a one-time purchase or an admin manual grant —
+ * there's no subscription concept here. Fails closed (no access) on error.
+ */
+export async function getLiveCourseAccess(courseId: string): Promise<LiveCourseAccess> {
+  try {
+    const res = await checkLiveCourseEnrollment(courseId);
+    if (!res.success || !res.data.enrolled) return { hasAccess: false };
+    return { hasAccess: true, accessGrantedAt: res.data.accessGrantedAt };
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    console.error("[live-course-access] fetch error:", err.code, err.message);
     return { hasAccess: false };
   }
 }

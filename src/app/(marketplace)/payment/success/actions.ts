@@ -5,6 +5,7 @@ import {
   getCourseSubStatus,
 } from "@/services/subscriptions.service";
 import { checkEnrollment } from "@/services/enrollments.service";
+import { checkLiveCourseEnrollment } from "@/services/liveCourses.service";
 import { getMyBookings } from "@/services/booking.service";
 
 /**
@@ -30,6 +31,14 @@ export async function checkPurchaseActive(
         (sub.success && sub.data.active) ||
         (enroll.success && enroll.data.enrolled);
       return { active: Boolean(active) };
+    }
+
+    // Live courses are a one-time purchase (not a subscription) — the webhook writes
+    // an enrollment only, no subscription status to fall back on.
+    if (type === "live_course") {
+      if (!courseId) return { active: false };
+      const res = await checkLiveCourseEnrollment(courseId);
+      return { active: Boolean(res.success && res.data.enrolled) };
     }
 
     if (type === "booking") {

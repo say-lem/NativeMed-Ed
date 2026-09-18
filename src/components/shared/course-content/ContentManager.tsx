@@ -14,16 +14,9 @@ import {
   Upload,
   Video,
 } from "lucide-react";
-import type { Lesson } from "@/types/api";
+import type { FormActionResult, Lesson } from "@/types/api";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import LessonEditModal from "./LessonEditModal";
-import {
-  addDriveLessonAction,
-  addPdfLessonAction,
-  deleteLessonAction,
-  reorderLessonsAction,
-  updateLessonAction,
-} from "../actions";
 
 const fieldClass =
   "w-full rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 text-sm text-black-others placeholder:text-[#B7B7B9] outline-none focus:border-primary-100";
@@ -58,8 +51,6 @@ function TypeBadge({ type }: { type: string }) {
   );
 }
 
-/** "mm:ss" ↔ seconds — the backend stores duration in seconds, but that's an unfriendly
- *  unit for an admin to type directly. */
 function parseDuration(v: string): number | undefined {
   const s = v.trim();
   if (!s) return undefined;
@@ -78,12 +69,36 @@ function formatDuration(seconds?: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+/** Server-action bindings — lets the same UI drive either `/courses/:id/content` or
+ *  `/live-courses/:id/content` (identical backend contract, different base path). */
+export interface ContentManagerActions {
+  addPdf: (courseId: string, formData: FormData) => Promise<FormActionResult>;
+  addDriveLink: (
+    courseId: string,
+    payload: {
+      title: string;
+      type: "video" | "audio";
+      fileUrl: string;
+      order: number;
+      duration?: number;
+    },
+  ) => Promise<FormActionResult>;
+  update: (
+    courseId: string,
+    id: string,
+    payload: { title?: string; order?: number; duration?: number },
+  ) => Promise<FormActionResult>;
+  remove: (courseId: string, id: string) => Promise<FormActionResult>;
+}
+
 export default function ContentManager({
   courseId,
   lessons,
+  actions,
 }: {
   courseId: string;
   lessons: Lesson[];
+  actions: ContentManagerActions;
 }) {
   const router = useRouter();
   const confirm = useConfirm();
@@ -130,9 +145,11 @@ export default function ContentManager({
     setItems(renumbered); // optimistic
     if (!changed.length) return;
     startReorder(async () => {
-      const res = await reorderLessonsAction(courseId, changed);
-      if (!res.ok) {
-        toast.error(res.message ?? "Couldn't save the new order");
+      const results = await Promise.all(
+        changed.map((c) => actions.update(courseId, c.id, { order: c.order })),
+      );
+      if (results.some((r) => !r.ok)) {
+        toast.error("Couldn't save the new order");
         router.refresh(); // revert to server truth
       }
     });
@@ -158,7 +175,7 @@ export default function ContentManager({
     }
     const ord = nextOrder; // always append at the end; reorder by dragging
     startAdd(async () => {
-      let res;
+      let res: FormActionResult;
       if (kind === "pdf") {
         if (!file) {
           toast.error("Choose a PDF file");
@@ -168,13 +185,13 @@ export default function ContentManager({
         fd.append("file", file);
         fd.append("title", title.trim());
         fd.append("order", String(ord));
-        res = await addPdfLessonAction(courseId, fd);
+        res = await actions.addPdf(courseId, fd);
       } else {
         if (!fileUrl.trim()) {
           toast.error("Add the Drive link");
           return;
         }
-        res = await addDriveLessonAction(courseId, {
+        res = await actions.addDriveLink(courseId, {
           title: title.trim(),
           type: kind,
           fileUrl: fileUrl.trim(),
@@ -196,7 +213,7 @@ export default function ContentManager({
     if (!editing) return;
     const id = editing._id;
     startEdit(async () => {
-      const res = await updateLessonAction(courseId, id, payload);
+      const res = await actions.update(courseId, id, payload);
       if (res.ok) {
         toast.success(res.message ?? "Lesson updated");
         setEditing(null);
@@ -217,7 +234,7 @@ export default function ContentManager({
     if (!ok) return;
     setDeletingId(l._id);
     startDelete(async () => {
-      const res = await deleteLessonAction(courseId, l._id);
+      const res = await actions.remove(courseId, l._id);
       if (res.ok) toast.success(res.message ?? "Lesson deleted");
       else toast.error(res.message ?? "Something went wrong");
       setDeletingId(null);

@@ -1,5 +1,6 @@
 import "server-only";
 import { api } from "@/lib/api";
+import * as content from "./content.service";
 import type {
   AdminCourse,
   ApiResponse,
@@ -142,82 +143,34 @@ export async function updateCourseThumbnail(
 
 /* ------------------------------------------------------------------ *
  * Course Content (lessons) — /courses/:courseId/content
- * Lives in its own backend module now (`src/modules/content`), but the
- * route paths are unchanged. No more tier gating on reads — any enrolled
- * user (or the course's creator/admin) can read every lesson.
+ * Thin bindings over the generic `content.service.ts` (shared with
+ * liveCourses.service.ts — same backend module, different base path).
  * ------------------------------------------------------------------ */
 
-/** GET /courses/:courseId/content — auth (enrolled user or admin). All lessons for a
- *  course, sorted by `order`. PDF `fileUrl`s are freshly-signed on every call. */
-export async function getCourseContent(
-  courseId: string,
-): Promise<ApiResponse<Lesson[]>> {
-  const res = await api.get<ApiResponse<Lesson[]>>(
-    `/courses/${courseId}/content`,
-  );
-  return res.data;
-}
+export const getCourseContent = (courseId: string): Promise<ApiResponse<Lesson[]>> =>
+  content.getCourseContent("courses", courseId);
 
-/** POST /courses/:courseId/content/upload-pdf — admin, multipart. A PDF lesson (Cloudinary,
- *  max 50MB, `application/pdf` only). */
-export async function uploadPdfLesson(
+export const uploadPdfLesson = (
   courseId: string,
   payload: { file: File; title: string; order: number },
-): Promise<ApiResponse<Lesson>> {
-  const fd = new FormData();
-  fd.append("file", payload.file);
-  fd.append("title", payload.title);
-  fd.append("order", String(payload.order));
-  fd.append("type", "pdf");
-  const res = await api.post<ApiResponse<Lesson>>(
-    `/courses/${courseId}/content/upload-pdf`,
-    fd,
-    { headers: { "Content-Type": undefined } },
-  );
-  return res.data;
-}
+): Promise<ApiResponse<Lesson>> => content.uploadPdfLesson("courses", courseId, payload);
 
-/** POST /courses/:courseId/content/drive-link — admin, JSON. A video or audio lesson
- *  (Google-Drive share link the admin adds manually — never uploaded through us). */
-export async function addDriveLesson(
+export const addDriveLesson = (
   courseId: string,
   payload: {
     title: string;
     type: "video" | "audio";
     fileUrl: string;
     order: number;
-    duration?: number; // seconds
+    duration?: number;
   },
-): Promise<ApiResponse<Lesson>> {
-  const res = await api.post<ApiResponse<Lesson>>(
-    `/courses/${courseId}/content/drive-link`,
-    payload,
-  );
-  return res.data;
-}
+): Promise<ApiResponse<Lesson>> => content.addDriveLesson("courses", courseId, payload);
 
-/** PATCH /courses/:courseId/content/:id — admin. Metadata only (title/order/duration) —
- *  never re-uploads the file; delete + re-add to replace one. */
-export async function updateLesson(
+export const updateLesson = (
   courseId: string,
   id: string,
   payload: Partial<Pick<Lesson, "title" | "order" | "duration">>,
-): Promise<ApiResponse<Lesson>> {
-  const res = await api.patch<ApiResponse<Lesson>>(
-    `/courses/${courseId}/content/${id}`,
-    payload,
-  );
-  return res.data;
-}
+): Promise<ApiResponse<Lesson>> => content.updateLesson("courses", courseId, id, payload);
 
-/** DELETE /courses/:courseId/content/:id — admin. PDFs also remove the Cloudinary asset;
- *  video/audio only remove the DB record (the Drive file itself isn't touched). */
-export async function deleteLesson(
-  courseId: string,
-  id: string,
-): Promise<ApiResponse<null>> {
-  const res = await api.delete<ApiResponse<null>>(
-    `/courses/${courseId}/content/${id}`,
-  );
-  return res.data;
-}
+export const deleteLesson = (courseId: string, id: string): Promise<ApiResponse<null>> =>
+  content.deleteLesson("courses", courseId, id);
