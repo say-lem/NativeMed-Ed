@@ -1,5 +1,6 @@
 import "server-only";
 import { api } from "@/lib/api";
+import * as content from "./content.service";
 import type {
   AdminCourse,
   ApiResponse,
@@ -63,7 +64,7 @@ export async function getAdminCourse(
   return res.data;
 }
 
-/** POST /courses — admin. Create a course. Requires both pricing tiers + both Drive links. */
+/** POST /courses — admin. Create a course. Requires the Drive link + at least one price. */
 export async function createCourse(
   payload: CourseInput,
 ): Promise<ApiResponse<AdminCourse>> {
@@ -71,8 +72,8 @@ export async function createCourse(
   return res.data;
 }
 
-/** PATCH /courses/:id — admin. Partial update; `pricing` merges per tier/interval, so send
- *  only what changed. Omitted Drive links keep their stored value. */
+/** PATCH /courses/:id — admin. Partial update; `pricing` merges per interval, so send
+ *  only what changed. Omitted Drive link keeps its stored value. */
 export async function updateCourse(
   id: string,
   payload: Partial<CourseInput>,
@@ -142,74 +143,34 @@ export async function updateCourseThumbnail(
 
 /* ------------------------------------------------------------------ *
  * Course Content (lessons) — /courses/:courseId/content
+ * Thin bindings over the generic `content.service.ts` (shared with
+ * liveCourses.service.ts — same backend module, different base path).
  * ------------------------------------------------------------------ */
 
-/** GET /courses/:courseId/content — admin. All lessons for a course. */
-export async function getCourseContent(
-  courseId: string,
-): Promise<ApiResponse<Lesson[]>> {
-  const res = await api.get<ApiResponse<Lesson[]>>(
-    `/courses/${courseId}/content`,
-  );
-  return res.data;
-}
+export const getCourseContent = (courseId: string): Promise<ApiResponse<Lesson[]>> =>
+  content.getCourseContent("courses", courseId);
 
-/** POST /courses/:courseId/content/upload-pdf — admin, multipart. A PDF lesson (Cloudinary). */
-export async function uploadPdfLesson(
+export const uploadPdfLesson = (
   courseId: string,
   payload: { file: File; title: string; order: number },
-): Promise<ApiResponse<Lesson>> {
-  const fd = new FormData();
-  fd.append("file", payload.file);
-  fd.append("title", payload.title);
-  fd.append("order", String(payload.order));
-  fd.append("type", "pdf");
-  const res = await api.post<ApiResponse<Lesson>>(
-    `/courses/${courseId}/content/upload-pdf`,
-    fd,
-    { headers: { "Content-Type": undefined } },
-  );
-  return res.data;
-}
+): Promise<ApiResponse<Lesson>> => content.uploadPdfLesson("courses", courseId, payload);
 
-/** POST /courses/:courseId/content/drive-link — admin, JSON. A video lesson (Google-Drive link). */
-export async function addDriveLesson(
+export const addDriveLesson = (
   courseId: string,
   payload: {
     title: string;
+    type: "video" | "audio";
     fileUrl: string;
     order: number;
-    duration?: string;
-    type?: string;
+    duration?: number;
   },
-): Promise<ApiResponse<Lesson>> {
-  const res = await api.post<ApiResponse<Lesson>>(
-    `/courses/${courseId}/content/drive-link`,
-    { type: "video", ...payload },
-  );
-  return res.data;
-}
+): Promise<ApiResponse<Lesson>> => content.addDriveLesson("courses", courseId, payload);
 
-/** PATCH /courses/:courseId/content/:id — admin. Partial lesson update. */
-export async function updateLesson(
+export const updateLesson = (
   courseId: string,
   id: string,
-  payload: Partial<Pick<Lesson, "title" | "order" | "duration" | "fileUrl">>,
-): Promise<ApiResponse<Lesson>> {
-  const res = await api.patch<ApiResponse<Lesson>>(
-    `/courses/${courseId}/content/${id}`,
-    payload,
-  );
-  return res.data;
-}
+  payload: Partial<Pick<Lesson, "title" | "order" | "duration">>,
+): Promise<ApiResponse<Lesson>> => content.updateLesson("courses", courseId, id, payload);
 
-/** DELETE /courses/:courseId/content/:id — admin. Remove a lesson. */
-export async function deleteLesson(
-  courseId: string,
-  id: string,
-): Promise<ApiResponse<null>> {
-  const res = await api.delete<ApiResponse<null>>(
-    `/courses/${courseId}/content/${id}`,
-  );
-  return res.data;
-}
+export const deleteLesson = (courseId: string, id: string): Promise<ApiResponse<null>> =>
+  content.deleteLesson("courses", courseId, id);

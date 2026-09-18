@@ -8,7 +8,7 @@ import {
   updateLesson,
   uploadPdfLesson,
 } from "@/services/courses.service";
-import type { ApiFailure, FormActionResult, Lesson } from "@/types/api";
+import type { ApiFailure, FormActionResult } from "@/types/api";
 
 function fail(err: unknown, tag: string, fallback: string): FormActionResult {
   if (axios.isAxiosError(err)) {
@@ -42,27 +42,33 @@ export async function addPdfLessonAction(
   }
 }
 
-/** Add a video lesson (Google-Drive link, JSON). */
+/** Add a video or audio lesson (Google-Drive link, JSON). */
 export async function addDriveLessonAction(
   courseId: string,
-  payload: { title: string; fileUrl: string; order: number; duration?: string },
+  payload: {
+    title: string;
+    type: "video" | "audio";
+    fileUrl: string;
+    order: number;
+    duration?: number;
+  },
 ): Promise<FormActionResult> {
   try {
     const res = await addDriveLesson(courseId, payload);
     if (!res.success)
       return { ok: false, message: res.message, fieldErrors: res.errors };
     revalidatePath(`/admin-courses/${courseId}/content`);
-    return { ok: true, message: "Video lesson added" };
+    return { ok: true, message: `${payload.type === "audio" ? "Audio" : "Video"} lesson added` };
   } catch (err) {
-    return fail(err, "addDriveLessonAction", "Couldn't add the video lesson.");
+    return fail(err, "addDriveLessonAction", "Couldn't add the lesson.");
   }
 }
 
-/** Update a lesson's title / order / duration / fileUrl. */
+/** Update a lesson's title / order / duration. Also used (per-item) to persist reordering. */
 export async function updateLessonAction(
   courseId: string,
   id: string,
-  payload: Partial<Pick<Lesson, "title" | "order" | "duration" | "fileUrl">>,
+  payload: { title?: string; order?: number; duration?: number },
 ): Promise<FormActionResult> {
   try {
     const res = await updateLesson(courseId, id, payload);
@@ -72,22 +78,6 @@ export async function updateLessonAction(
     return { ok: true, message: "Lesson updated" };
   } catch (err) {
     return fail(err, "updateLessonAction", "Couldn't update the lesson.");
-  }
-}
-
-/** Persist a new lesson order — PATCHes each changed lesson's `order`. */
-export async function reorderLessonsAction(
-  courseId: string,
-  ordered: { id: string; order: number }[],
-): Promise<FormActionResult> {
-  try {
-    await Promise.all(
-      ordered.map((o) => updateLesson(courseId, o.id, { order: o.order })),
-    );
-    revalidatePath(`/admin-courses/${courseId}/content`);
-    return { ok: true, message: "Order saved" };
-  } catch (err) {
-    return fail(err, "reorderLessonsAction", "Couldn't save the new order.");
   }
 }
 

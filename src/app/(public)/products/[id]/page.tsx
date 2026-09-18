@@ -7,19 +7,34 @@ import ProductsCard from "@/components/shared/ProductsCard";
 import TitleCase from "@/components/shared/TitleCase";
 import { Button } from "@/components/ui/button";
 import { getCourses } from "@/services/courses.service";
-import type { Course } from "@/types/api";
+import { getLiveCourses } from "@/services/liveCourses.service";
+import { formatMoney } from "@/lib/price";
+import type { Course, LiveCourse } from "@/types/api";
 
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
-/** The public course list is available unauthenticated; find the one by id
- *  (the single-course endpoint requires auth). */
-async function loadCourse(id: string): Promise<Course | null> {
+type Product =
+  | { kind: "course"; data: Course }
+  | { kind: "live_course"; data: LiveCourse };
+
+/** The public course lists are available unauthenticated; find the one by id (the
+ *  single-item endpoints require auth). Checks regular courses first, then live courses —
+ *  both id spaces are Mongo ObjectIds with no overlap, so at most one will match. */
+async function loadProduct(id: string): Promise<Product | null> {
   try {
-    const res = await getCourses();
-    if (!res.success) return null;
-    return res.data.find((c) => c._id === id) ?? null;
+    const [courses, liveCourses] = await Promise.all([getCourses(), getLiveCourses()]);
+
+    if (courses.success) {
+      const course = courses.data.find((c) => c._id === id);
+      if (course) return { kind: "course", data: course };
+    }
+    if (liveCourses.success) {
+      const liveCourse = liveCourses.data.find((c) => c._id === id);
+      if (liveCourse) return { kind: "live_course", data: liveCourse };
+    }
+    return null;
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;
     console.error("[product-detail] fetch error:", err.code, err.message);
@@ -29,9 +44,9 @@ async function loadCourse(id: string): Promise<Course | null> {
 
 export default async function ProductByIdPage({ params }: PageProps) {
   const { id } = await params;
-  const course = await loadCourse(id);
+  const product = await loadProduct(id);
 
-  if (!course) {
+  if (!product) {
     return (
       <section className="px-4 sm:px-8 lg:px-15 py-24 text-center space-y-4">
         <h1 className="text-2xl font-semibold text-black-others">
@@ -50,6 +65,13 @@ export default async function ProductByIdPage({ params }: PageProps) {
     );
   }
 
+  const { kind, data } = product;
+  const ctaHref = kind === "course" ? `/courses/${data._id}` : `/live-courses/${data._id}`;
+  const ctaLabel =
+    kind === "course"
+      ? "Get this course"
+      : `Buy Now${data.price != null ? ` — ${formatMoney(data.price)}` : ""}`;
+
   return (
     <>
       <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-8 sm:pt-12 lg:pt-20 pb-16 sm:pb-24 lg:pb-36">
@@ -57,8 +79,8 @@ export default async function ProductByIdPage({ params }: PageProps) {
           <div className="authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-5 md:gap-6 lg:gap-8 flex flex-col md:flex-row justify-center overflow-x-hidden">
             <aside className="relative w-full md:basis-1/2 min-h-[35vh] sm:min-h-[40vh] md:min-h-[50vh] lg:min-h-[60vh]">
               <Image
-                src={course.thumbnailUrl || "/Images/card image.png"}
-                alt={`image of ${course.title}`}
+                src={data.thumbnailUrl || "/Images/card image.png"}
+                alt={`image of ${data.title}`}
                 fill
                 className="object-cover object-center rounded-lg"
                 sizes="(max-width: 768px) 100vw, 50vw"
@@ -68,18 +90,18 @@ export default async function ProductByIdPage({ params }: PageProps) {
             <aside className="w-full md:basis-1/2 flex flex-col justify-between gap-4 sm:gap-5 md:gap-6 lg:gap-8">
               <div className="space-y-3 sm:space-y-4">
                 <h3 className="font-semibold text-lg sm:text-xl lg:text-2xl leading-[130%] tracking-[-2%] text-black-others">
-                  {course.title}
+                  {data.title}
                 </h3>
-                {course.description && (
+                {data.description && (
                   <p className="font-light text-sm sm:text-base lg:text-xl leading-[150%] text-[#373737] whitespace-pre-line">
-                    {course.description}
+                    {data.description}
                   </p>
                 )}
               </div>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center sm:justify-end">
-                <Link href={`/courses/${course._id}`}>
+                <Link href={ctaHref}>
                   <Button className="font-bold text-sm sm:text-base bg-black-others w-full">
-                    Get this course
+                    {ctaLabel}
                   </Button>
                 </Link>
               </div>
@@ -89,13 +111,13 @@ export default async function ProductByIdPage({ params }: PageProps) {
 
         {/* Longer write-up — outside the hero card, shown only when the admin has set one.
             Stored as markdown from the admin's rich-text editor. */}
-        {course.detailedDescription && (
+        {data.detailedDescription && (
           <aside className="px-0 sm:px-4 lg:px-10 pt-8 sm:pt-10 space-y-3">
             <h2 className="font-semibold text-lg sm:text-xl lg:text-2xl text-black-others">
               About this course
             </h2>
             <Markdown className="text-sm sm:text-base lg:text-lg text-[#373737]">
-              {course.detailedDescription}
+              {data.detailedDescription}
             </Markdown>
           </aside>
         )}

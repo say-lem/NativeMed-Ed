@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { StatVideoIcon } from "../../admin-dashboard/_components/StatIcons";
 import Link from "next/link";
 import type { Course } from "@/types/api";
-import { coursePriceRows } from "@/lib/price";
+import { coursePriceLabel } from "@/lib/price";
 import { useAdminList } from "../../_components/AdminListContext";
 import Pagination from "../../_components/Pagination";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
@@ -140,7 +140,7 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6 mt-8">
           {rows.map((course) => {
-            const priceRows = coursePriceRows(course);
+            const priceLabel = coursePriceLabel(course);
             return (
               <div
                 key={course._id}
@@ -188,26 +188,10 @@ export default function AdminCourses({ courses }: { courses: Course[] }) {
                     {course.description}
                   </p>
 
-                  {/* Pricing: one row per tier. Four prices can't share a row with the
-                    action buttons, so they get their own block. */}
-                  <div className="mt-auto pt-3 space-y-1">
-                    {priceRows.length === 0 ? (
-                      <p className="text-sm text-subtle-text">No price set</p>
-                    ) : (
-                      priceRows.map((row) => (
-                        <div
-                          key={row.tier}
-                          className="flex items-baseline justify-between gap-3"
-                        >
-                          <span className="text-xs text-subtle-text shrink-0">
-                            {row.label}
-                          </span>
-                          <span className="text-sm font-semibold text-black-others text-right">
-                            {row.prices}
-                          </span>
-                        </div>
-                      ))
-                    )}
+                  <div className="mt-auto pt-3">
+                    <span className="text-sm font-semibold text-black-others">
+                      {priceLabel}
+                    </span>
                   </div>
 
                   <div className="pt-3 flex items-center gap-2">

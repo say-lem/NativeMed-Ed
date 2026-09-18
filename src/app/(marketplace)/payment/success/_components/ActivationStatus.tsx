@@ -74,21 +74,32 @@ export default function ActivationStatus({
   };
 
   const isCourse = type === "course" && Boolean(courseId);
+  const isLiveCourse = type === "live_course" && Boolean(courseId);
   const isBooking = type === "booking";
   const destination = isCourse
     ? `/my-courses/${courseId}`
-    : isBooking
-      ? "/one-on-one"
-      : "/full-cases";
-  const destinationLabel = isCourse
+    : isLiveCourse
+      ? `/my-live-courses/${courseId}`
+      : isBooking
+        ? "/one-on-one"
+        : "/full-cases";
+  const destinationLabel = isCourse || isLiveCourse
     ? "Go to course"
     : isBooking
       ? "My bookings"
       : "Explore Case Bank";
   // Booking isn't a subscription, so the secondary CTA elsewhere in this component
   // points somewhere relevant instead of "My subscriptions".
-  const secondaryHref = isBooking ? "/dashboard" : "/subscriptions";
-  const secondaryLabel = isBooking ? "Dashboard" : "My subscriptions";
+  const secondaryHref = isBooking
+    ? "/dashboard"
+    : isLiveCourse
+      ? "/my-live-courses"
+      : "/subscriptions";
+  const secondaryLabel = isBooking
+    ? "Dashboard"
+    : isLiveCourse
+      ? "My live courses"
+      : "My subscriptions";
 
   if (state === "waiting") {
     return (
@@ -119,7 +130,7 @@ export default function ActivationStatus({
           {isBooking
             ? "Your session is booked and confirmed — we'll be in touch with the details."
             : "Your access is active."}{" "}
-          {isCourse &&
+          {(isCourse || isLiveCourse) &&
             "Course materials are shared to your Google Drive — check your email if you don't see them yet."}
         </p>
         <div className="flex flex-col sm:flex-row gap-3 mt-2">

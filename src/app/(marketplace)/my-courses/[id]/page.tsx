@@ -3,17 +3,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
   ChevronLeft,
-  FileText,
-  Video,
-  Lock,
   ChevronRight,
   ExternalLink,
+  FileText,
+  Mail,
+  MessageCircle,
+  Music,
+  Send,
+  Video,
 } from "lucide-react";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import { getCourse, getCourseContent } from "@/services/courses.service";
 import { getCourseAccess } from "@/lib/access";
-import { includesLectures } from "@/lib/tiers";
 import type { Course, Lesson } from "@/types/api";
 
 interface PageProps {
@@ -42,12 +44,11 @@ async function loadContent(id: string): Promise<Lesson[]> {
   }
 }
 
+const KIND_ICON = { pdf: FileText, video: Video, audio: Music } as const;
+
 export default async function CourseContentPage({ params }: PageProps) {
   const { id } = await params;
-  const [course, access] = await Promise.all([
-    loadCourse(id),
-    getCourseAccess(id),
-  ]);
+  const [course, access] = await Promise.all([loadCourse(id), getCourseAccess(id)]);
 
   // Not entitled → send to the course page (which shows the plan picker).
   if (!access.hasAccess) redirect(`/courses/${id}`);
@@ -55,9 +56,6 @@ export default async function CourseContentPage({ params }: PageProps) {
   const lessons = (await loadContent(id)).sort(
     (a, b) => (a.order ?? 0) - (b.order ?? 0),
   );
-
-  // The mock-sessions-only tier can't open the Google-Drive video lessons.
-  const canWatchVideo = includesLectures(access.tier);
 
   return (
     <>
@@ -76,6 +74,49 @@ export default async function CourseContentPage({ params }: PageProps) {
           <ChevronLeft size={18} /> Back to My Courses
         </Link>
 
+        {/* Beyond the itemized lessons below, the course also shares a Google Drive
+            folder on enrollment — the backend grants Viewer access directly and never
+            exposes the folder URL to the client, so it only ever shows up in email /
+            Drive's "Shared with me", not in-app. */}
+        <div className="flex items-start gap-3 rounded-[16px] border border-primary-20 bg-primary-10 p-5">
+          <Mail size={20} className="text-primary-100 shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <p className="font-semibold text-black-others">
+              Also check your email for extra materials
+            </p>
+            <p className="text-sm leading-[150%] text-subtle-text">
+              You&apos;ve been given Viewer access to this course&apos;s Google Drive
+              folder — look for an invite from Google Drive at the email address on your
+              account, or find it under &quot;Shared with me&quot; in Drive.
+            </p>
+          </div>
+        </div>
+
+        {(course?.telegramChannel || course?.whatsappChannel) && (
+          <div className="flex flex-wrap gap-3">
+            {course?.telegramChannel && (
+              <a
+                href={course.telegramChannel}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-[#229ED9] text-white text-sm font-semibold px-5 py-2.5 hover:opacity-90 transition-opacity"
+              >
+                <Send size={16} /> Telegram
+              </a>
+            )}
+            {course?.whatsappChannel && (
+              <a
+                href={course.whatsappChannel}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-[#25D366] text-white text-sm font-semibold px-5 py-2.5 hover:opacity-90 transition-opacity"
+              >
+                <MessageCircle size={16} /> WhatsApp
+              </a>
+            )}
+          </div>
+        )}
+
         {lessons.length === 0 ? (
           <p className="text-center text-subtle-text py-16">
             No lessons have been added to this course yet.
@@ -83,9 +124,9 @@ export default async function CourseContentPage({ params }: PageProps) {
         ) : (
           <ul className="space-y-3">
             {lessons.map((lesson) => {
-              const video = lesson.type === "video";
-              const locked = video && !canWatchVideo;
-              const Icon = video ? Video : FileText;
+              const kind = lesson.type === "video" || lesson.type === "audio" ? lesson.type : "pdf";
+              const external = kind !== "pdf";
+              const Icon = KIND_ICON[kind];
 
               const inner = (
                 <>
@@ -98,14 +139,12 @@ export default async function CourseContentPage({ params }: PageProps) {
                     </p>
                     <p className="text-xs text-subtle-text capitalize">
                       {lesson.type}
-                      {lesson.duration ? ` · ${lesson.duration}` : ""}
+                      {lesson.duration != null
+                        ? ` · ${Math.floor(lesson.duration / 60)}:${String(lesson.duration % 60).padStart(2, "0")}`
+                        : ""}
                     </p>
                   </div>
-                  {locked ? (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-subtle-text shrink-0">
-                      <Lock size={14} /> PDF + Drive only
-                    </span>
-                  ) : video ? (
+                  {external ? (
                     <span className="inline-flex items-center gap-1 text-xs font-medium text-subtle-text shrink-0">
                       <ExternalLink size={14} /> Open in Drive
                     </span>
@@ -123,12 +162,8 @@ export default async function CourseContentPage({ params }: PageProps) {
 
               return (
                 <li key={lesson._id}>
-                  {locked ? (
-                    <div className="flex items-center gap-4 rounded-[12px] border border-gray-1 bg-white p-4 opacity-70">
-                      {inner}
-                    </div>
-                  ) : video ? (
-                    // Videos are Google-Drive links — open externally, not in-app.
+                  {external ? (
+                    // Video/audio are Google-Drive links — open externally, not in-app.
                     lesson.fileUrl ? (
                       <a
                         href={lesson.fileUrl}

@@ -2,23 +2,18 @@ import "server-only";
 import { api } from "@/lib/api";
 import type {
   ApiResponse,
-  CourseTier,
   Paginated,
   PaymentPlan,
 } from "@/types/api";
 
-/** Course access tiers accepted by checkout (`type: "course"`). Canonical definition
- *  lives in `@/types/api`; re-exported here for existing callers. */
-export type { CourseTier };
-
 /** Billing interval accepted by checkout. Confirm the full set against `/payments/plans`. */
 export type PaymentInterval = "monthly" | "quarterly" | string;
 
-/** POST /payments/checkout body. */
+/** POST /payments/checkout body. Courses no longer have access tiers — a course is one
+ *  Drive folder, one price per interval. */
 export interface CheckoutInput {
   type: "case_bank" | "course";
   interval: PaymentInterval;
-  tier?: CourseTier; // required when type === "course"
   courseId?: string; // required when type === "course"
   successUrl: string;
   cancelUrl: string;

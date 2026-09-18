@@ -2,6 +2,7 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { getCourses } from "@/services/courses.service";
+import { courseBadgePrice } from "@/lib/price";
 import type { Course } from "@/types/api";
 
 async function loadCourses(cutBy: number): Promise<Course[]> {
@@ -67,7 +68,10 @@ export default async function ProductsCard({ cutBy = 0 }: { cutBy?: number }) {
               </div>
             </aside>
 
-            <div className="px-3 sm:px-4 lg:px-6 flex justify-end items-center">
+            <div className="px-3 sm:px-4 lg:px-6 flex justify-between items-center gap-2">
+              <span className="font-bold text-sm sm:text-base text-black-others">
+                {courseBadgePrice(course)}
+              </span>
               <span className="bg-black-others shadow-[0px_4px_16px_0px_rgba(0,0,0,0.1)] text-white rounded-md font-bold text-xs sm:text-sm leading-[150%] px-4 py-2">
                 View Course
               </span>
