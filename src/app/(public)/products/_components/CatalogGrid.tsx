@@ -2,7 +2,7 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 import { CalendarClock, Layers } from "lucide-react";
-import { courseBadgePrice, formatMoney } from "@/lib/price";
+import { courseBadgePrice, formatMoney, liveCourseBadgePrice } from "@/lib/price";
 import { getCatalog } from "@/services/catalog.service";
 import type { CatalogProduct } from "@/types/api";
 
@@ -13,8 +13,9 @@ import type { CatalogProduct } from "@/types/api";
 // order, so it's left as-is.
 const TYPE_PRIORITY: Record<CatalogProduct["type"], number> = {
   course: 0,
-  case_bank: 1,
-  one_on_one: 2,
+  live_course: 1,
+  case_bank: 2,
+  one_on_one: 3,
 };
 
 async function loadCatalog(cutBy: number): Promise<CatalogProduct[]> {
@@ -99,6 +100,40 @@ export default async function CatalogGrid({ cutBy = 0 }: { cutBy?: number }) {
                 </aside>
 
                 <CtaBadge price={courseBadgePrice(product)}>View Course</CtaBadge>
+              </div>
+            </Link>
+          );
+        }
+
+        if (product.type === "live_course") {
+          return (
+            <Link href={`/products/${product._id}`} key={product._id}>
+              <div role="link" tabIndex={0} className={cardClass}>
+                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64">
+                  <Image
+                    src={product.thumbnailUrl || "/Images/card image.png"}
+                    alt={`image of ${product.title}`}
+                    fill
+                    className="object-cover object-center"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  <p className="absolute rounded-[100px] py-2 px-3 top-2 right-3 bg-[#00000080] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
+                    {liveCourseBadgePrice(product)}
+                  </p>
+                </aside>
+
+                <aside className="px-3 sm:px-4 lg:px-6 flex-1">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <p className="text-base sm:text-lg lg:text-xl font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
+                      {product.title}
+                    </p>
+                    <p className="line-clamp-3 text-sm leading-[150%] text-[#373737]">
+                      {product.description}
+                    </p>
+                  </div>
+                </aside>
+
+                <CtaBadge price={liveCourseBadgePrice(product)}>View Course</CtaBadge>
               </div>
             </Link>
           );

@@ -334,6 +334,86 @@ export interface Enrollment {
   updatedAt?: string;
 }
 
+/**
+ * Live course — a one-time-payment course with a fixed start/end date, as opposed to the
+ * subscription-based `Course`. Content (lessons) and Drive-folder access work identically —
+ * same content module, same enrollment-grants-Drive-access pattern — just a different
+ * parent collection (`/live-courses/:id/content` instead of `/courses/:id/content`).
+ */
+export interface LiveCourse {
+  _id: string;
+  title: string;
+  /** Short summary — shown on live-course cards/listings. */
+  description?: string;
+  /** Longer-form write-up — shown on the detail page only, never inside a card. */
+  detailedDescription?: string;
+  /** GBP pounds — one-time price, not a subscription. */
+  price?: number;
+  startDate: string;
+  endDate: string;
+  thumbnailUrl?: string;
+  telegramChannel?: string | null;
+  whatsappChannel?: string | null;
+  isPublished?: boolean;
+  /** New purchases are blocked while true — visibility (`isPublished`) and existing
+   *  enrollments are untouched. */
+  paymentsPaused?: boolean;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+/** Live course — admin shape (`GET /live-courses/admin/*`, and the `POST`/`PATCH`
+ *  responses). These routes DO return the Drive folder id, so the admin edit form can
+ *  prefill it. Public routes omit it. */
+export interface AdminLiveCourse extends LiveCourse {
+  driveFolderId?: string;
+}
+
+/**
+ * Payload for POST /live-courses (create) and PATCH /live-courses/:id (partial update).
+ * Create requires: title, description, price, startDate, endDate, and the Drive link.
+ */
+export interface LiveCourseInput {
+  title: string;
+  description?: string;
+  detailedDescription?: string;
+  price?: number;
+  /** ISO 8601 date string. */
+  startDate?: string;
+  endDate?: string;
+  driveFolderId?: string;
+  telegramChannel?: string | null;
+  whatsappChannel?: string | null;
+  isPublished?: boolean;
+}
+
+/** Live course enrollment — one-time purchase, no subscription. Same shape/semantics as
+ *  `Enrollment` minus `subscriptionId` (live courses have nothing recurring to reference). */
+export interface LiveCourseEnrollment {
+  _id: string;
+  userId?: UserRef | string;
+  courseId?:
+    | {
+        _id: string;
+        title?: string;
+        description?: string;
+        price?: number;
+        startDate?: string;
+        endDate?: string;
+        thumbnailUrl?: string;
+      }
+    | string
+    | null;
+  isActive?: boolean;
+  source?: string; // "manual" | "payment"
+  accessGrantedAt?: string;
+  grantedBy?: string;
+  paymentId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type LessonType = "pdf" | "video" | "audio";
 
 /** A course lesson (GET /courses/:courseId/content). PDF lessons carry a Cloudinary
@@ -645,6 +725,18 @@ export interface CatalogCourseProduct {
   pricing?: CoursePricing;
 }
 
+export interface CatalogLiveCourseProduct {
+  type: "live_course";
+  _id: string;
+  title: string;
+  description?: string;
+  thumbnailUrl?: string;
+  /** GBP pounds — one-time price, not a subscription. */
+  price: number;
+  startDate: string;
+  endDate: string;
+}
+
 export interface CatalogOneOnOneProduct {
   type: "one_on_one";
   _id: string;
@@ -668,6 +760,7 @@ export interface CatalogCaseBankProduct {
 
 export type CatalogProduct =
   | CatalogCourseProduct
+  | CatalogLiveCourseProduct
   | CatalogOneOnOneProduct
   | CatalogCaseBankProduct;
 
