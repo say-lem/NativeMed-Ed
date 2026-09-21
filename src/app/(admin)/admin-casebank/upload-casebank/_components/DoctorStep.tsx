@@ -111,6 +111,7 @@ export default function DoctorStep() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <TextField
             label="Seen By"
+            required
             placeholder="e.g., GP Surgery / Practice Nurse"
             registration={register("seenBy")}
             error={errors.seenBy?.message}
@@ -131,12 +132,14 @@ export default function DoctorStep() {
         <MarkdownField
           name="recentNotes"
           label="Recent Notes/Consultation"
+          required
           placeholder="Enter consultation notes, examination findings, plans, etc..."
           error={errors.recentNotes?.message}
         />
 
         <TextArea
           label="Blood Test Summary"
+          required
           rows={2}
           placeholder="Short summary shown above the blood-test table"
           registration={register("bloodTestSummary")}
