@@ -2,6 +2,7 @@ import "server-only";
 import { api } from "@/lib/api";
 import type {
   ApiResponse,
+  CaseBankSettings,
   CaseBankStatus,
   CourseSubStatus,
   Subscriber,
@@ -43,6 +44,67 @@ export async function getCaseBankStatus(): Promise<
 > {
   const res = await api.get<ApiResponse<CaseBankStatus>>(
     "/subscriptions/case-bank/status",
+  );
+  return res.data;
+}
+
+/* ------------------------------------------------------------------ *
+ * Admin — Case Bank access management
+ * ------------------------------------------------------------------ */
+
+/** POST /subscriptions/case-bank/enroll — admin. Grant Case Bank access without
+ *  payment, for `durationDays` (1–3650) from now. */
+export async function manualGrantCaseBank(
+  userId: string,
+  durationDays: number,
+): Promise<ApiResponse<Subscription>> {
+  const res = await api.post<ApiResponse<Subscription>>(
+    "/subscriptions/case-bank/enroll",
+    { userId, durationDays },
+  );
+  return res.data;
+}
+
+/** POST /subscriptions/case-bank/revoke — admin. Cancels on Stripe first (if it's a real
+ *  Stripe subscription) then marks the local record cancelled. 404 if the user has no
+ *  active Case Bank subscription. */
+export async function revokeCaseBankAccess(
+  userId: string,
+): Promise<ApiResponse<null>> {
+  const res = await api.post<ApiResponse<null>>(
+    "/subscriptions/case-bank/revoke",
+    { userId },
+  );
+  return res.data;
+}
+
+/** PATCH /subscriptions/case-bank/restore — admin. Grants a fresh `durationDays` period
+ *  after a revoke (Stripe has no "uncancel", so this always starts a new local period).
+ *  400 if the user already has active access. */
+export async function restoreCaseBankAccess(
+  userId: string,
+  durationDays: number,
+): Promise<ApiResponse<Subscription>> {
+  const res = await api.patch<ApiResponse<Subscription>>(
+    "/subscriptions/case-bank/restore",
+    { userId, durationDays },
+  );
+  return res.data;
+}
+
+/** PATCH /subscriptions/case-bank/pause-payments — admin, no body. Blocks new Case Bank
+ *  checkouts (400) without touching existing subscribers' access. */
+export async function pauseCaseBankPayments(): Promise<ApiResponse<CaseBankSettings>> {
+  const res = await api.patch<ApiResponse<CaseBankSettings>>(
+    "/subscriptions/case-bank/pause-payments",
+  );
+  return res.data;
+}
+
+/** PATCH /subscriptions/case-bank/resume-payments — admin, no body. */
+export async function resumeCaseBankPayments(): Promise<ApiResponse<CaseBankSettings>> {
+  const res = await api.patch<ApiResponse<CaseBankSettings>>(
+    "/subscriptions/case-bank/resume-payments",
   );
   return res.data;
 }
