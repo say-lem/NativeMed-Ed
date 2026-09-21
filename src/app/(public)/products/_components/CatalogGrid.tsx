@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { CalendarClock, Layers } from "lucide-react";
 import { courseBadgePrice, formatMoney, liveCourseBadgePrice } from "@/lib/price";
+import { roundDownToNearestTen } from "@/lib/stats";
 import { getCatalog } from "@/services/catalog.service";
 import type { CatalogProduct } from "@/types/api";
 
@@ -205,7 +206,7 @@ export default async function CatalogGrid({
                     {product.description}
                   </p>
                   <p className="text-xs text-subtle-text">
-                    {product.caseCount}+ cases
+                    {roundDownToNearestTen(product.caseCount)}+ cases
                   </p>
                 </div>
               </aside>

@@ -8,6 +8,7 @@ import { getCatalog } from "@/services/catalog.service";
 import { getCaseBankOverview } from "@/services/cases.service";
 import { getCaseBankStatus } from "@/services/subscriptions.service";
 import { getOptionalUser } from "@/lib/current-user";
+import { roundDownToNearestTen } from "@/lib/stats";
 import CaseBankActions from "./_components/CaseBankActions";
 import type { CatalogCaseBankProduct } from "@/types/api";
 
@@ -97,7 +98,7 @@ export default async function CaseBankProductPage() {
                   {caseBank.description}
                 </p>
                 <p className="text-sm text-subtle-text">
-                  {caseBank.caseCount}+ cases · {priceLabel ?? "—"}
+                  {roundDownToNearestTen(caseBank.caseCount)}+ cases · {priceLabel ?? "—"}
                 </p>
               </div>
               <CaseBankActions
