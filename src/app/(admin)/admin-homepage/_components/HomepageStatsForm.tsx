@@ -38,12 +38,22 @@ export default function HomepageStatsForm({
   registrarsCount,
   contactEmail,
   contactPhone,
+  facebookUrl,
+  whatsappUrl,
+  twitterUrl,
+  instagramUrl,
+  youtubeUrl,
 }: {
   caseNumber: number;
   testimonialsCount: number;
   registrarsCount: number;
   contactEmail: string | null;
   contactPhone: string | null;
+  facebookUrl: string | null;
+  whatsappUrl: string | null;
+  twitterUrl: string | null;
+  instagramUrl: string | null;
+  youtubeUrl: string | null;
 }) {
   const [pending, startTransition] = useTransition();
 
@@ -59,6 +69,11 @@ export default function HomepageStatsForm({
       registrarsCount: String(registrarsCount),
       contactEmail: contactEmail ?? "",
       contactPhone: contactPhone ?? "",
+      facebookUrl: facebookUrl ?? "",
+      whatsappUrl: whatsappUrl ?? "",
+      twitterUrl: twitterUrl ?? "",
+      instagramUrl: instagramUrl ?? "",
+      youtubeUrl: youtubeUrl ?? "",
     },
   });
 
@@ -150,6 +165,73 @@ export default function HomepageStatsForm({
           <p className="text-xs text-subtle-text">Shown on the public Contact page.</p>
           <FieldError message={errors.contactPhone?.message} />
         </div>
+
+        <fieldset className="sm:col-span-3 space-y-4 pt-2">
+          <legend className="text-sm font-semibold text-black-others mb-1">
+            Social links (optional)
+          </legend>
+          <p className="text-xs text-subtle-text -mt-3 mb-3">
+            Shown as live icons on the public Contact page — a platform left blank stays a
+            &quot;coming soon&quot; button instead of a link.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label text="Facebook URL" htmlFor="facebookUrl" />
+              <input
+                id="facebookUrl"
+                type="text"
+                placeholder="https://facebook.com/…"
+                className={inputClass}
+                {...register("facebookUrl")}
+              />
+              <FieldError message={errors.facebookUrl?.message} />
+            </div>
+            <div className="space-y-2">
+              <Label text="Instagram URL" htmlFor="instagramUrl" />
+              <input
+                id="instagramUrl"
+                type="text"
+                placeholder="https://instagram.com/…"
+                className={inputClass}
+                {...register("instagramUrl")}
+              />
+              <FieldError message={errors.instagramUrl?.message} />
+            </div>
+            <div className="space-y-2">
+              <Label text="X (Twitter) URL" htmlFor="twitterUrl" />
+              <input
+                id="twitterUrl"
+                type="text"
+                placeholder="https://x.com/…"
+                className={inputClass}
+                {...register("twitterUrl")}
+              />
+              <FieldError message={errors.twitterUrl?.message} />
+            </div>
+            <div className="space-y-2">
+              <Label text="YouTube URL" htmlFor="youtubeUrl" />
+              <input
+                id="youtubeUrl"
+                type="text"
+                placeholder="https://youtube.com/@…"
+                className={inputClass}
+                {...register("youtubeUrl")}
+              />
+              <FieldError message={errors.youtubeUrl?.message} />
+            </div>
+            <div className="space-y-2">
+              <Label text="WhatsApp URL" htmlFor="whatsappUrl" />
+              <input
+                id="whatsappUrl"
+                type="text"
+                placeholder="https://wa.me/…"
+                className={inputClass}
+                {...register("whatsappUrl")}
+              />
+              <FieldError message={errors.whatsappUrl?.message} />
+            </div>
+          </div>
+        </fieldset>
 
         <div className="sm:col-span-3 text-right">
           <Button

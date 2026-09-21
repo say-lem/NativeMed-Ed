@@ -2,6 +2,7 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 // import CountDownToClass from "@/components/shared/Countdown";
+import CourseSchedule from "@/components/shared/CourseSchedule";
 import { Markdown } from "@/components/shared/Markdown";
 import ProductsCard from "@/components/shared/ProductsCard";
 import TitleCase from "@/components/shared/TitleCase";
@@ -119,6 +120,12 @@ export default async function ProductByIdPage({ params }: PageProps) {
             <Markdown className="text-sm sm:text-base lg:text-lg text-[#373737]">
               {data.detailedDescription}
             </Markdown>
+          </aside>
+        )}
+
+        {product.kind === "live_course" && product.data.tocPdfUrl && (
+          <aside className="px-0 sm:px-4 lg:px-10 pt-8 sm:pt-10">
+            <CourseSchedule url={product.data.tocPdfUrl} />
           </aside>
         )}
 

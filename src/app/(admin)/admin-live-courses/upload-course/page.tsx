@@ -31,6 +31,7 @@ export default async function UploadLiveCoursePage({
         courseId={course?._id}
         initialValues={initialValues}
         initialThumbnail={course?.thumbnailUrl}
+        initialTocPdfUrl={course?.tocPdfUrl}
       />
     </>
   );

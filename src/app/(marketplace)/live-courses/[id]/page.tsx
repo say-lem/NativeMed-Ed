@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Markdown } from "@/components/shared/Markdown";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
+import CourseSchedule from "@/components/shared/CourseSchedule";
 import LiveCoursePurchase from "./_components/LiveCoursePurchase";
 import { getLiveCourse } from "@/services/liveCourses.service";
 import { getHomepageData } from "@/services/homepage.service";
@@ -145,6 +146,8 @@ export default async function LiveCourseDetailPage({ params }: PageProps) {
             <LiveCoursePurchase course={course} contactEmail={contactEmail} />
           </div>
         )}
+
+        {course.tocPdfUrl && <CourseSchedule url={course.tocPdfUrl} />}
       </section>
     </>
   );

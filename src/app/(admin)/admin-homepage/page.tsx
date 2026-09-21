@@ -39,8 +39,19 @@ export default async function AdminHomepagePage() {
   if (!homepageRes.success) throw new Error(homepageRes.message);
   if (!productsRes.success) throw new Error(productsRes.message);
 
-  const { caseNumber, testimonialsCount, registrarsCount, contactEmail, contactPhone, youtubeLinks } =
-    homepageRes.data;
+  const {
+    caseNumber,
+    testimonialsCount,
+    registrarsCount,
+    contactEmail,
+    contactPhone,
+    facebookUrl,
+    whatsappUrl,
+    twitterUrl,
+    instagramUrl,
+    youtubeUrl,
+    youtubeLinks,
+  } = homepageRes.data;
   const faqs = faqsRes.success ? faqsRes.data : [];
 
   // Nothing saved yet -> pre-fill the editor with the copy that used to be hardcoded on
@@ -82,6 +93,11 @@ export default async function AdminHomepagePage() {
         registrarsCount={registrarsCount}
         contactEmail={contactEmail}
         contactPhone={contactPhone}
+        facebookUrl={facebookUrl}
+        whatsappUrl={whatsappUrl}
+        twitterUrl={twitterUrl}
+        instagramUrl={instagramUrl}
+        youtubeUrl={youtubeUrl}
         youtubeLinks={youtubeLinks}
         freeProducts={productsRes.data.items}
         terms={terms}

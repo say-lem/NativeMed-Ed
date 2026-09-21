@@ -6,15 +6,12 @@ import { courseBadgePrice, formatMoney, liveCourseBadgePrice } from "@/lib/price
 import { getCatalog } from "@/services/catalog.service";
 import type { CatalogProduct } from "@/types/api";
 
-// Only the truncated preview (`cutBy > 0`, currently the home page) cares about a
-// specific order — courses first, then the case bank, then one-on-one sessions — so
-// the handful shown there represent the product range rather than whatever order the
-// backend happens to return. The full /products grid shows everything regardless of
-// order, so it's left as-is.
+// Catalogue order (home page preview + full /products grid): case bank first,
+// then live courses, then courses, then one-on-one sessions.
 const TYPE_PRIORITY: Record<CatalogProduct["type"], number> = {
-  course: 0,
+  case_bank: 0,
   live_course: 1,
-  case_bank: 2,
+  course: 2,
   one_on_one: 3,
 };
 
@@ -22,12 +19,11 @@ async function loadCatalog(cutBy: number): Promise<CatalogProduct[]> {
   try {
     const res = await getCatalog();
     if (!res.success) return [];
-    if (cutBy <= 0) return res.data;
     // Stable sort — items of the same type keep their original relative order.
     const sorted = [...res.data].sort(
       (a, b) => TYPE_PRIORITY[a.type] - TYPE_PRIORITY[b.type],
     );
-    return sorted.slice(0, cutBy);
+    return cutBy > 0 ? sorted.slice(0, cutBy) : sorted;
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;
     console.error("[catalog-grid] fetch error:", err.code, err.message);
