@@ -27,7 +27,7 @@ export async function getCourseContent(
 }
 
 /** POST /:basePath/:courseId/content/upload-pdf — admin, multipart. A PDF lesson
- *  (Cloudinary, max 50MB, `application/pdf` only). */
+ *  (Cloudinary, max 300MB, `application/pdf` only). */
 export async function uploadPdfLesson(
   basePath: ContentBasePath,
   courseId: string,

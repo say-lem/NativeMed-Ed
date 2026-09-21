@@ -1,9 +1,15 @@
 import CatalogGrid from "./CatalogGrid";
+import ProductsGuide from "./ProductsGuide";
 import Image from "next/image";
 import Link from "next/link";
 import { Gift } from "lucide-react";
+import type { CatalogProduct } from "@/types/api";
 
-export default function ProductsHero() {
+export default function ProductsHero({
+  filterType,
+}: {
+  filterType?: CatalogProduct["type"];
+}) {
   return (
     <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-8 sm:pt-10 lg:pt-14 pb-10 sm:pb-14 md:pb-16 lg:pb-20">
       <div className="relative mt-2 sm:mt-4 lg:mt-6 flex items-center justify-center gap-4 sm:gap-8 lg:gap-15 pb-4 sm:pb-6 lg:pb-8 px-1 sm:px-2 lg:px-3">
@@ -41,7 +47,10 @@ export default function ProductsHero() {
             Browse Free Products
           </Link>
         </div>
-        <CatalogGrid />
+        <div id="catalog" className="scroll-mt-24">
+          <CatalogGrid filterType={filterType} />
+        </div>
+        <ProductsGuide />
       </div>
     </section>
   );

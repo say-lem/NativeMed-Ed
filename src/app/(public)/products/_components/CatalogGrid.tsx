@@ -15,12 +15,18 @@ const TYPE_PRIORITY: Record<CatalogProduct["type"], number> = {
   one_on_one: 3,
 };
 
-async function loadCatalog(cutBy: number): Promise<CatalogProduct[]> {
+async function loadCatalog(
+  cutBy: number,
+  filterType?: CatalogProduct["type"],
+): Promise<CatalogProduct[]> {
   try {
     const res = await getCatalog();
     if (!res.success) return [];
+    const filtered = filterType
+      ? res.data.filter((p) => p.type === filterType)
+      : res.data;
     // Stable sort — items of the same type keep their original relative order.
-    const sorted = [...res.data].sort(
+    const sorted = [...filtered].sort(
       (a, b) => TYPE_PRIORITY[a.type] - TYPE_PRIORITY[b.type],
     );
     return cutBy > 0 ? sorted.slice(0, cutBy) : sorted;
@@ -53,13 +59,21 @@ function CtaBadge({
   );
 }
 
-export default async function CatalogGrid({ cutBy = 0 }: { cutBy?: number }) {
-  const products = await loadCatalog(cutBy);
+export default async function CatalogGrid({
+  cutBy = 0,
+  filterType,
+}: {
+  cutBy?: number;
+  filterType?: CatalogProduct["type"];
+}) {
+  const products = await loadCatalog(cutBy, filterType);
 
   if (products.length === 0) {
     return (
       <p className="text-center text-subtle-text py-10">
-        No products available right now. Check back soon.
+        {filterType
+          ? "No products of this type available right now. Check back soon."
+          : "No products available right now. Check back soon."}
       </p>
     );
   }
