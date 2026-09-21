@@ -54,11 +54,11 @@ export const caseSchema = z.object({
     .refine((v) => Number(v) >= 0 && Number(v) <= 130, "Enter a valid age (0–130)"),
   pastMedicalHistory: z.string(),
   drugHistory: z.string(),
-  seenBy: z.string(),
+  seenBy: z.string().trim().min(1, "Seen by is required"),
   recentRole: z.string(),
   recentDate: z.string(),
-  recentNotes: z.string(),
-  bloodTestSummary: z.string(),
+  recentNotes: z.string().trim().min(1, "Consultation notes are required"),
+  bloodTestSummary: z.string().trim().min(1, "Blood test summary is required"),
   bloodTests: z.array(
     z.object({
       test: z.string(),

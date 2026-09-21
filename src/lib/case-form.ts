@@ -213,9 +213,7 @@ export function buildCasePayload(
         notes: v.recentNotes.trim(),
       },
       bloodTestResults: {
-        summary:
-          v.bloodTestSummary.trim() ||
-          (rows.length ? "" : "No blood tests available"),
+        summary: v.bloodTestSummary.trim(),
         rows,
       },
     },
