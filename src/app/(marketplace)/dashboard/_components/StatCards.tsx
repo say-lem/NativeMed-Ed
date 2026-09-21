@@ -5,18 +5,28 @@ import {
   SubscriptionsIllustration,
 } from "./StatIllustrations";
 import { getMyEnrollments } from "@/services/enrollments.service";
+import { getMyLiveCourseEnrollments } from "@/services/liveCourses.service";
 import {
   getMySubscriptions,
   getCaseBankStatus,
 } from "@/services/subscriptions.service";
 import { getSpecialties } from "@/services/cases.service";
 
+/** Regular + live course enrollments combined — the two use separate backend
+ *  models (Enrollment refs Course only), so they're fetched and summed here. */
 async function loadEnrolledCount(): Promise<number> {
   try {
-    const res = await getMyEnrollments();
-    return res.success
-      ? res.data.filter((e) => e.isActive !== false).length
+    const [courses, liveCourses] = await Promise.all([
+      getMyEnrollments(),
+      getMyLiveCourseEnrollments(),
+    ]);
+    const courseCount = courses.success
+      ? courses.data.filter((e) => e.isActive !== false).length
       : 0;
+    const liveCourseCount = liveCourses.success
+      ? liveCourses.data.filter((e) => e.isActive !== false).length
+      : 0;
+    return courseCount + liveCourseCount;
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;
     return 0;
