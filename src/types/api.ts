@@ -352,6 +352,10 @@ export interface LiveCourse {
   startDate: string;
   endDate: string;
   thumbnailUrl?: string;
+  /** Admin-uploaded PDF (e.g. a course schedule / table of contents) shown on the
+   *  detail page to everyone, including unauthenticated visitors. Freshly signed on
+   *  every read (Cloudinary `authenticated` delivery) — never cache this URL. */
+  tocPdfUrl?: string;
   telegramChannel?: string | null;
   whatsappChannel?: string | null;
   isPublished?: boolean;
@@ -448,6 +452,9 @@ export interface PaymentPlan {
   name: string;
   description: string;
   prices: PlanPrice[];
+  /** Live toggle — only present (and meaningful) on the `case_bank` plan group. Merged in
+   *  at request time from admin state, not a static plan detail. */
+  paymentsPaused?: boolean;
 }
 
 /** Stripe subscription status. `past_due` STILL GRANTS ACCESS (payment retry in
@@ -495,6 +502,16 @@ export interface Subscription {
   stripeSubscriptionId?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+/** Response of PATCH /subscriptions/case-bank/{pause,resume}-payments — admin. Singleton
+ *  settings doc; there is no GET for it, so the frontend only learns the current
+ *  `paymentsPaused` value from the response of whichever action was last taken. */
+export interface CaseBankSettings {
+  _id: string;
+  paymentsPaused: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 /** GET /enrollments/check/:courseId — access via an enrollment (manual grant or
@@ -565,6 +582,13 @@ export interface HomepageData {
   registrarsCount: number;
   contactEmail: string | null;
   contactPhone: string | null;
+  /** Social profile/channel links — `null` until an admin sets them. `youtubeUrl` is the
+   *  channel/profile link, distinct from `youtubeLinks` (embedded videos) below. */
+  facebookUrl: string | null;
+  whatsappUrl: string | null;
+  twitterUrl: string | null;
+  instagramUrl: string | null;
+  youtubeUrl: string | null;
   youtubeLinks: YoutubeLink[];
 }
 
@@ -576,6 +600,11 @@ export interface HomepageSettings {
   registrarsCount: number;
   contactEmail?: string;
   contactPhone?: string;
+  facebookUrl?: string;
+  whatsappUrl?: string;
+  twitterUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
   youtubeLinks: YoutubeLink[];
   faqs: Faq[];
   createdAt: string;
@@ -588,6 +617,11 @@ export interface UpdateHomepageStatsInput {
   registrarsCount?: number;
   contactEmail?: string;
   contactPhone?: string;
+  facebookUrl?: string;
+  whatsappUrl?: string;
+  twitterUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
 }
 
 /** Payload for POST /admin/homepage/youtube-links (all required) and PATCH .../:linkId (partial). */

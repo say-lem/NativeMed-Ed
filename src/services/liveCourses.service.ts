@@ -185,6 +185,22 @@ export async function updateLiveCourseThumbnail(
   return res.data;
 }
 
+/** PATCH /live-courses/:id/toc-pdf — admin, multipart field `tocPdf` (PDF only, max 50MB).
+ *  Sets/replaces the course-schedule PDF shown on the detail page. */
+export async function updateLiveCourseTocPdf(
+  id: string,
+  file: File,
+): Promise<ApiResponse<{ tocPdfUrl: string }>> {
+  const fd = new FormData();
+  fd.append("tocPdf", file);
+  const res = await api.patch<ApiResponse<{ tocPdfUrl: string }>>(
+    `/live-courses/${id}/toc-pdf`,
+    fd,
+    { headers: { "Content-Type": undefined } },
+  );
+  return res.data;
+}
+
 /* ------------------------------------------------------------------ *
  * Admin — enrollments (roster is per-course; there's no global list like
  * /enrollments — see GET /live-courses/:id/enrollments)

@@ -7,6 +7,7 @@ import {
   publishLiveCourse,
   updateLiveCourse,
   updateLiveCourseThumbnail,
+  updateLiveCourseTocPdf,
 } from "@/services/liveCourses.service";
 import type { ApiFailure, FormActionResult, LiveCourseInput } from "@/types/api";
 
@@ -80,5 +81,27 @@ export async function uploadLiveCourseThumbnailAction(
     }
     console.error("[uploadLiveCourseThumbnailAction] unexpected error:", err);
     return { ok: false, message: "Cover upload failed." };
+  }
+}
+
+export async function uploadLiveCourseTocPdfAction(
+  id: string,
+  formData: FormData,
+): Promise<FormActionResult> {
+  try {
+    const file = formData.get("tocPdf");
+    if (!(file instanceof File) || file.size === 0) return { ok: true };
+    const res = await updateLiveCourseTocPdf(id, file);
+    if (!res.success) return { ok: false, message: res.message };
+    revalidatePath("/admin-live-courses");
+    return { ok: true };
+  } catch (err) {
+    if (axios.isAxiosError(err)) {
+      const data = err.response?.data as ApiFailure | undefined;
+      console.error("[uploadLiveCourseTocPdfAction] axios error:", err.code, err.message);
+      return { ok: false, message: data?.message ?? "Course schedule upload failed." };
+    }
+    console.error("[uploadLiveCourseTocPdfAction] unexpected error:", err);
+    return { ok: false, message: "Course schedule upload failed." };
   }
 }

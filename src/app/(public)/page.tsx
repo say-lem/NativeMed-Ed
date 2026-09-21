@@ -21,6 +21,11 @@ const EMPTY_HOMEPAGE_DATA: HomepageData = {
   registrarsCount: 0,
   contactEmail: null,
   contactPhone: null,
+  facebookUrl: null,
+  whatsappUrl: null,
+  twitterUrl: null,
+  instagramUrl: null,
+  youtubeUrl: null,
   youtubeLinks: [],
 };
 

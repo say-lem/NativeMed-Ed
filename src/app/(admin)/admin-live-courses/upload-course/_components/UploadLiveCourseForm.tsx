@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useController, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Loader2, Upload } from "lucide-react";
+import { FileText, Loader2, Upload } from "lucide-react";
 import {
   makeLiveCourseSchema,
   emptyLiveCourseValues,
@@ -14,12 +14,17 @@ import {
 import { applyFieldErrors } from "@/lib/form-errors";
 import { LogoLoaderOverlay } from "@/components/shared/LogoLoader";
 import RichTextEditor from "@/components/shared/RichTextEditor";
-import { saveLiveCourseAction, uploadLiveCourseThumbnailAction } from "../actions";
+import {
+  saveLiveCourseAction,
+  uploadLiveCourseThumbnailAction,
+  uploadLiveCourseTocPdfAction,
+} from "../actions";
 
 const fieldClass =
   "w-full rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 text-sm text-black-others placeholder:text-[#B7B7B9] outline-none focus:border-primary-100";
 
 const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp";
+const PDF_ACCEPT = "application/pdf,.pdf";
 
 function Label({ text, required }: { text: string; required?: boolean }) {
   return (
@@ -39,10 +44,12 @@ export default function UploadLiveCourseForm({
   courseId,
   initialValues,
   initialThumbnail,
+  initialTocPdfUrl,
 }: {
   courseId?: string;
   initialValues?: LiveCourseFormValues;
   initialThumbnail?: string;
+  initialTocPdfUrl?: string;
 }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -50,6 +57,8 @@ export default function UploadLiveCourseForm({
   const [coverPreview, setCoverPreview] = useState<string | undefined>(
     initialThumbnail,
   );
+  const [tocFile, setTocFile] = useState<File | null>(null);
+  const hasExistingToc = Boolean(initialTocPdfUrl);
 
   const isEdit = Boolean(courseId);
 
@@ -98,6 +107,12 @@ export default function UploadLiveCourseForm({
         const up = await uploadLiveCourseThumbnailAction(id, fd);
         if (!up.ok) toast.warning(up.message ?? "Cover upload failed");
       }
+      if (tocFile && id) {
+        const fd = new FormData();
+        fd.append("tocPdf", tocFile);
+        const up = await uploadLiveCourseTocPdfAction(id, fd);
+        if (!up.ok) toast.warning(up.message ?? "Course schedule upload failed");
+      }
       toast.success(result.message ?? "Saved");
       router.push("/admin-live-courses");
       router.refresh();
@@ -139,6 +154,33 @@ export default function UploadLiveCourseForm({
               onChange={onCover}
             />
           </label>
+        </div>
+
+        {/* Course schedule / table of contents PDF */}
+        <div className="space-y-2">
+          <Label text="Course Schedule (PDF)" />
+          <label className="flex items-center justify-between gap-3 rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 cursor-pointer">
+            <span className="text-sm text-subtle-text truncate">
+              {tocFile
+                ? tocFile.name
+                : hasExistingToc
+                  ? "Replace the current schedule PDF"
+                  : "Choose a PDF file"}
+            </span>
+            <Upload size={16} className="text-primary-100 shrink-0" />
+            <input
+              type="file"
+              accept={PDF_ACCEPT}
+              className="hidden"
+              onChange={(e) => setTocFile(e.target.files?.[0] ?? null)}
+            />
+          </label>
+          <p className="text-xs text-subtle-text flex items-center gap-1">
+            <FileText size={13} />
+            {hasExistingToc && !tocFile
+              ? "A schedule PDF is already uploaded — shown on the course page to everyone."
+              : "Optional. Shown as \"View / Download Course Schedule\" on the course page, including to visitors who haven't signed up."}
+          </p>
         </div>
 
         {/* Title */}
