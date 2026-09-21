@@ -20,6 +20,16 @@ export interface User {
   updatedAt?: string;
 }
 
+/** Payload for POST /auth/admin/users — admin only. Creates a new admin account
+ *  (`role: "admin"`, `mustChangePassword: true`); the backend auto-generates
+ *  `temporaryPassword` and emails it if omitted here. */
+export interface CreateAdminInput {
+  fullName: string;
+  email: string;
+  phone: string;
+  temporaryPassword?: string;
+}
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
