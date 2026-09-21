@@ -1,14 +1,15 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@/types/api";
 import { useAdminList } from "../../_components/AdminListContext";
 import Pagination from "../../_components/Pagination";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import UserDetailModal from "./UserDetailModal";
-import { toggleUserStatusAction } from "../actions";
+import CreateAdminModal, { type CreateAdminValues } from "./CreateAdminModal";
+import { createAdminAction, toggleUserStatusAction } from "../actions";
 
 const TABS = ["All", "Active", "Inactive"] as const;
 type Tab = (typeof TABS)[number];
@@ -53,6 +54,29 @@ export default function Users({ users }: { users: User[] }) {
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [selected, setSelected] = useState<User | null>(null);
   const [, startTransition] = useTransition();
+  const [creating, setCreating] = useState(false);
+  const [createErrors, setCreateErrors] = useState<Record<string, string[]> | undefined>();
+  const [savingCreate, startCreate] = useTransition();
+
+  const createAdmin = (values: CreateAdminValues) => {
+    startCreate(async () => {
+      const res = await createAdminAction({
+        fullName: values.fullName.trim(),
+        email: values.email.trim(),
+        phone: values.phone.trim(),
+        temporaryPassword: values.temporaryPassword.trim() || undefined,
+      });
+      if (res.ok) {
+        toast.success(res.message ?? "Admin account created");
+        setCreating(false);
+        setCreateErrors(undefined);
+        router.refresh();
+      } else {
+        setCreateErrors(res.fieldErrors);
+        toast.error(res.message ?? "Something went wrong");
+      }
+    });
+  };
 
   const toggle = async (u: User, closeModal = false) => {
     const active = isActiveUser(u);
@@ -106,6 +130,17 @@ export default function Users({ users }: { users: User[] }) {
 
   return (
     <section className="px-4 sm:px-6 lg:px-10 mt-6 mb-10">
+      {/* Create admin */}
+      <div className="flex justify-end mb-4">
+        <button
+          type="button"
+          onClick={() => setCreating(true)}
+          className="flex items-center gap-2 rounded-full bg-primary-100 text-white text-sm font-semibold px-5 py-2.5 cursor-pointer"
+        >
+          <UserPlus size={16} /> Create Admin
+        </button>
+      </div>
+
       {/* Tabs */}
       <div className="flex items-center border-b border-[#EDEDED]">
         {TABS.map((t) => {
@@ -195,8 +230,13 @@ export default function Users({ users }: { users: User[] }) {
                       e.stopPropagation();
                       toggle(u);
                     }}
-                    disabled={pendingId === u._id}
-                    className={`flex items-center justify-center gap-1.5 rounded-[8px] text-sm font-medium px-4 py-2 cursor-pointer disabled:opacity-60 ${
+                    disabled={pendingId === u._id || (active && u.role === "admin")}
+                    title={
+                      active && u.role === "admin"
+                        ? "Admin accounts can't be deactivated here"
+                        : undefined
+                    }
+                    className={`flex items-center justify-center gap-1.5 rounded-[8px] text-sm font-medium px-4 py-2 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
                       active
                         ? "border border-[#FFC9C9] text-[#C11616] hover:bg-[#FFE6E6]"
                         : "border border-primary-100 text-primary-100 hover:bg-primary-10"
@@ -222,6 +262,18 @@ export default function Users({ users }: { users: User[] }) {
           onClose={() => setSelected(null)}
           onToggle={() => toggle(selected, true)}
           pending={pendingId === selected._id}
+        />
+      )}
+
+      {creating && (
+        <CreateAdminModal
+          saving={savingCreate}
+          fieldErrors={createErrors}
+          onClose={() => {
+            setCreating(false);
+            setCreateErrors(undefined);
+          }}
+          onSubmit={createAdmin}
         />
       )}
     </section>
