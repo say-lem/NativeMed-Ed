@@ -1,6 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    serverActions: {
+      // Server Actions default to a 1MB body limit. PDF lessons are uploaded
+      // through a server action as multipart FormData and can be up to 50MB
+      // (backend cap) — raise the limit so uploads aren't rejected before
+      // they even reach our code.
+      bodySizeLimit: "55mb",
+    },
+  },
   images: {
     remotePatterns: [
       {
