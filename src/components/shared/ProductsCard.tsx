@@ -43,7 +43,7 @@ export default async function ProductsCard({ cutBy = 0 }: { cutBy?: number }) {
                invalid so no border colour was ever applied. Hex form works. */
             className="rounded-[16px] border-[0.5px] border-[#F7F4FB] cardShadow space-y-3 sm:space-y-4 lg:space-y-8 overflow-y-hidden pb-3 sm:pb-4 h-full flex flex-col"
           >
-            <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg overflow-hidden">
+            <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg overflow-hidden">
               <ContainedImage
                 src={course.thumbnailUrl || "/Images/card image.png"}
                 alt={`image of ${course.title}`}

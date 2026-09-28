@@ -106,7 +106,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
       {/* Hero */}
       <div className="authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-6 lg:gap-8 flex flex-col md:flex-row overflow-hidden">
-        <aside className="relative w-full md:basis-1/2 min-h-[35vh] sm:min-h-[40vh] md:min-h-[50vh] bg-gray-from-radial-bg rounded-lg overflow-hidden">
+        <aside className="relative w-full md:basis-1/2 aspect-[4/3] bg-gray-from-radial-bg rounded-lg overflow-hidden">
           <ContainedImage
             src={course.thumbnailUrl || "/Images/coursesImage.png"}
             alt={`image of ${course.title}`}
