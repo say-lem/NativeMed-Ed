@@ -1,9 +1,9 @@
 import axios from "axios";
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
+import ContainedImage from "@/components/shared/ContainedImage";
 import { Markdown } from "@/components/shared/Markdown";
 import BookingForm from "./_components/BookingForm";
 import { getBookingProduct } from "@/services/booking.service";
@@ -67,11 +67,9 @@ export default async function OneOnOneDetailPage({ params }: PageProps) {
         <div className="authFormBorder rounded-[16px] p-4 sm:p-6 flex flex-col md:flex-row gap-4 sm:gap-6">
           {product.imageUrl && (
             <div className="relative w-full md:basis-2/5 min-h-[35vh] sm:min-h-[40vh] md:min-h-0 shrink-0 rounded-[12px] overflow-hidden bg-gray-from-radial-bg">
-              <Image
+              <ContainedImage
                 src={product.imageUrl}
                 alt={`image of ${product.title}`}
-                fill
-                className="object-contain object-center"
                 sizes="(max-width: 768px) 100vw, 40vw"
                 priority
               />
