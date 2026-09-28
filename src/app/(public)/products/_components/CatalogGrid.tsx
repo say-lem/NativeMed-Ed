@@ -1,7 +1,7 @@
 import axios from "axios";
-import Image from "next/image";
 import Link from "next/link";
 import { CalendarClock, Layers } from "lucide-react";
+import ContainedImage from "@/components/shared/ContainedImage";
 import { courseBadgePrice, formatMoney, liveCourseBadgePrice } from "@/lib/price";
 import { roundDownToNearestTen } from "@/lib/stats";
 import { getCatalog } from "@/services/catalog.service";
@@ -86,12 +86,10 @@ export default async function CatalogGrid({
           return (
             <Link href={`/products/${product._id}`} key={product._id}>
               <div role="link" tabIndex={0} className={cardClass}>
-                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg">
-                  <Image
+                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg overflow-hidden">
+                  <ContainedImage
                     src={product.thumbnailUrl || "/Images/card image.png"}
                     alt={`image of ${product.title}`}
-                    fill
-                    className="object-contain object-center"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   <p className="absolute rounded-[100px] py-2 px-3 top-2 right-3 bg-[#00000080] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
@@ -120,12 +118,10 @@ export default async function CatalogGrid({
           return (
             <Link href={`/products/${product._id}`} key={product._id}>
               <div role="link" tabIndex={0} className={cardClass}>
-                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg">
-                  <Image
+                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg overflow-hidden">
+                  <ContainedImage
                     src={product.thumbnailUrl || "/Images/card image.png"}
                     alt={`image of ${product.title}`}
-                    fill
-                    className="object-contain object-center"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   <p className="absolute rounded-[100px] py-2 px-3 top-2 right-3 bg-[#00000080] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
@@ -183,11 +179,9 @@ export default async function CatalogGrid({
             <div role="link" tabIndex={0} className={cardClass}>
               <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg grid place-items-center overflow-hidden">
                 {product.imageUrl ? (
-                  <Image
+                  <ContainedImage
                     src={product.imageUrl}
                     alt={`image of ${product.title}`}
-                    fill
-                    className="object-contain object-center"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                 ) : (
