@@ -86,7 +86,7 @@ export default async function CatalogGrid({
           return (
             <Link href={`/products/${product._id}`} key={product._id}>
               <div role="link" tabIndex={0} className={cardClass}>
-                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg overflow-hidden">
+                <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg overflow-hidden">
                   <ContainedImage
                     src={product.thumbnailUrl || "/Images/card image.png"}
                     alt={`image of ${product.title}`}
@@ -118,7 +118,7 @@ export default async function CatalogGrid({
           return (
             <Link href={`/products/${product._id}`} key={product._id}>
               <div role="link" tabIndex={0} className={cardClass}>
-                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg overflow-hidden">
+                <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg overflow-hidden">
                   <ContainedImage
                     src={product.thumbnailUrl || "/Images/card image.png"}
                     alt={`image of ${product.title}`}
@@ -150,7 +150,7 @@ export default async function CatalogGrid({
           return (
             <Link href={`/one-on-one/${product._id}`} key={product._id}>
               <div role="link" tabIndex={0} className={cardClass}>
-                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg grid place-items-center">
+                <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg grid place-items-center">
                   <span className="grid place-items-center size-16 rounded-full bg-primary-100 text-white">
                     <CalendarClock size={28} />
                   </span>
@@ -177,7 +177,7 @@ export default async function CatalogGrid({
         return (
           <Link href="/products/case-bank" key="case_bank">
             <div role="link" tabIndex={0} className={cardClass}>
-              <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg grid place-items-center overflow-hidden">
+              <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg grid place-items-center overflow-hidden">
                 {product.imageUrl ? (
                   <ContainedImage
                     src={product.imageUrl}

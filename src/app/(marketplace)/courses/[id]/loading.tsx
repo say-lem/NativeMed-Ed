@@ -9,7 +9,7 @@ export default function Loading() {
 
         {/* Hero card */}
         <div className="authFormBorder rounded-[16px] p-3 sm:p-4 flex flex-col md:flex-row gap-6">
-          <div className="w-full md:basis-1/2 min-h-[35vh] md:min-h-[50vh] rounded-lg bg-gray-200 animate-pulse" />
+          <div className="w-full md:basis-1/2 aspect-[4/3] rounded-lg bg-gray-200 animate-pulse" />
           <div className="w-full md:basis-1/2 flex flex-col justify-center gap-3">
             <div className="h-4 w-full rounded bg-gray-200 animate-pulse" />
             <div className="h-4 w-5/6 rounded bg-gray-200 animate-pulse" />

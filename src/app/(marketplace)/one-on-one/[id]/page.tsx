@@ -66,7 +66,7 @@ export default async function OneOnOneDetailPage({ params }: PageProps) {
 
         <div className="authFormBorder rounded-[16px] p-4 sm:p-6 flex flex-col md:flex-row gap-4 sm:gap-6">
           {product.imageUrl && (
-            <div className="relative w-full md:basis-2/5 min-h-[35vh] sm:min-h-[40vh] md:min-h-0 shrink-0 rounded-[12px] overflow-hidden bg-gray-from-radial-bg">
+            <div className="relative w-full md:basis-2/5 aspect-[4/3] shrink-0 rounded-[12px] overflow-hidden bg-gray-from-radial-bg">
               <ContainedImage
                 src={product.imageUrl}
                 alt={`image of ${product.title}`}

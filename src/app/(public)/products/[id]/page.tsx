@@ -78,7 +78,7 @@ export default async function ProductByIdPage({ params }: PageProps) {
       <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-8 sm:pt-12 lg:pt-20 pb-16 sm:pb-24 lg:pb-36">
         <aside className="px-0 sm:px-4 lg:px-10">
           <div className="authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-5 md:gap-6 lg:gap-8 flex flex-col md:flex-row justify-center overflow-x-hidden">
-            <aside className="relative w-full md:basis-1/2 min-h-[35vh] sm:min-h-[40vh] md:min-h-[50vh] lg:min-h-[60vh] bg-gray-from-radial-bg rounded-lg overflow-hidden">
+            <aside className="relative w-full md:basis-1/2 aspect-[4/3] bg-gray-from-radial-bg rounded-lg overflow-hidden">
               <ContainedImage
                 src={data.thumbnailUrl || "/Images/card image.png"}
                 alt={`image of ${data.title}`}
