@@ -19,12 +19,13 @@ import {
 import {
   createLinkFreeProduct,
   deleteFreeProduct,
+  registerPdfFreeProduct,
   replaceFreeProductCoverImage,
   setFreeProductPublished,
   updateFreeProduct,
   uploadBlogFreeProduct,
-  uploadPdfFreeProduct,
 } from "@/services/freeProducts.service";
+import { getPdfUploadSignatureAction } from "@/app/(admin)/actions";
 import {
   homepageStatsSchema,
   homepageStatsPayload,
@@ -48,7 +49,12 @@ import {
   freeProductEditPayload,
   type FreeProductEditValues,
 } from "@/lib/schemas/freeProducts";
-import type { ApiFailure, FormActionResult, FreeProductType } from "@/types/api";
+import type {
+  ApiFailure,
+  FormActionResult,
+  FreeProductType,
+  PdfSignatureResult,
+} from "@/types/api";
 
 function fail(err: unknown, tag: string, fallback: string): FormActionResult {
   if (axios.isAxiosError(err)) {
@@ -341,27 +347,34 @@ export async function addLinkFreeProductAction(
   }
 }
 
-/** Add a `pdf` product (multipart) — reads `file`, `title`, `description`, `order` from formData. */
-export async function addPdfFreeProductAction(formData: FormData): Promise<FormActionResult> {
+/** Issues a signed Cloudinary upload request for the Free Resources PDF flow. */
+export async function getFreeProductPdfSignatureAction(): Promise<PdfSignatureResult> {
+  return getPdfUploadSignatureAction("free-product");
+}
+
+/** Register a `pdf` product already uploaded directly to Cloudinary by the browser. */
+export async function addPdfFreeProductAction(payload: {
+  title: string;
+  description: string;
+  fileUrl: string;
+  publicId: string;
+  order?: number;
+}): Promise<FormActionResult> {
   try {
-    const file = formData.get("file");
-    const title = String(formData.get("title") ?? "").trim();
-    const description = String(formData.get("description") ?? "").trim();
-    const order = Number(formData.get("order") ?? 0);
-    if (!(file instanceof File) || file.size === 0) {
-      return { ok: false, message: "Please choose a PDF file." };
-    }
+    const title = payload.title.trim();
+    const description = payload.description.trim();
     if (title.length < 2) return { ok: false, message: "Title is required." };
     if (description.length < 5) {
       return { ok: false, message: "Description must be at least 5 characters." };
     }
 
-    const fd = new FormData();
-    fd.set("file", file);
-    fd.set("title", title);
-    fd.set("description", description);
-    fd.set("order", String(order));
-    const res = await uploadPdfFreeProduct(fd);
+    const res = await registerPdfFreeProduct({
+      title,
+      description,
+      fileUrl: payload.fileUrl,
+      publicId: payload.publicId,
+      order: payload.order ?? 0,
+    });
     if (!res.success) return { ok: false, message: res.message, fieldErrors: res.errors };
     revalidateFreeProducts();
     return { ok: true, message: "Free product added" };

@@ -150,10 +150,10 @@ export async function updateCourseThumbnail(
 export const getCourseContent = (courseId: string): Promise<ApiResponse<Lesson[]>> =>
   content.getCourseContent("courses", courseId);
 
-export const uploadPdfLesson = (
+export const registerPdfLesson = (
   courseId: string,
-  payload: { file: File; title: string; order: number },
-): Promise<ApiResponse<Lesson>> => content.uploadPdfLesson("courses", courseId, payload);
+  payload: { title: string; order: number; fileUrl: string; publicId: string },
+): Promise<ApiResponse<Lesson>> => content.registerPdfLesson("courses", courseId, payload);
 
 export const addDriveLesson = (
   courseId: string,

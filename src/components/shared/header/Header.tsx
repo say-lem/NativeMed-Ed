@@ -22,13 +22,15 @@ export default function PublicHeader({ user }: { user?: User | null }) {
 
   return (
     <header className="radialBgGradient min-h-14 sm:min-h-16 md:min-h-20 lg:min-h-25 flex items-center justify-between px-4 sm:px-6 lg:px-15 sticky top-0 backdrop-blur-md z-50 border-b border-white/20">
-      <Image
-        src={"/Images/main_logo.png"}
-        alt="NativeMed Logo"
-        width={100}
-        height={100}
-        className="w-25 lg:w-35 mix-blend-multiply"
-      />
+      <Link href="/">
+        <Image
+          src={"/Images/main_logo.png"}
+          alt="NativeMed Logo"
+          width={100}
+          height={100}
+          className="w-25 lg:w-35 mix-blend-multiply"
+        />
+      </Link>
 
       <nav className="hidden lg:flex space-x-8">
         <HeaderNavLink href="/" label="Home" />

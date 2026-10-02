@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
 import RichTextEditor from "@/components/shared/RichTextEditor";
+import { uploadPdfDirect } from "@/lib/pdf-upload";
 import type { FreeProduct } from "@/types/api";
 import FreeProductEditModal from "./FreeProductEditModal";
 import {
@@ -23,6 +24,7 @@ import {
   addLinkFreeProductAction,
   addPdfFreeProductAction,
   deleteFreeProductAction,
+  getFreeProductPdfSignatureAction,
   setFreeProductPublishedAction,
 } from "../actions";
 
@@ -98,12 +100,25 @@ export default function FreeProductsManager({ products }: { products: FreeProduc
           toast.error("Choose a PDF file");
           return;
         }
-        const fd = new FormData();
-        fd.append("file", file);
-        fd.append("title", title.trim());
-        fd.append("description", description.trim());
-        fd.append("order", order || "0");
-        res = await addPdfFreeProductAction(fd);
+        const sig = await getFreeProductPdfSignatureAction();
+        if (!sig.ok || !sig.data) {
+          toast.error(sig.message ?? "Couldn't start the upload");
+          return;
+        }
+        let uploaded: { secure_url: string; public_id: string };
+        try {
+          uploaded = await uploadPdfDirect(file, sig.data);
+        } catch {
+          toast.error("PDF upload failed");
+          return;
+        }
+        res = await addPdfFreeProductAction({
+          title: title.trim(),
+          description: description.trim(),
+          fileUrl: uploaded.secure_url,
+          publicId: uploaded.public_id,
+          order: Number(order || 0),
+        });
       } else {
         if (!coverImage) {
           toast.error("Choose a cover image");

@@ -150,10 +150,18 @@ export default async function CatalogGrid({
           return (
             <Link href={`/one-on-one/${product._id}`} key={product._id}>
               <div role="link" tabIndex={0} className={cardClass}>
-                <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg grid place-items-center">
-                  <span className="grid place-items-center size-16 rounded-full bg-primary-100 text-white">
-                    <CalendarClock size={28} />
-                  </span>
+                <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg grid place-items-center overflow-hidden">
+                  {product.imageUrl ? (
+                    <ContainedImage
+                      src={product.imageUrl}
+                      alt={`image of ${product.title}`}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <span className="grid place-items-center size-16 rounded-full bg-primary-100 text-white">
+                      <CalendarClock size={28} />
+                    </span>
+                  )}
                 </aside>
 
                 <aside className="px-3 sm:px-4 lg:px-6 flex-1">

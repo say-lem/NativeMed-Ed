@@ -14,8 +14,9 @@ import {
   Upload,
   Video,
 } from "lucide-react";
-import type { FormActionResult, Lesson } from "@/types/api";
+import type { FormActionResult, Lesson, PdfSignatureResult } from "@/types/api";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
+import { uploadPdfDirect } from "@/lib/pdf-upload";
 import LessonEditModal from "./LessonEditModal";
 
 const fieldClass =
@@ -72,7 +73,11 @@ function formatDuration(seconds?: number): string {
 /** Server-action bindings — lets the same UI drive either `/courses/:id/content` or
  *  `/live-courses/:id/content` (identical backend contract, different base path). */
 export interface ContentManagerActions {
-  addPdf: (courseId: string, formData: FormData) => Promise<FormActionResult>;
+  getPdfSignature: () => Promise<PdfSignatureResult>;
+  addPdf: (
+    courseId: string,
+    payload: { title: string; order: number; fileUrl: string; publicId: string },
+  ) => Promise<FormActionResult>;
   addDriveLink: (
     courseId: string,
     payload: {
@@ -181,11 +186,24 @@ export default function ContentManager({
           toast.error("Choose a PDF file");
           return;
         }
-        const fd = new FormData();
-        fd.append("file", file);
-        fd.append("title", title.trim());
-        fd.append("order", String(ord));
-        res = await actions.addPdf(courseId, fd);
+        const sig = await actions.getPdfSignature();
+        if (!sig.ok || !sig.data) {
+          toast.error(sig.message ?? "Couldn't start the upload");
+          return;
+        }
+        let uploaded: { secure_url: string; public_id: string };
+        try {
+          uploaded = await uploadPdfDirect(file, sig.data);
+        } catch {
+          toast.error("PDF upload failed");
+          return;
+        }
+        res = await actions.addPdf(courseId, {
+          title: title.trim(),
+          order: ord,
+          fileUrl: uploaded.secure_url,
+          publicId: uploaded.public_id,
+        });
       } else {
         if (!fileUrl.trim()) {
           toast.error("Add the Drive link");
