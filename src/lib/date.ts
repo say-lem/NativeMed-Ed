@@ -1,3 +1,5 @@
+import type { BookingAvailableDate } from "@/types/api";
+
 const MONTHS = [
   "Jan",
   "Feb",
@@ -54,4 +56,14 @@ export function byBookingTimeAsc(
   b: { date: string; time: string },
 ): number {
   return bookingTimestamp(a.date, a.time) - bookingTimestamp(b.date, b.time);
+}
+
+/** True if a booking product's date entry still has at least one slot a user could book
+ *  right now — unbooked AND not yet elapsed. The backend only pre-filters `availableDates`
+ *  by booking status (unbooked), never by whether the date/time has already passed, so a
+ *  raw `.length` on that array can count expired dates as "available". No grace period
+ *  here (contrast `isBookingPast`, which gives an already-*booked* session an extra hour
+ *  before it counts as past) — once a slot's start time arrives, it's no longer offerable. */
+export function hasOpenSlot(d: BookingAvailableDate): boolean {
+  return d.times.some((t) => t.isAvailable && bookingTimestamp(d.date, t.time) > Date.now());
 }

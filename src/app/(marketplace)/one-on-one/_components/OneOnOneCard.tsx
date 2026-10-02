@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CalendarDays } from "lucide-react";
+import { hasOpenSlot } from "@/lib/date";
 import { formatMoney } from "@/lib/price";
 import type { BookingProduct } from "@/types/api";
 
@@ -30,8 +31,9 @@ export default function OneOnOneCard({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5 md:gap-6 lg:gap-9 px-4 sm:px-6 md:px-8 py-8 sm:py-10 md:py-12">
       {products.map((product) => {
-        // The public list already omits dates with zero available times.
-        const openDates = product.availableDates.length;
+        // The backend only omits dates with zero unbooked times — it doesn't drop
+        // dates/times that have already passed, so this still needs its own filter.
+        const openDates = product.availableDates.filter(hasOpenSlot).length;
         return (
           <Link
             key={product._id}
