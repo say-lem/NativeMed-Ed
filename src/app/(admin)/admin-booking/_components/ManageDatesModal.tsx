@@ -1,10 +1,10 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Trash2, X } from "lucide-react";
+import { AlertTriangle, Loader2, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
-import { formatDate } from "@/lib/date";
+import { formatDate, isBookingPast } from "@/lib/date";
 import type { AdminBookingProduct } from "@/types/api";
 import {
   addAvailableDateAction,
@@ -44,6 +44,13 @@ export default function ManageDatesModal({
   const sorted = [...product.availableDates].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
+
+  const hasOpenDate = product.availableDates.some((d) =>
+    product.availableTimes.some(
+      (t) => !d.bookedTimes.includes(t) && !isBookingPast(d.date, t),
+    ),
+  );
+  const allDatesExpired = !hasOpenDate && product.availableDates.length > 0;
 
   const add = () => {
     if (!date) {
@@ -122,6 +129,12 @@ export default function ManageDatesModal({
 
         <h2 className="text-lg font-semibold text-black-others">Manage Dates</h2>
         <p className="mt-1 text-sm text-subtle-text">{product.title}</p>
+        {allDatesExpired && (
+          <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+            <AlertTriangle size={12} />
+            Every date below has passed — add a new one to make this bookable again.
+          </p>
+        )}
 
         <div className="mt-5 inline-flex rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
           {(["single", "range"] as Mode[]).map((m) => (
@@ -205,21 +218,35 @@ export default function ManageDatesModal({
               const busy = busyId === d._id;
               const label = formatDate(d.date);
               const hasBookings = d.bookedTimes.length > 0;
+              // Expired = every configured time on this date has already passed — distinct
+              // from "booked"; a date can clear the old bookedTimes check yet still be
+              // unbookable because the clock has simply moved past it (see BookingProductsManager).
+              const expired =
+                product.availableTimes.length > 0 &&
+                product.availableTimes.every((t) => isBookingPast(d.date, t));
               return (
                 <div key={d._id} className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
                     <span className="text-sm text-black-others">{label}</span>
+                    {expired && (
+                      <span className="ml-2 rounded-full bg-amber-50 text-amber-700 text-xs px-2 py-0.5">
+                        Expired
+                      </span>
+                    )}
                     {product.availableTimes.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {product.availableTimes.map((time) => {
                           const isBooked = d.bookedTimes.includes(time);
+                          const isPast = !isBooked && isBookingPast(d.date, time);
                           return (
                             <span
                               key={time}
                               className={`text-xs rounded-full px-2 py-0.5 ${
                                 isBooked
                                   ? "bg-gray-100 text-subtle-text line-through"
-                                  : "bg-primary-10 text-primary-100"
+                                  : isPast
+                                    ? "bg-amber-50 text-amber-700 line-through"
+                                    : "bg-primary-10 text-primary-100"
                               }`}
                             >
                               {time}

@@ -38,14 +38,14 @@ async function Founder() {
   return (
     <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-10 sm:pt-14 lg:pt-20 pb-8 sm:pb-12 md:pb-16 lg:pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start gap-6 sm:gap-8 md:gap-10">
-        <aside className="w-full md:basis-2/5">
-          <div className="relative w-full aspect-square rounded-lg overflow-hidden">
+        <aside className="w-full md:basis-[42%]">
+          <div className="relative w-full aspect-[5/7] rounded-lg overflow-hidden">
             <Image
               src={imageUrl || "/Images/founder page.png"}
               alt="Founder"
               fill
               className="object-cover"
-              sizes="(max-width: 768px) 100vw, 50vw"
+              sizes="(max-width: 768px) 100vw, 42vw"
             />
           </div>
 
@@ -63,7 +63,7 @@ async function Founder() {
             {title}
           </Markdown>
         </aside>
-        <aside className="w-full md:basis-3/5">
+        <aside className="w-full md:basis-[58%]">
           <TitleCase text="About The Founder" />
           <Markdown className="text-subtle-2 text-sm sm:text-base lg:text-lg leading-[150%] mt-2 sm:mt-3 lg:mt-5">
             {content}

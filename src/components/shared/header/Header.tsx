@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { HeaderNavLink } from "./NavLink";
@@ -13,7 +13,17 @@ export default function PublicHeader({ user }: { user?: User | null }) {
   const [isOpen, setIsOpen] = useState(false);
   const [navPending, startNav] = useTransition();
   const router = useRouter();
+  const pathname = usePathname();
   const isLoggedIn = !!user;
+
+  // Already on the home page — a same-page Link is a no-op, so force a real refresh
+  // instead (matches what a user clicking a logo generally expects to happen).
+  const onLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (pathname === "/") {
+      e.preventDefault();
+      window.location.reload();
+    }
+  };
 
   const goToDashboard = () => {
     setIsOpen(false);
@@ -22,7 +32,7 @@ export default function PublicHeader({ user }: { user?: User | null }) {
 
   return (
     <header className="radialBgGradient min-h-14 sm:min-h-16 md:min-h-20 lg:min-h-25 flex items-center justify-between px-4 sm:px-6 lg:px-15 sticky top-0 backdrop-blur-md z-50 border-b border-white/20">
-      <Link href="/">
+      <Link href="/" onClick={onLogoClick}>
         <Image
           src={"/Images/main_logo.png"}
           alt="NativeMed Logo"
