@@ -88,7 +88,13 @@ export default function BookingProductsManager({
                 (t) => !d.bookedTimes.includes(t) && !isBookingPast(d.date, t),
               ),
             ).length;
-            const allDatesExpired = availableCount === 0 && product.availableDates.length > 0;
+            // No `availableTimes` at all means `.some()` above is vacuously false for
+            // every date regardless of how far in the future it is — that's a "no times
+            // configured" problem, not an "expired" one, and needs its own message so a
+            // product with perfectly good future dates doesn't get told they've all passed.
+            const noTimesConfigured = product.availableTimes.length === 0;
+            const allDatesExpired =
+              !noTimesConfigured && availableCount === 0 && product.availableDates.length > 0;
             return (
               <div
                 key={product._id}
@@ -132,11 +138,18 @@ export default function BookingProductsManager({
                     {product.availableTimes.length} time
                     {product.availableTimes.length === 1 ? "" : "s"}
                   </p>
-                  {allDatesExpired && (
+                  {noTimesConfigured ? (
                     <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
                       <AlertTriangle size={12} />
-                      All dates have passed — add new ones
+                      No session times configured — edit this product to add some
                     </p>
+                  ) : (
+                    allDatesExpired && (
+                      <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
+                        <AlertTriangle size={12} />
+                        All dates have passed — add new ones
+                      </p>
+                    )
                   )}
                   </div>
                 </div>
