@@ -7,15 +7,13 @@ import {
   getLiveCourseContent,
 } from "@/services/liveCourses.service";
 import type { Lesson, LiveCourse } from "@/types/api";
-import { getPdfUploadSignatureAction } from "@/app/(admin)/actions";
 import {
   addDriveLessonAction,
   addPdfLessonAction,
   deleteLessonAction,
+  getPdfSignatureAction,
   updateLessonAction,
 } from "./actions";
-
-const getPdfSignature = () => getPdfUploadSignatureAction("course-content");
 
 async function loadCourse(id: string): Promise<LiveCourse | undefined> {
   try {
@@ -55,7 +53,7 @@ export default async function LiveCourseContentPage({
         courseId={id}
         lessons={lessons}
         actions={{
-          getPdfSignature,
+          getPdfSignature: getPdfSignatureAction,
           addPdf: addPdfLessonAction,
           addDriveLink: addDriveLessonAction,
           update: updateLessonAction,
