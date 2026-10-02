@@ -50,7 +50,11 @@ export default function ManageDatesModal({
       (t) => !d.bookedTimes.includes(t) && !isBookingPast(d.date, t),
     ),
   );
-  const allDatesExpired = !hasOpenDate && product.availableDates.length > 0;
+  // No `availableTimes` at all makes the `.some()` above vacuously false for every date
+  // no matter how far in the future it is — that's "no times configured", not "expired".
+  const noTimesConfigured = product.availableTimes.length === 0;
+  const allDatesExpired =
+    !noTimesConfigured && !hasOpenDate && product.availableDates.length > 0;
 
   const add = () => {
     if (!date) {
@@ -129,11 +133,19 @@ export default function ManageDatesModal({
 
         <h2 className="text-lg font-semibold text-black-others">Manage Dates</h2>
         <p className="mt-1 text-sm text-subtle-text">{product.title}</p>
-        {allDatesExpired && (
+        {noTimesConfigured ? (
           <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
             <AlertTriangle size={12} />
-            Every date below has passed — add a new one to make this bookable again.
+            This product has no session times configured — edit it to add some before
+            dates here can be booked.
           </p>
+        ) : (
+          allDatesExpired && (
+            <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
+              <AlertTriangle size={12} />
+              Every date below has passed — add a new one to make this bookable again.
+            </p>
+          )
         )}
 
         <div className="mt-5 inline-flex rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
