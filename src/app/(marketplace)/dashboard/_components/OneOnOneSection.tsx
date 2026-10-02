@@ -1,6 +1,7 @@
 import axios from "axios";
 import Link from "next/link";
 import { CalendarClock } from "lucide-react";
+import { hasOpenSlot } from "@/lib/date";
 import { formatMoney } from "@/lib/price";
 import { getBookingProducts } from "@/services/booking.service";
 import type { BookingProduct } from "@/types/api";
@@ -39,8 +40,9 @@ export default async function OneOnOneSection() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {products.map((product) => {
-          // The public list already omits dates with zero available times.
-          const openDates = product.availableDates.length;
+          // The backend only omits dates with zero unbooked times — it doesn't drop
+          // dates/times that have already passed, so this still needs its own filter.
+          const openDates = product.availableDates.filter(hasOpenSlot).length;
           return (
             <Link
               key={product._id}
