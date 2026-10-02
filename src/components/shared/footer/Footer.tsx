@@ -1,6 +1,5 @@
 import Image from "next/image";
 import { FooterNavLink } from "../header/NavLink";
-import { Button } from "@/components/ui/button";
 import LeaveReviewButton from "./LeaveReviewButton";
 
 export default function Footer() {
@@ -34,7 +33,14 @@ export default function Footer() {
           </nav>
 
           <div className="space-y-3 sm:space-y-4 sm:col-span-2 md:col-span-1">
-            <h3 className="font-medium text-base sm:text-lg lg:text-2xl leading-[140%] tracking-[-2%] text-white w-full md:w-[90%] lg:w-[85%] capitalize">
+            {/* Newsletter signup — not wired to anything (no form state, no handler, no
+             *  backend endpoint). Not being built right now; revisit later — options
+             *  discussed: reuse the backend's existing Gmail API sender (gmail.send scope,
+             *  src/shared/services/email.service.ts in the Express repo) for a small list,
+             *  capped at ~500/day on a personal account, or move to a dedicated ESP
+             *  (Resend/Mailchimp/Brevo) once the list needs to scale or wants proper
+             *  unsubscribe/compliance handling. */}
+            {/* <h3 className="font-medium text-base sm:text-lg lg:text-2xl leading-[140%] tracking-[-2%] text-white w-full md:w-[90%] lg:w-[85%] capitalize">
               Stay up to date with our latest news & Classes
             </h3>
             <aside className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
@@ -44,7 +50,7 @@ export default function Footer() {
                 placeholder="Enter your Email"
               />
               <Button className="">Sign Me Up</Button>
-            </aside>
+            </aside> */}
             <LeaveReviewButton />
           </div>
         </div>
