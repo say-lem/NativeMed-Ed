@@ -5,11 +5,17 @@ import { revalidatePath } from "next/cache";
 import {
   createLiveCourse,
   publishLiveCourse,
+  registerLiveCourseTocPdf,
   updateLiveCourse,
   updateLiveCourseThumbnail,
-  updateLiveCourseTocPdf,
 } from "@/services/liveCourses.service";
-import type { ApiFailure, FormActionResult, LiveCourseInput } from "@/types/api";
+import { getPdfUploadSignatureAction } from "@/app/(admin)/actions";
+import type {
+  ApiFailure,
+  FormActionResult,
+  LiveCourseInput,
+  PdfSignatureResult,
+} from "@/types/api";
 
 type SaveResult = FormActionResult & { courseId?: string };
 
@@ -84,24 +90,28 @@ export async function uploadLiveCourseThumbnailAction(
   }
 }
 
-export async function uploadLiveCourseTocPdfAction(
+/** Issues a signed Cloudinary upload request for the live-course schedule PDF. */
+export async function getLiveCourseTocPdfSignatureAction(): Promise<PdfSignatureResult> {
+  return getPdfUploadSignatureAction("live-course-toc");
+}
+
+/** Registers a schedule PDF already uploaded directly to Cloudinary by the browser. */
+export async function registerLiveCourseTocPdfAction(
   id: string,
-  formData: FormData,
+  payload: { fileUrl: string; publicId: string },
 ): Promise<FormActionResult> {
   try {
-    const file = formData.get("tocPdf");
-    if (!(file instanceof File) || file.size === 0) return { ok: true };
-    const res = await updateLiveCourseTocPdf(id, file);
+    const res = await registerLiveCourseTocPdf(id, payload);
     if (!res.success) return { ok: false, message: res.message };
     revalidatePath("/admin-live-courses");
     return { ok: true };
   } catch (err) {
     if (axios.isAxiosError(err)) {
       const data = err.response?.data as ApiFailure | undefined;
-      console.error("[uploadLiveCourseTocPdfAction] axios error:", err.code, err.message);
+      console.error("[registerLiveCourseTocPdfAction] axios error:", err.code, err.message);
       return { ok: false, message: data?.message ?? "Course schedule upload failed." };
     }
-    console.error("[uploadLiveCourseTocPdfAction] unexpected error:", err);
+    console.error("[registerLiveCourseTocPdfAction] unexpected error:", err);
     return { ok: false, message: "Course schedule upload failed." };
   }
 }

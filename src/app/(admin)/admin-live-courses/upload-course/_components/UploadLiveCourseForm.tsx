@@ -14,10 +14,12 @@ import {
 import { applyFieldErrors } from "@/lib/form-errors";
 import { LogoLoaderOverlay } from "@/components/shared/LogoLoader";
 import RichTextEditor from "@/components/shared/RichTextEditor";
+import { uploadPdfDirect } from "@/lib/pdf-upload";
 import {
+  getLiveCourseTocPdfSignatureAction,
+  registerLiveCourseTocPdfAction,
   saveLiveCourseAction,
   uploadLiveCourseThumbnailAction,
-  uploadLiveCourseTocPdfAction,
 } from "../actions";
 
 const fieldClass =
@@ -108,10 +110,21 @@ export default function UploadLiveCourseForm({
         if (!up.ok) toast.warning(up.message ?? "Cover upload failed");
       }
       if (tocFile && id) {
-        const fd = new FormData();
-        fd.append("tocPdf", tocFile);
-        const up = await uploadLiveCourseTocPdfAction(id, fd);
-        if (!up.ok) toast.warning(up.message ?? "Course schedule upload failed");
+        const sig = await getLiveCourseTocPdfSignatureAction();
+        if (!sig.ok || !sig.data) {
+          toast.warning(sig.message ?? "Course schedule upload failed");
+        } else {
+          try {
+            const uploaded = await uploadPdfDirect(tocFile, sig.data);
+            const up = await registerLiveCourseTocPdfAction(id, {
+              fileUrl: uploaded.secure_url,
+              publicId: uploaded.public_id,
+            });
+            if (!up.ok) toast.warning(up.message ?? "Course schedule upload failed");
+          } catch {
+            toast.warning("Course schedule upload failed");
+          }
+        }
       }
       toast.success(result.message ?? "Saved");
       router.push("/admin-live-courses");

@@ -26,23 +26,18 @@ export async function getCourseContent(
   return res.data;
 }
 
-/** POST /:basePath/:courseId/content/upload-pdf — admin, multipart. A PDF lesson
- *  (Cloudinary, max 300MB, `application/pdf` only). */
-export async function uploadPdfLesson(
+/** POST /:basePath/:courseId/content/pdf-link — admin, JSON. Registers a PDF lesson
+ *  already uploaded directly to Cloudinary by the browser (see uploads.service.ts) —
+ *  the file bytes never pass through our server. */
+export async function registerPdfLesson(
   basePath: ContentBasePath,
   courseId: string,
-  payload: { file: File; title: string; order: number },
+  payload: { title: string; order: number; fileUrl: string; publicId: string },
 ): Promise<ApiResponse<Lesson>> {
-  const fd = new FormData();
-  fd.append("file", payload.file);
-  fd.append("title", payload.title);
-  fd.append("order", String(payload.order));
-  fd.append("type", "pdf");
-  const res = await api.post<ApiResponse<Lesson>>(
-    `/${basePath}/${courseId}/content/upload-pdf`,
-    fd,
-    { headers: { "Content-Type": undefined } },
-  );
+  const res = await api.post<ApiResponse<Lesson>>(`/${basePath}/${courseId}/content/pdf-link`, {
+    ...payload,
+    type: "pdf",
+  });
   return res.data;
 }
 

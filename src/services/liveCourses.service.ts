@@ -185,18 +185,16 @@ export async function updateLiveCourseThumbnail(
   return res.data;
 }
 
-/** PATCH /live-courses/:id/toc-pdf — admin, multipart field `tocPdf` (PDF only, max 50MB).
- *  Sets/replaces the course-schedule PDF shown on the detail page. */
-export async function updateLiveCourseTocPdf(
+/** PATCH /live-courses/:id/toc-pdf-link — admin, JSON. Registers a course-schedule PDF
+ *  already uploaded directly to Cloudinary by the browser (see uploads.service.ts) —
+ *  replaces the previous PDF. */
+export async function registerLiveCourseTocPdf(
   id: string,
-  file: File,
+  payload: { fileUrl: string; publicId: string },
 ): Promise<ApiResponse<{ tocPdfUrl: string }>> {
-  const fd = new FormData();
-  fd.append("tocPdf", file);
   const res = await api.patch<ApiResponse<{ tocPdfUrl: string }>>(
-    `/live-courses/${id}/toc-pdf`,
-    fd,
-    { headers: { "Content-Type": undefined } },
+    `/live-courses/${id}/toc-pdf-link`,
+    payload,
   );
   return res.data;
 }
@@ -278,11 +276,11 @@ export async function restoreLiveCourseEnrollment(
 export const getLiveCourseContent = (courseId: string): Promise<ApiResponse<Lesson[]>> =>
   content.getCourseContent("live-courses", courseId);
 
-export const uploadLiveCoursePdfLesson = (
+export const registerLiveCoursePdfLesson = (
   courseId: string,
-  payload: { file: File; title: string; order: number },
+  payload: { title: string; order: number; fileUrl: string; publicId: string },
 ): Promise<ApiResponse<Lesson>> =>
-  content.uploadPdfLesson("live-courses", courseId, payload);
+  content.registerPdfLesson("live-courses", courseId, payload);
 
 export const addLiveCourseDriveLesson = (
   courseId: string,

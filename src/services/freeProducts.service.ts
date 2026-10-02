@@ -66,16 +66,16 @@ export async function createLinkFreeProduct(
   return res.data;
 }
 
-/** POST /admin/free-products/upload-pdf — admin, multipart. Creates a `pdf` product. */
-export async function uploadPdfFreeProduct(
-  formData: FormData,
-): Promise<ApiResponse<FreeProduct>> {
-  // Let axios derive the multipart boundary (override the JSON default).
-  const res = await api.post<ApiResponse<FreeProduct>>(
-    "/admin/free-products/upload-pdf",
-    formData,
-    { headers: { "Content-Type": undefined } },
-  );
+/** POST /admin/free-products/pdf-link — admin, JSON. Creates a `pdf` product from a file
+ *  already uploaded directly to Cloudinary by the browser (see uploads.service.ts). */
+export async function registerPdfFreeProduct(payload: {
+  title: string;
+  description: string;
+  fileUrl: string;
+  publicId: string;
+  order?: number;
+}): Promise<ApiResponse<FreeProduct>> {
+  const res = await api.post<ApiResponse<FreeProduct>>("/admin/free-products/pdf-link", payload);
   return res.data;
 }
 

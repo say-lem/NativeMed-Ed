@@ -57,6 +57,32 @@ export type FormActionResult = {
   fieldErrors?: Record<string, string[]>;
 };
 
+/** Whitelist of PDF destinations the direct-to-Cloudinary upload flow can target —
+ *  mirrors the backend's whitelist in POST /admin/uploads/pdf-signature. */
+export const PDF_UPLOAD_TARGETS = ["course-content", "free-product", "live-course-toc"] as const;
+export type PdfUploadTarget = (typeof PDF_UPLOAD_TARGETS)[number];
+
+/** POST /admin/uploads/pdf-signature response — lets the browser upload a PDF straight
+ *  to Cloudinary (folder/public_id/type are fixed server-side and baked into the
+ *  signature), bypassing our server entirely so large files never hit Vercel's 4.5MB
+ *  function body-size cap. */
+export interface PdfUploadSignature {
+  cloudName: string;
+  apiKey: string;
+  uploadUrl: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  publicId: string;
+  type: "authenticated";
+}
+
+export type PdfSignatureResult = {
+  ok: boolean;
+  message?: string;
+  data?: PdfUploadSignature;
+};
+
 export interface JwtPayload {
   _id: string;
   email: string;
@@ -786,6 +812,9 @@ export interface CatalogOneOnOneProduct {
   _id: string;
   title: string;
   description: string;
+  /** GET /products omits this even though the underlying booking product has one —
+   *  backfilled in catalog.service.ts from GET /booking by matching `_id`. */
+  imageUrl?: string | null;
   /** GBP pounds, informational only — booking has no payment gate. */
   price: number;
 }

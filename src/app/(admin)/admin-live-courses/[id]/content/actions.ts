@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 import {
   addLiveCourseDriveLesson,
   deleteLiveCourseLesson,
+  registerLiveCoursePdfLesson,
   updateLiveCourseLesson,
-  uploadLiveCoursePdfLesson,
 } from "@/services/liveCourses.service";
 import type { ApiFailure, FormActionResult } from "@/types/api";
 
@@ -22,17 +22,12 @@ function fail(err: unknown, tag: string, fallback: string): FormActionResult {
 
 export async function addPdfLessonAction(
   courseId: string,
-  formData: FormData,
+  payload: { title: string; order: number; fileUrl: string; publicId: string },
 ): Promise<FormActionResult> {
   try {
-    const file = formData.get("file");
-    const title = String(formData.get("title") ?? "").trim();
-    const order = Number(formData.get("order") ?? 0);
-    if (!(file instanceof File) || file.size === 0)
-      return { ok: false, message: "Please choose a PDF file." };
-    if (!title) return { ok: false, message: "Title is required." };
+    if (!payload.title.trim()) return { ok: false, message: "Title is required." };
 
-    const res = await uploadLiveCoursePdfLesson(courseId, { file, title, order });
+    const res = await registerLiveCoursePdfLesson(courseId, payload);
     if (!res.success) return { ok: false, message: res.message };
     revalidatePath(`/admin-live-courses/${courseId}/content`);
     return { ok: true, message: "PDF lesson added" };
