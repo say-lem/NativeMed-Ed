@@ -2,13 +2,14 @@
 
 import axios from "axios";
 import { revalidatePath } from "next/cache";
+import { getPdfUploadSignatureAction } from "@/app/(admin)/actions";
 import {
   addLiveCourseDriveLesson,
   deleteLiveCourseLesson,
   registerLiveCoursePdfLesson,
   updateLiveCourseLesson,
 } from "@/services/liveCourses.service";
-import type { ApiFailure, FormActionResult } from "@/types/api";
+import type { ApiFailure, FormActionResult, PdfSignatureResult } from "@/types/api";
 
 function fail(err: unknown, tag: string, fallback: string): FormActionResult {
   if (axios.isAxiosError(err)) {
@@ -18,6 +19,13 @@ function fail(err: unknown, tag: string, fallback: string): FormActionResult {
   }
   console.error(`[${tag}] unexpected error:`, err);
   return { ok: false, message: "Something went wrong." };
+}
+
+/** Issues a signed Cloudinary upload request for a live-course PDF lesson. A direct
+ *  re-export (not a wrapper arrow function) — Server Components can only pass genuine
+ *  Server Actions as props to Client Components, so this must live in a "use server" file. */
+export async function getPdfSignatureAction(): Promise<PdfSignatureResult> {
+  return getPdfUploadSignatureAction("course-content");
 }
 
 export async function addPdfLessonAction(
