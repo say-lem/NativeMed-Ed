@@ -107,7 +107,7 @@ export default function MyLiveCoursesList({
               href={`/my-live-courses/${course._id}`}
               className="rounded-[16px] overflow-hidden courseBorder pb-4 bg-white hover:scale-[1.02] transition-transform flex flex-col"
             >
-              <div className="relative w-full min-h-40 sm:min-h-48 overflow-hidden bg-gray-from-radial-bg">
+              <div className="relative w-full aspect-[4/3] overflow-hidden bg-gray-from-radial-bg">
                 <ContainedImage
                   src={course.thumbnailUrl || "/Images/coursesImage.png"}
                   alt={`image of ${course.title ?? "live course"}`}
