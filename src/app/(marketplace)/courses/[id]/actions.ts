@@ -11,10 +11,12 @@ import type { PaymentInterval } from "@/services/payments.service";
 export async function startCourseCheckout(
   courseId: string,
   interval: PaymentInterval,
+  clientOrigin?: string,
 ): Promise<CheckoutActionResult> {
   const res = await runCheckout(
     { type: "course", interval, courseId },
     "payments/checkout course",
+    clientOrigin,
   );
 
   // Course-specific wording for the documented 404 / 409 cases.

@@ -40,7 +40,11 @@ export default function CoursePurchase({
 
   const subscribe = () => {
     startTransition(async () => {
-      const res = await startCourseCheckout(course._id, activeInterval);
+      const res = await startCourseCheckout(
+        course._id,
+        activeInterval,
+        window.location.origin,
+      );
       if (res.ok && res.url) {
         window.location.assign(res.url);
         return;

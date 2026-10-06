@@ -16,9 +16,10 @@ export interface LiveCourseCheckoutResult {
  *  flow, since a live course is a single payment, not recurring billing. */
 export async function startLiveCourseCheckout(
   courseId: string,
+  clientOrigin?: string,
 ): Promise<LiveCourseCheckoutResult> {
   try {
-    const origin = await getOrigin();
+    const origin = await getOrigin(clientOrigin);
     const ctx = new URLSearchParams({ type: "live_course", courseId });
     const successUrl =
       `${origin}/payment/success?${ctx.toString()}` + `&session_id={CHECKOUT_SESSION_ID}`;

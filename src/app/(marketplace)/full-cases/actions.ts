@@ -6,9 +6,11 @@ import { runCheckout, type CheckoutActionResult } from "@/lib/checkout";
 /** Kick off Stripe checkout for the Case Bank subscription (unlocks all cases). */
 export async function startCaseBankCheckout(
   interval = "monthly",
+  clientOrigin?: string,
 ): Promise<CheckoutActionResult> {
   return runCheckout(
     { type: "case_bank", interval },
     "payments/checkout case_bank",
+    clientOrigin,
   );
 }
