@@ -103,6 +103,27 @@ export async function publishCourse(
   return res.data;
 }
 
+/** PATCH /courses/:id/pause-payments — admin. Blocks new checkouts/plan changes without
+ *  touching visibility; existing subscriptions are untouched. */
+export async function pauseCoursePayments(
+  id: string,
+): Promise<ApiResponse<{ _id: string; title: string; paymentsPaused: boolean }>> {
+  const res = await api.patch<
+    ApiResponse<{ _id: string; title: string; paymentsPaused: boolean }>
+  >(`/courses/${id}/pause-payments`);
+  return res.data;
+}
+
+/** PATCH /courses/:id/resume-payments — admin. */
+export async function resumeCoursePayments(
+  id: string,
+): Promise<ApiResponse<{ _id: string; title: string; paymentsPaused: boolean }>> {
+  const res = await api.patch<
+    ApiResponse<{ _id: string; title: string; paymentsPaused: boolean }>
+  >(`/courses/${id}/resume-payments`);
+  return res.data;
+}
+
 /** PATCH /courses/:id/thumbnail — admin, multipart field `thumbnail`. */
 export async function updateCourseThumbnail(
   id: string,

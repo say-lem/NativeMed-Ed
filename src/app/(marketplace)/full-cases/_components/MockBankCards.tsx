@@ -40,14 +40,17 @@ export default function MockCasesCards({
   specialties,
   totalCases,
   emptyMessage,
+  rootPath = "/full-cases",
 }: {
   specialties: Specialty[];
   totalCases: number;
   emptyMessage?: string;
+  /** Lets the public case-bank preview reuse this exact grid with its own base path. */
+  rootPath?: string;
 }) {
   return (
     <>
-      <Link href="/full-cases/all" className={cardClass}>
+      <Link href={`${rootPath}/all`} className={cardClass}>
         <aside
           style={{ backgroundColor: "#EEE9F7" }}
           className="flex rounded-full p-4 shrink-0"
@@ -76,7 +79,7 @@ export default function MockCasesCards({
 
         return (
           <Link
-            href={`/full-cases/${slug}`}
+            href={`${rootPath}/${slug}`}
             key={item.specialty}
             className={cardClass}
           >

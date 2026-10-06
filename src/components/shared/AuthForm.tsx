@@ -15,8 +15,9 @@ import { Button } from "../ui/button";
 import {
   examSittingOptions,
   loginSchema,
-  registerSchema,
+  registerFormSchema,
   type LoginValues,
+  type RegisterFormValues,
   type RegisterValues,
 } from "@/lib/schemas/auth";
 import { loginAction } from "@/app/(auth)/login/actions";
@@ -236,22 +237,26 @@ function RegisterForm({ redirectTo }: { redirectTo?: string }) {
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm<RegisterValues>({
-    resolver: zodResolver(registerSchema),
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerFormSchema),
     defaultValues: {
       fullName: "",
       email: "",
-      phone: "",
-      telegramUsername: "",
       examSitting: "",
       password: "",
+      agreeToTerms: false,
     },
   });
 
-  const onSubmit = (values: RegisterValues) => {
+  const onSubmit = (values: RegisterFormValues) => {
     setServerError(null);
+    // agreeToTerms only gates the UI — the backend doesn't expect it in the payload.
+    const { fullName, email, examSitting, password } = values;
     startTransition(async () => {
-      const result = await registerAction(values, redirectTo);
+      const result = await registerAction(
+        { fullName, email, examSitting, password },
+        redirectTo,
+      );
       if (!result.ok) {
         applyServerErrors<RegisterValues>(result, setError);
         if (result.message) setServerError(result.message);
@@ -278,6 +283,47 @@ function RegisterForm({ redirectTo }: { redirectTo?: string }) {
         noValidate
       >
         <RegisterFields register={rhfRegister} errors={errors} />
+        <div className="space-y-2">
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              id="agreeToTerms"
+              className="mt-1 size-4 shrink-0 rounded-[4px] border-[0.5px] border-secondary-20 accent-primary-100 cursor-pointer"
+              {...rhfRegister("agreeToTerms")}
+            />
+            <span className="font-light text-xs sm:text-sm leading-[150%] text-subtle-text">
+              I have read and agree to the{" "}
+              <Link
+                href="/terms-and-conditions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-100 font-bold"
+              >
+                Terms &amp; Conditions
+              </Link>
+              ,{" "}
+              <Link
+                href="/legal-disclaimer"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-100 font-bold"
+              >
+                Legal Disclaimer
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy-policy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary-100 font-bold"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </span>
+          </label>
+          <FieldError message={errors.agreeToTerms?.message} />
+        </div>
         {serverError && (
           <p
             className="text-error-other text-sm leading-[150%]"
@@ -306,8 +352,8 @@ function RegisterFields({
   register,
   errors,
 }: {
-  register: UseFormRegister<RegisterValues>;
-  errors: FieldErrors<RegisterValues>;
+  register: UseFormRegister<RegisterFormValues>;
+  errors: FieldErrors<RegisterFormValues>;
 }) {
   return (
     <>
@@ -334,30 +380,6 @@ function RegisterFields({
           {...register("email")}
         />
         <FieldError message={errors.email?.message} />
-      </div>
-      <div className="space-y-2">
-        <Label text="Phone" htmlFor="phone" />
-        <input
-          id="phone"
-          type="tel"
-          autoComplete="tel"
-          placeholder="+1234567890"
-          className={inputClass}
-          {...register("phone")}
-        />
-        <FieldError message={errors.phone?.message} />
-      </div>
-      <div className="space-y-2">
-        <Label text="Telegram Username" htmlFor="telegramUsername" />
-        <input
-          id="telegramUsername"
-          type="text"
-          autoComplete="off"
-          placeholder="@yourusername"
-          className={inputClass}
-          {...register("telegramUsername")}
-        />
-        <FieldError message={errors.telegramUsername?.message} />
       </div>
       <div className="space-y-2">
         <Label text="Exam Sitting" htmlFor="examSitting" />

@@ -1,5 +1,6 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import SideNavLink from "./SideNavLinks";
 import {
   CoursesIcon,
@@ -9,7 +10,7 @@ import {
   SubscriptionsIcon,
 } from "./Icons";
 import { usePathname } from "next/navigation";
-import { GraduationCap, LogOutIcon } from "lucide-react";
+import { CalendarClock, GraduationCap, LogOutIcon } from "lucide-react";
 
 export default function SideNav() {
   const pathName = usePathname();
@@ -27,13 +28,15 @@ export default function SideNav() {
         {/* <p className="font-semibold leading-[150%] text-black-others mt-5">
           Native Medical Education
         </p> */}
-        <Image
-          src={"/Images/main_logo.png"}
-          alt="NativeMed Logo"
-          width={100}
-          height={100}
-          className="w-20 lg:w-28 mix-blend-multiply"
-        />
+        <Link href="/">
+          <Image
+            src={"/Images/main_logo.png"}
+            alt="NativeMed Logo"
+            width={100}
+            height={100}
+            className="w-20 lg:w-28 mix-blend-multiply"
+          />
+        </Link>
       </aside>
 
       <aside className="pt-7">
@@ -76,6 +79,16 @@ export default function SideNav() {
           label="Case Bank"
         />
 
+        <SideNavLink
+          icon={
+            <CalendarClock
+              size={20}
+              color={pathName === "/one-on-one" ? "#5925B3" : "#373737"}
+            />
+          }
+          href="/one-on-one"
+          label="1-on-1 Sessions"
+        />
         <SideNavLink
           icon={
             <SubscriptionsIcon

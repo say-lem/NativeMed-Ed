@@ -55,20 +55,6 @@ export const registerSchema = z.object({
     .min(1, "Full name is required")
     .min(2, "Full name must be at least 2 characters"),
   email: z.string().min(1, "Email is required").email("Enter a valid email"),
-  phone: z
-    .string()
-    .min(1, "Phone is required")
-    .regex(/^\+?[0-9]{7,15}$/, "Enter a valid phone number"),
-  // The server prefixes "@" itself, so accept it with or without one and don't be stricter
-  // than the backend (which only requires a non-empty string).
-  telegramUsername: z
-    .string()
-    .trim()
-    .min(1, "Telegram username is required")
-    .regex(
-      /^@?[A-Za-z0-9_]{4,32}$/,
-      "Use letters, numbers and underscores (min 4 characters)",
-    ),
   examSitting: z
     .string()
     .min(1, "Select your exam sitting")
@@ -84,3 +70,12 @@ export const registerSchema = z.object({
 
 export type LoginValues = z.infer<typeof loginSchema>;
 export type RegisterValues = z.infer<typeof registerSchema>;
+
+/** Client-only: adds the sign-up consent checkbox on top of the fields the backend expects. */
+export const registerFormSchema = registerSchema.extend({
+  agreeToTerms: z.boolean().refine((v) => v === true, {
+    message: "You must agree to the Terms & Conditions, Legal Disclaimer and Privacy Policy",
+  }),
+});
+
+export type RegisterFormValues = z.infer<typeof registerFormSchema>;

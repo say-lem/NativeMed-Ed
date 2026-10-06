@@ -3,11 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Markdown } from "@/components/shared/Markdown";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import CoursePurchase from "./_components/CoursePurchase";
 import { getCourse } from "@/services/courses.service";
 import { getPaymentPlans } from "@/services/payments.service";
+import { getHomepageData } from "@/services/homepage.service";
 import { getCourseAccess } from "@/lib/access";
 import { tierLabel } from "@/lib/tiers";
 import { formatDate } from "@/lib/date";
@@ -42,12 +44,24 @@ async function loadPlans(): Promise<PaymentPlan[]> {
   }
 }
 
+/** For the "payments paused" contact-admin message — falls back to null if unset/unavailable. */
+async function loadContactEmail(): Promise<string | null> {
+  try {
+    const res = await getHomepageData();
+    return res.success ? res.data.contactEmail : null;
+  } catch (err) {
+    if (!axios.isAxiosError(err)) throw err;
+    return null;
+  }
+}
+
 export default async function CourseDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [course, plans, access] = await Promise.all([
+  const [course, plans, access, contactEmail] = await Promise.all([
     loadCourse(id),
     loadPlans(),
     getCourseAccess(id),
+    loadContactEmail(),
   ]);
 
   if (!course) {
@@ -127,13 +141,26 @@ export default async function CourseDetailPage({ params }: PageProps) {
         </aside>
       </div>
 
+      {/* Longer write-up — outside the hero card, shown only when the admin has set one.
+          Stored as markdown from the admin's rich-text editor. */}
+      {course.detailedDescription && (
+        <div className="space-y-3">
+          <h2 className="font-semibold text-xl sm:text-2xl text-black-others">
+            About this course
+          </h2>
+          <Markdown className="text-sm sm:text-base text-[#373737]">
+            {course.detailedDescription}
+          </Markdown>
+        </div>
+      )}
+
       {/* No access → choose a plan (access users get the CTA in the top bar) */}
       {!access.hasAccess && (
         <div className="space-y-5">
           <h2 className="font-semibold text-xl sm:text-2xl text-black-others">
             Choose your plan
           </h2>
-          <CoursePurchase course={course} plans={plans} />
+          <CoursePurchase course={course} plans={plans} contactEmail={contactEmail} />
         </div>
       )}
       </section>

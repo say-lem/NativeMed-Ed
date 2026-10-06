@@ -1,11 +1,12 @@
 "use client";
 import { FiFacebook, FiTwitter } from "react-icons/fi";
 import { IoLogoInstagram } from "react-icons/io5";
-import { TbBrandYoutube } from "react-icons/tb";
+import { TbBrandWhatsapp, TbBrandYoutube } from "react-icons/tb";
 import { toast } from "sonner";
 
 const YOUTUBE_URL =
   "https://youtube.com/@nativemedicaleducation?si=D23ouZz5vhRAK-Sn";
+const WHATSAPP_URL = "https://wa.me/447312537606";
 
 const buttonClass =
   "cursor-pointer p-2.25 rounded-full border border-primary-20 hover:border-primary-100 transition-colors";
@@ -44,7 +45,7 @@ export default function SocialLinks() {
         <FiTwitter className="size-5 text-black-others" />
       </button>
 
-      {/* The only live channel */}
+      {/* Live channels */}
       <a
         href={YOUTUBE_URL}
         target="_blank"
@@ -54,6 +55,16 @@ export default function SocialLinks() {
         className={buttonClass}
       >
         <TbBrandYoutube className="size-5 text-black-others" />
+      </a>
+      <a
+        href={WHATSAPP_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Chat with Native Medical Education on WhatsApp (opens in a new tab)"
+        title="Chat with us on WhatsApp"
+        className={buttonClass}
+      >
+        <TbBrandWhatsapp className="size-5 text-black-others" />
       </a>
     </div>
   );

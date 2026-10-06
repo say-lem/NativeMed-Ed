@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { FooterNavLink } from "../header/NavLink";
 import { Button } from "@/components/ui/button";
+import LeaveReviewButton from "./LeaveReviewButton";
 
 export default function Footer() {
   return (
@@ -29,6 +30,7 @@ export default function Footer() {
             <FooterNavLink href="/products" label="Products" />
             <FooterNavLink href="/about" label="About" />
             <FooterNavLink href="/contact" label="Contact" />
+            <FooterNavLink href="/legal-disclaimer" label="Legal Disclaimer" />
           </nav>
 
           <div className="space-y-3 sm:space-y-4 sm:col-span-2 md:col-span-1">
@@ -43,11 +45,16 @@ export default function Footer() {
               />
               <Button className="">Sign Me Up</Button>
             </aside>
+            <LeaveReviewButton />
           </div>
         </div>
       </footer>
 
-      <div className="border-t border-subtle-text bg-black py-4 sm:py-6 lg:py-8 text-center px-4">
+      <div className="border-t border-subtle-text bg-black py-4 sm:py-6 lg:py-8 text-center px-4 space-y-2 sm:space-y-3">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+          <FooterNavLink href="/terms-and-conditions" label="Terms & Conditions" />
+          <FooterNavLink href="/privacy-policy" label="Privacy Policy" />
+        </div>
         <p className="leading-6 tracking-[-0.31px] text-subtle-text text-xs sm:text-sm lg:text-base">
           © 2026 Native Medical Education. All rights reserved.
         </p>

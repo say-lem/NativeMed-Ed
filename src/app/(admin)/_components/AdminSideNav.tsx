@@ -1,8 +1,9 @@
 "use client";
 import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AdminSideNavLink from "./AdminSideNavLink";
-import { GraduationCap, Users as UsersIcon } from "lucide-react";
+import { CalendarClock, CalendarDays, GraduationCap, Home, Star, Users as UsersIcon } from "lucide-react";
 import {
   CoursesIcon,
   DashboardIcon,
@@ -23,13 +24,15 @@ export default function AdminSideNav() {
   return (
     <div>
       <aside className="flex items-center px-5 justify-center">
-        <Image
-          src={"/Images/main_logo.png"}
-          alt="NativeMed Logo"
-          width={100}
-          height={100}
-          className="w-20 lg:w-28 mix-blend-multiply"
-        />
+        <Link href="/">
+          <Image
+            src={"/Images/main_logo.png"}
+            alt="NativeMed Logo"
+            width={100}
+            height={100}
+            className="w-20 lg:w-28 mix-blend-multiply"
+          />
+        </Link>
       </aside>
 
       <aside className="pt-7">
@@ -37,6 +40,11 @@ export default function AdminSideNav() {
           icon={<DashboardIcon color={color("/admin-dashboard")} />}
           href="/admin-dashboard"
           label="Dashboard"
+        />
+        <AdminSideNavLink
+          icon={<Home size={22} color={color("/admin-homepage")} />}
+          href="/admin-homepage"
+          label="Homepage"
         />
         <AdminSideNavLink
           icon={<SubscriptionsIcon color={color("/admin-subscribers")} />}
@@ -63,6 +71,21 @@ export default function AdminSideNav() {
           icon={<CoursesIcon color={color("/admin-courses")} />}
           href="/admin-courses"
           label="Courses"
+        />
+        <AdminSideNavLink
+          icon={<Star size={22} color={color("/admin-reviews")} />}
+          href="/admin-reviews"
+          label="Reviews"
+        />
+        <AdminSideNavLink
+          icon={<CalendarDays size={22} color={color("/admin-events")} />}
+          href="/admin-events"
+          label="Events"
+        />
+        <AdminSideNavLink
+          icon={<CalendarClock size={22} color={color("/admin-booking")} />}
+          href="/admin-booking"
+          label="1-on-1 Bookings"
         />
 
         <AdminSideNavLink

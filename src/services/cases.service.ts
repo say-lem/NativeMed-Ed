@@ -3,15 +3,54 @@ import { api } from "@/lib/api";
 import type {
   AdminCase,
   ApiResponse,
+  CaseBankOverview,
   CaseDetail,
   CaseInput,
   CasesPage,
   Paginated,
   Specialty,
+  UpdateCaseBankOverviewInput,
 } from "@/types/api";
 
 export async function getSpecialties(): Promise<ApiResponse<Specialty[]>> {
   const res = await api.get<ApiResponse<Specialty[]>>("/cases/specialties");
+  return res.data;
+}
+
+/** GET /cases/overview — public. The case bank as a product (title/description/image). */
+export async function getCaseBankOverview(): Promise<ApiResponse<CaseBankOverview>> {
+  const res = await api.get<ApiResponse<CaseBankOverview>>("/cases/overview");
+  return res.data;
+}
+
+/** GET /cases/admin/overview — admin. Same shape, for the admin editor to load current values. */
+export async function getAdminCaseBankOverview(): Promise<ApiResponse<CaseBankOverview>> {
+  const res = await api.get<ApiResponse<CaseBankOverview>>("/cases/admin/overview");
+  return res.data;
+}
+
+/** PATCH /cases/admin/overview — admin. At least one of title/description required. */
+export async function updateCaseBankOverview(
+  input: UpdateCaseBankOverviewInput,
+): Promise<ApiResponse<CaseBankOverview>> {
+  const res = await api.patch<ApiResponse<CaseBankOverview>>(
+    "/cases/admin/overview",
+    input,
+  );
+  return res.data;
+}
+
+/** PATCH /cases/admin/overview/image — admin. Multipart field `image` (resized 800×450). */
+export async function updateCaseBankOverviewImage(
+  file: File,
+): Promise<ApiResponse<{ imageUrl: string }>> {
+  const fd = new FormData();
+  fd.append("image", file);
+  const res = await api.patch<ApiResponse<{ imageUrl: string }>>(
+    "/cases/admin/overview/image",
+    fd,
+    { headers: { "Content-Type": undefined } },
+  );
   return res.data;
 }
 

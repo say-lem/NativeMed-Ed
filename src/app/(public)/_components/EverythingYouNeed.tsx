@@ -1,7 +1,20 @@
 import ButtonTag from "@/components/shared/ButtonTag";
 import Image from "next/image";
 import SubtleText from "@/components/shared/SubtleText";
-export default function EverythingYouNeed() {
+import { formatStatCount, roundToNearestTen } from "@/lib/stats";
+
+export default function EverythingYouNeed({
+  caseNumber,
+  testimonialsCount,
+  registrarsCount,
+}: {
+  caseNumber: number;
+  testimonialsCount: number;
+  registrarsCount: number;
+}) {
+  // Rounded so the live case count reads as a round marketing figure (e.g. 247 -> 250)
+  // rather than a precise-looking number that draws attention to being exact.
+  const displayedCaseNumber = roundToNearestTen(caseNumber);
   // Top padding intentionally mirrors the bottom (pb-*) so the section reads as one
   // rhythm. It used to be pt-32/pt-64, which left a ~250px void under the hero.
   return (
@@ -25,7 +38,7 @@ export default function EverythingYouNeed() {
         <div className="relative w-full">
           <Image
             src={"/Images/everythingImage.svg"}
-            alt="What you get: 200+ SCA cases, live classes, Case Bank, pre-recorded lectures, 300+ testimonies, and 3k+ GP registrars"
+            alt={`What you get: ${formatStatCount(displayedCaseNumber)} SCA cases, live classes, Case Bank, pre-recorded lectures, ${formatStatCount(testimonialsCount)} testimonies, and trusted by ${formatStatCount(registrarsCount)} doctors`}
             width={752}
             height={415}
             className="block w-full h-auto"
@@ -61,7 +74,7 @@ export default function EverythingYouNeed() {
               fontWeight="700"
               letterSpacing="-1"
             >
-              200+
+              {formatStatCount(displayedCaseNumber)}
             </text>
 
             {/* Middle card — number only; "Testimonies" below it is still artwork */}
@@ -73,10 +86,15 @@ export default function EverythingYouNeed() {
               fontWeight="700"
               letterSpacing="-1"
             >
-              300+
+              {formatStatCount(testimonialsCount)}
             </text>
 
-            {/* Top-right card — number and label */}
+            {/* Top-right card — kicker, number, and label read top-to-bottom as
+                "Trusted by 3k+ Doctors". Kicker sits the same 32.688 baseline
+                offset above the number as the label sits below it, for symmetry. */}
+            <text x="529.32" y="217.912" fill="#F7F4FB" fontSize="24">
+              Trusted by
+            </text>
             <text
               x="529.32"
               y="250.6"
@@ -85,10 +103,10 @@ export default function EverythingYouNeed() {
               fontWeight="700"
               letterSpacing="-1"
             >
-              3k+
+              {formatStatCount(registrarsCount)}
             </text>
             <text x="529.32" y="283.288" fill="#F7F4FB" fontSize="24">
-              GP registrars
+              Doctors
             </text>
 
             {/* Bottom-left card — centred in a 240-wide card (0–240) */}

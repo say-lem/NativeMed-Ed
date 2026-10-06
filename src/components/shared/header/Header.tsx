@@ -27,12 +27,13 @@ export default function PublicHeader({ user }: { user?: User | null }) {
         alt="NativeMed Logo"
         width={100}
         height={100}
-        className="w-20 lg:w-28 mix-blend-multiply"
+        className="w-25 lg:w-35 mix-blend-multiply"
       />
 
       <nav className="hidden lg:flex space-x-8">
         <HeaderNavLink href="/" label="Home" />
         <HeaderNavLink href="/products" label="Products" />
+        <HeaderNavLink href="/free-products" label="Free Resources" />
         <HeaderNavLink href="/about" label="About" />
         <HeaderNavLink href="/contact" label="Contact" />
       </nav>
@@ -77,6 +78,9 @@ export default function PublicHeader({ user }: { user?: User | null }) {
           </div>
           <div onClick={() => setIsOpen(false)}>
             <HeaderNavLink href="/products" label="Products" />
+          </div>
+          <div onClick={() => setIsOpen(false)}>
+            <HeaderNavLink href="/free-products" label="Free Resources" />
           </div>
           <div onClick={() => setIsOpen(false)}>
             <HeaderNavLink href="/about" label="About" />

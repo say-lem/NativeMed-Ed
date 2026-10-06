@@ -35,17 +35,34 @@ const META: Record<string, StatusMeta> = {
   },
 };
 
-export function statusMeta(status?: SubscriptionStatus): StatusMeta {
-  if (!status) return { label: "Unknown", tone: "dead" };
-  return META[status] ?? { label: status.replace(/_/g, " "), tone: "dead" };
+/** True once the current billing period has actually elapsed. Stripe's webhook can lag
+ *  behind the real date, so a backend-reported "active"/"past_due" can be stale — the tag
+ *  shouldn't keep saying Active/Payment due past the date the subscription itself names. */
+function isPastPeriodEnd(currentPeriodEnd?: string): boolean {
+  if (!currentPeriodEnd) return false;
+  return new Date(currentPeriodEnd).getTime() < Date.now();
 }
 
-/** Does this subscription currently grant access? `past_due` still does. */
-export function grantsAccess(status?: SubscriptionStatus): boolean {
-  return status === "active" || status === "past_due";
+export function statusMeta(
+  status?: SubscriptionStatus,
+  currentPeriodEnd?: string,
+): StatusMeta {
+  if (!status) return { label: "Unknown", tone: "dead" };
+  const meta = META[status] ?? { label: status.replace(/_/g, " "), tone: "dead" };
+  if ((status === "active" || status === "past_due") && isPastPeriodEnd(currentPeriodEnd)) {
+    return { label: "Expired", tone: "dead" };
+  }
+  return meta;
+}
+
+/** Does this subscription currently grant access? `past_due` still does — unless its
+ *  period has actually elapsed, in which case a stale status shouldn't keep it "active". */
+export function grantsAccess(status?: SubscriptionStatus, currentPeriodEnd?: string): boolean {
+  if (status !== "active" && status !== "past_due") return false;
+  return !isPastPeriodEnd(currentPeriodEnd);
 }
 
 /** Subscriptions needing the user's attention — drives the page-level banner. */
 export function needsAttention(subs: Subscription[]): Subscription[] {
-  return subs.filter((s) => statusMeta(s.status).tone === "warn");
+  return subs.filter((s) => statusMeta(s.status, s.currentPeriodEnd).tone === "warn");
 }

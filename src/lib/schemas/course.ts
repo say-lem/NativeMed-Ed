@@ -46,6 +46,15 @@ export function makeCourseSchema(mode: "create" | "edit") {
         .string()
         .trim()
         .min(10, "Description must be at least 10 characters"),
+      // Optional — blank means the detail page shows no separate write-up (just the short
+      // description). The backend only enforces the 10-char minimum once something's typed.
+      detailedDescription: z
+        .string()
+        .trim()
+        .refine(
+          (v) => v === "" || v.length >= 10,
+          "Detailed description must be at least 10 characters",
+        ),
       sessionsMonthly: priceField,
       sessionsQuarterly: priceField,
       lecturesMonthly: priceField,
@@ -82,6 +91,7 @@ export type CourseFormValues = z.infer<typeof courseSchema>;
 export const emptyCourseValues: CourseFormValues = {
   title: "",
   description: "",
+  detailedDescription: "",
   sessionsMonthly: "",
   sessionsQuarterly: "",
   lecturesMonthly: "",
@@ -100,6 +110,7 @@ export function courseToFormValues(c: AdminCourse): CourseFormValues {
   return {
     title: c.title ?? "",
     description: c.description ?? "",
+    detailedDescription: c.detailedDescription ?? "",
     sessionsMonthly: toStr(sessions?.monthly),
     sessionsQuarterly: toStr(sessions?.quarterly),
     lecturesMonthly: toStr(lectures?.monthly),
@@ -124,6 +135,9 @@ export function buildCoursePayload(v: CourseFormValues): CourseInput {
     title: v.title.trim(),
     description: v.description.trim(),
   };
+
+  const detailedDescription = v.detailedDescription.trim();
+  if (detailedDescription) payload.detailedDescription = detailedDescription;
 
   const pricing: CoursePricing = {};
 

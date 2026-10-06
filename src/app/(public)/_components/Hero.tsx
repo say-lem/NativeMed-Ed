@@ -38,14 +38,13 @@ export default function HomeHero({ isLoggedIn = false }: { isLoggedIn?: boolean 
         />
       </div>
       <p className="text-subtle-text text-xs sm:text-sm md:text-base lg:text-lg leading-[150%] w-[92%] sm:w-[85%] md:w-[70%] lg:w-[60%] mx-auto text-center mt-3 sm:mt-4 lg:mt-0">
-        We go beyond exam preparation, equipping you with the confidence and{" "}
-        competence to excel as a General Practitioner or Family Physician.
+      At Native Medical Education, we are not just invested in helping you pass your exams; we are passionate about nurturing your confidence and competence as General Practitioners and Family Physicians.
       </p>
 
       <div className="mt-5 sm:mt-6 lg:mt-10 text-center">
-        <Link href={isLoggedIn ? "/dashboard" : "/register"}>
+        <Link href={isLoggedIn ? "/products" : "/products"}>
           <Button className="bg-primary-100 font-bold tracking-[-1%] leading-[120%] space-x-1">
-            <span>{isLoggedIn ? "Go to Dashboard" : "Start Learning"}</span>
+            <span>{isLoggedIn ? "Start Learning" : "Start Learning"}</span>
             <Image
               src="/Images/arrow_forward.png"
               alt="Arrow forward"

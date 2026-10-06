@@ -2,7 +2,7 @@ import ButtonTag from "@/components/shared/ButtonTag";
 import SubtleText from "@/components/shared/SubtleText";
 import Image from "next/image";
 import Link from "next/link";
-import ProductsCard from "@/components/shared/ProductsCard";
+import CatalogGrid from "@/app/(public)/products/_components/CatalogGrid";
 import TitleCase from "@/components/shared/TitleCase";
 
 export default function WhatYouGet() {
@@ -10,11 +10,11 @@ export default function WhatYouGet() {
     <section className="px-4 sm:px-8 md:px-10 lg:px-15 pt-10 sm:pt-14 md:pt-18 lg:pt-24 space-y-4 sm:space-y-6 md:space-y-8 lg:space-y-12 pb-8 sm:pb-10">
       <div className="text-center mx-auto w-full sm:w-[85%] md:w-[65%] lg:w-[50%]">
         <ButtonTag title="Products" />
-        <TitleCase text="What You Get" />
-        <SubtleText text="From live class recordings to pre-recorded lectures, question banks, and SCA cases—everything you need in one place." />
+        <TitleCase text="What We Offer" />
+        <SubtleText text="From live classes and pre-recorded lectures to high-quality SCA cases and personalised coaching — everything you need to prepare for the SCA, all in one place." />
       </div>
 
-      <ProductsCard cutBy={3} />
+      <CatalogGrid cutBy={3} />
 
       <Link
         href="/products"
