@@ -922,11 +922,18 @@ export type SessionBookingStatus = "pending" | "confirmed" | "cancelled";
 
 /** POST /booking/:id/book response — a booking is NOT confirmed at this point. Redirect
  *  the browser to `url` to complete payment; the booking becomes `confirmed` only once
- *  Stripe's webhook fires. `url` mirrors Stripe's own type (`string | null`). */
+ *  Stripe's webhook fires. `url` mirrors Stripe's own type (`string | null`).
+ *  `GET /booking/:bookingId/resume-payment` returns this same shape for a still-pending
+ *  booking's existing checkout session. */
 export interface BookingCheckout {
   bookingId: string;
   sessionId: string;
   url: string | null;
+  /** ISO 8601 — when this booking's checkout session was created. */
+  paymentInitiatedAt: string;
+  /** ISO 8601 — `paymentInitiatedAt` + 1 hour; matches both Stripe's own session expiry
+   *  and the backend sweep that releases unpaid holds. Drive a countdown off this. */
+  expiresAt: string;
 }
 
 export interface SessionBooking {
@@ -937,6 +944,10 @@ export interface SessionBooking {
   time: string;
   status: SessionBookingStatus;
   stripeCheckoutSessionId?: string;
+  /** Present only while `status === "pending"` — derived from `createdAt`, not stored.
+   *  Mirrors `BookingCheckout.paymentInitiatedAt`/`expiresAt`. */
+  paymentInitiatedAt?: string;
+  paymentExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -950,6 +961,8 @@ export interface AdminSessionBooking {
   time: string;
   status: SessionBookingStatus;
   stripeCheckoutSessionId?: string;
+  paymentInitiatedAt?: string;
+  paymentExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -967,6 +980,10 @@ export interface MyBooking {
   time: string;
   stripeCheckoutSessionId?: string;
   status: SessionBookingStatus;
+  /** Present only while `status === "pending"` — drive the "complete payment" countdown
+   *  (and when to offer "resume payment") off `paymentExpiresAt`. */
+  paymentInitiatedAt?: string;
+  paymentExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }

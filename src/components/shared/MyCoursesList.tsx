@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import ContainedImage from "./ContainedImage";
 import type { Enrollment } from "@/types/api";
 
 /** The populated course object on an enrollment. Null when `courseId` came back as a
@@ -114,12 +115,10 @@ export default function MyCoursesList({
               href={`/my-courses/${course._id}`}
               className="rounded-[16px] overflow-hidden courseBorder pb-4 bg-white hover:scale-[1.02] transition-transform flex flex-col"
             >
-              <div className="relative w-full min-h-40 sm:min-h-48">
-                <Image
+              <div className="relative w-full min-h-40 sm:min-h-48 overflow-hidden bg-gray-from-radial-bg">
+                <ContainedImage
                   src={course.thumbnailUrl || "/Images/coursesImage.png"}
                   alt={`image of ${course.title ?? "course"}`}
-                  fill
-                  className="object-cover object-center"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               </div>
