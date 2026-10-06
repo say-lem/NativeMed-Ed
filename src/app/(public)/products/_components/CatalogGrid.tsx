@@ -1,32 +1,36 @@
 import axios from "axios";
-import Image from "next/image";
 import Link from "next/link";
 import { CalendarClock, Layers } from "lucide-react";
-import { courseBadgePrice, formatMoney } from "@/lib/price";
+import ContainedImage from "@/components/shared/ContainedImage";
+import { courseBadgePrice, formatMoney, liveCourseBadgePrice } from "@/lib/price";
+import { roundDownToNearestTen } from "@/lib/stats";
 import { getCatalog } from "@/services/catalog.service";
 import type { CatalogProduct } from "@/types/api";
 
-// Only the truncated preview (`cutBy > 0`, currently the home page) cares about a
-// specific order — courses first, then the case bank, then one-on-one sessions — so
-// the handful shown there represent the product range rather than whatever order the
-// backend happens to return. The full /products grid shows everything regardless of
-// order, so it's left as-is.
+// Catalogue order (home page preview + full /products grid): case bank first,
+// then live courses, then courses, then one-on-one sessions.
 const TYPE_PRIORITY: Record<CatalogProduct["type"], number> = {
-  course: 0,
-  case_bank: 1,
-  one_on_one: 2,
+  case_bank: 0,
+  live_course: 1,
+  course: 2,
+  one_on_one: 3,
 };
 
-async function loadCatalog(cutBy: number): Promise<CatalogProduct[]> {
+async function loadCatalog(
+  cutBy: number,
+  filterType?: CatalogProduct["type"],
+): Promise<CatalogProduct[]> {
   try {
     const res = await getCatalog();
     if (!res.success) return [];
-    if (cutBy <= 0) return res.data;
+    const filtered = filterType
+      ? res.data.filter((p) => p.type === filterType)
+      : res.data;
     // Stable sort — items of the same type keep their original relative order.
-    const sorted = [...res.data].sort(
+    const sorted = [...filtered].sort(
       (a, b) => TYPE_PRIORITY[a.type] - TYPE_PRIORITY[b.type],
     );
-    return sorted.slice(0, cutBy);
+    return cutBy > 0 ? sorted.slice(0, cutBy) : sorted;
   } catch (err) {
     if (!axios.isAxiosError(err)) throw err;
     console.error("[catalog-grid] fetch error:", err.code, err.message);
@@ -56,13 +60,21 @@ function CtaBadge({
   );
 }
 
-export default async function CatalogGrid({ cutBy = 0 }: { cutBy?: number }) {
-  const products = await loadCatalog(cutBy);
+export default async function CatalogGrid({
+  cutBy = 0,
+  filterType,
+}: {
+  cutBy?: number;
+  filterType?: CatalogProduct["type"];
+}) {
+  const products = await loadCatalog(cutBy, filterType);
 
   if (products.length === 0) {
     return (
       <p className="text-center text-subtle-text py-10">
-        No products available right now. Check back soon.
+        {filterType
+          ? "No products of this type available right now. Check back soon."
+          : "No products available right now. Check back soon."}
       </p>
     );
   }
@@ -74,12 +86,10 @@ export default async function CatalogGrid({ cutBy = 0 }: { cutBy?: number }) {
           return (
             <Link href={`/products/${product._id}`} key={product._id}>
               <div role="link" tabIndex={0} className={cardClass}>
-                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64">
-                  <Image
+                <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg overflow-hidden">
+                  <ContainedImage
                     src={product.thumbnailUrl || "/Images/card image.png"}
                     alt={`image of ${product.title}`}
-                    fill
-                    className="object-cover object-center"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                   <p className="absolute rounded-[100px] py-2 px-3 top-2 right-3 bg-[#00000080] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
@@ -104,14 +114,54 @@ export default async function CatalogGrid({ cutBy = 0 }: { cutBy?: number }) {
           );
         }
 
+        if (product.type === "live_course") {
+          return (
+            <Link href={`/products/${product._id}`} key={product._id}>
+              <div role="link" tabIndex={0} className={cardClass}>
+                <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg overflow-hidden">
+                  <ContainedImage
+                    src={product.thumbnailUrl || "/Images/card image.png"}
+                    alt={`image of ${product.title}`}
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  <p className="absolute rounded-[100px] py-2 px-3 top-2 right-3 bg-[#00000080] border-[0.2px] border-white/0.8 text-xs font-semibold text-primary-white leading-[150%] tracking-[-1%]">
+                    {liveCourseBadgePrice(product)}
+                  </p>
+                </aside>
+
+                <aside className="px-3 sm:px-4 lg:px-6 flex-1">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <p className="text-base sm:text-lg lg:text-xl font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
+                      {product.title}
+                    </p>
+                    <p className="line-clamp-3 text-sm leading-[150%] text-[#373737]">
+                      {product.description}
+                    </p>
+                  </div>
+                </aside>
+
+                <CtaBadge price={liveCourseBadgePrice(product)}>View Course</CtaBadge>
+              </div>
+            </Link>
+          );
+        }
+
         if (product.type === "one_on_one") {
           return (
             <Link href={`/one-on-one/${product._id}`} key={product._id}>
               <div role="link" tabIndex={0} className={cardClass}>
-                <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg grid place-items-center">
-                  <span className="grid place-items-center size-16 rounded-full bg-primary-100 text-white">
-                    <CalendarClock size={28} />
-                  </span>
+                <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg grid place-items-center overflow-hidden">
+                  {product.imageUrl ? (
+                    <ContainedImage
+                      src={product.imageUrl}
+                      alt={`image of ${product.title}`}
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  ) : (
+                    <span className="grid place-items-center size-16 rounded-full bg-primary-100 text-white">
+                      <CalendarClock size={28} />
+                    </span>
+                  )}
                 </aside>
 
                 <aside className="px-3 sm:px-4 lg:px-6 flex-1">
@@ -135,13 +185,11 @@ export default async function CatalogGrid({ cutBy = 0 }: { cutBy?: number }) {
         return (
           <Link href="/products/case-bank" key="case_bank">
             <div role="link" tabIndex={0} className={cardClass}>
-              <aside className="relative w-full min-h-40 sm:min-h-48 lg:min-h-64 bg-gray-from-radial-bg grid place-items-center overflow-hidden">
+              <aside className="relative w-full aspect-[4/3] bg-gray-from-radial-bg grid place-items-center overflow-hidden">
                 {product.imageUrl ? (
-                  <Image
+                  <ContainedImage
                     src={product.imageUrl}
                     alt={`image of ${product.title}`}
-                    fill
-                    className="object-cover object-center"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   />
                 ) : (
@@ -160,7 +208,7 @@ export default async function CatalogGrid({ cutBy = 0 }: { cutBy?: number }) {
                     {product.description}
                   </p>
                   <p className="text-xs text-subtle-text">
-                    {product.caseCount}+ cases
+                    {roundDownToNearestTen(product.caseCount)}+ cases
                   </p>
                 </div>
               </aside>

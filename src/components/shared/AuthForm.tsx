@@ -24,7 +24,7 @@ import { loginAction } from "@/app/(auth)/login/actions";
 import { registerAction } from "@/app/(auth)/register/actions";
 import type { FormActionResult } from "@/types/api";
 
-function Label({ text, htmlFor }: { text: string; htmlFor?: string }) {
+export function Label({ text, htmlFor }: { text: string; htmlFor?: string }) {
   return (
     <label
       htmlFor={htmlFor}
@@ -35,14 +35,14 @@ function Label({ text, htmlFor }: { text: string; htmlFor?: string }) {
   );
 }
 
-function FieldError({ message }: { message?: string }) {
+export function FieldError({ message }: { message?: string }) {
   if (!message) return null;
   return (
     <p className="text-error-other text-xs mt-1 leading-[150%]">{message}</p>
   );
 }
 
-const inputClass =
+export const inputClass =
   "border-[0.5px] rounded-[8px] px-3 sm:px-4 py-2.5 sm:py-3 border-secondary-20 w-full focus:outline-none focus:border-primary-100";
 
 /** Carry the post-login `redirect` target across the login ↔ register links. */
@@ -50,7 +50,7 @@ function withRedirect(href: string, redirectTo?: string): string {
   return redirectTo ? `${href}?redirect=${encodeURIComponent(redirectTo)}` : href;
 }
 
-function PasswordField({
+export function PasswordField({
   id,
   autoComplete,
   registration,
@@ -81,7 +81,7 @@ function PasswordField({
   );
 }
 
-function applyServerErrors<T extends Record<string, unknown>>(
+export function applyServerErrors<T extends Record<string, unknown>>(
   result: FormActionResult,
   setError: (name: keyof T & string, error: { type: string; message: string }) => void,
 ) {
@@ -96,7 +96,7 @@ function applyServerErrors<T extends Record<string, unknown>>(
   }
 }
 
-function AuthCard({
+export function AuthCard({
   title,
   subtitle,
   children,
@@ -217,7 +217,15 @@ function LoginFields({
         <FieldError message={errors.email?.message} />
       </div>
       <div className="space-y-2">
-        <Label text="Password" htmlFor="password" />
+        <div className="flex items-center justify-between gap-2">
+          <Label text="Password" htmlFor="password" />
+          <Link
+            href="/forgot-password"
+            className="text-primary-100 text-xs sm:text-sm font-bold shrink-0"
+          >
+            Forgot password?
+          </Link>
+        </div>
         <PasswordField
           id="password"
           autoComplete="current-password"

@@ -82,7 +82,11 @@ export default function BookingForm({
       return;
     }
     startTransition(async () => {
-      const res = await bookSessionAction(product._id, { date, time });
+      const res = await bookSessionAction(
+        product._id,
+        { date, time },
+        window.location.origin,
+      );
       if (res.ok && res.url) {
         // The slot is only held, not booked, until Stripe confirms payment — send the
         // browser straight to checkout rather than showing a local "booked" state.

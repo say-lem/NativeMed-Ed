@@ -24,6 +24,11 @@ export default function AdminHomepageTabs({
   registrarsCount,
   contactEmail,
   contactPhone,
+  facebookUrl,
+  whatsappUrl,
+  twitterUrl,
+  instagramUrl,
+  youtubeUrl,
   youtubeLinks,
   freeProducts,
   terms,
@@ -37,6 +42,11 @@ export default function AdminHomepageTabs({
   registrarsCount: number;
   contactEmail: string | null;
   contactPhone: string | null;
+  facebookUrl: string | null;
+  whatsappUrl: string | null;
+  twitterUrl: string | null;
+  instagramUrl: string | null;
+  youtubeUrl: string | null;
   youtubeLinks: YoutubeLink[];
   freeProducts: FreeProduct[];
   terms: LegalPageContent;
@@ -72,6 +82,11 @@ export default function AdminHomepageTabs({
             registrarsCount={registrarsCount}
             contactEmail={contactEmail}
             contactPhone={contactPhone}
+            facebookUrl={facebookUrl}
+            whatsappUrl={whatsappUrl}
+            twitterUrl={twitterUrl}
+            instagramUrl={instagramUrl}
+            youtubeUrl={youtubeUrl}
           />
           <YoutubeLinksManager links={youtubeLinks} />
         </div>

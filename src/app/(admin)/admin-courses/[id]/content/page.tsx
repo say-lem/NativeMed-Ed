@@ -1,12 +1,19 @@
 import axios from "axios";
 import { notFound } from "next/navigation";
-import AdminContentHero from "./_components/AdminContentHero";
-import ContentManager from "./_components/ContentManager";
+import AdminContentHero from "@/components/shared/course-content/AdminContentHero";
+import ContentManager from "@/components/shared/course-content/ContentManager";
 import {
   getAdminCourse,
   getCourseContent,
 } from "@/services/courses.service";
 import type { Course, Lesson } from "@/types/api";
+import {
+  addDriveLessonAction,
+  addPdfLessonAction,
+  deleteLessonAction,
+  getPdfSignatureAction,
+  updateLessonAction,
+} from "./actions";
 
 async function loadCourse(id: string): Promise<Course | undefined> {
   try {
@@ -41,8 +48,18 @@ export default async function CourseContentPage({
 
   return (
     <section>
-      <AdminContentHero title={course.title} />
-      <ContentManager courseId={id} lessons={lessons} />
+      <AdminContentHero title={course.title} backHref="/admin-courses" />
+      <ContentManager
+        courseId={id}
+        lessons={lessons}
+        actions={{
+          getPdfSignature: getPdfSignatureAction,
+          addPdf: addPdfLessonAction,
+          addDriveLink: addDriveLessonAction,
+          update: updateLessonAction,
+          remove: deleteLessonAction,
+        }}
+      />
     </section>
   );
 }

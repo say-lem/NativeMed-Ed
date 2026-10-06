@@ -1,19 +1,12 @@
 "use server";
 import axios from "axios";
-import { headers } from "next/headers";
+import { getOrigin } from "@/lib/checkout";
 import { getBillingPortal } from "@/services/payments.service";
 
 export interface PortalResult {
   ok: boolean;
   url?: string;
   message?: string;
-}
-
-async function getOrigin(): Promise<string> {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? "http";
-  return `${proto}://${host}`;
 }
 
 const NO_STRIPE_CUSTOMER =
@@ -27,9 +20,11 @@ const NO_STRIPE_CUSTOMER =
  * session — it fails rather than returning a URL. That's expected, not a bug, so it gets
  * explanatory copy instead of "Something went wrong".
  */
-export async function openBillingPortal(): Promise<PortalResult> {
+export async function openBillingPortal(
+  clientOrigin?: string,
+): Promise<PortalResult> {
   try {
-    const origin = await getOrigin();
+    const origin = await getOrigin(clientOrigin);
     const res = await getBillingPortal(`${origin}/subscriptions`);
     if (!res.success) {
       return { ok: false, message: res.message ?? NO_STRIPE_CUSTOMER };

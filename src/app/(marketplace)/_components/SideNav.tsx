@@ -10,7 +10,7 @@ import {
   SubscriptionsIcon,
 } from "./Icons";
 import { usePathname } from "next/navigation";
-import { CalendarClock, GraduationCap, LogOutIcon } from "lucide-react";
+import { CalendarClock, GraduationCap, LogOutIcon, Radio } from "lucide-react";
 
 export default function SideNav() {
   const pathName = usePathname();
@@ -77,6 +77,26 @@ export default function SideNav() {
           }
           href="/full-cases"
           label="Case Bank"
+        />
+        <SideNavLink
+          icon={
+            <Radio
+              size={20}
+              color={pathName === "/live-courses" ? "#5925B3" : "#373737"}
+            />
+          }
+          href="/live-courses"
+          label="Live Courses"
+        />
+        <SideNavLink
+          icon={
+            <GraduationCap
+              size={20}
+              color={pathName === "/my-live-courses" ? "#5925B3" : "#373737"}
+            />
+          }
+          href="/my-live-courses"
+          label="My Live Courses"
         />
 
         <SideNavLink

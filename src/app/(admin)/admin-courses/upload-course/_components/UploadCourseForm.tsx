@@ -92,8 +92,8 @@ export default function UploadCourseForm({
     control,
     formState: { errors },
   } = useForm<CourseFormValues>({
-    // On edit the Drive links are optional — they're never returned by the API, so they
-    // can't be prefilled, and an empty field is omitted from the PATCH.
+    // On edit the Drive link is optional — it prefills from the admin GET, and an empty
+    // field is omitted from the PATCH (keeps the stored value).
     resolver: zodResolver(makeCourseSchema(isEdit ? "edit" : "create")),
     defaultValues: initialValues ?? emptyCourseValues,
   });
@@ -201,124 +201,98 @@ export default function UploadCourseForm({
           </div>
         </div>
 
-        {/* Pricing — per access tier since 2026-08-10. Each tier needs at least one
-            interval; a blank interval simply isn't offered to buyers. */}
+        {/* Pricing — flat, one price per interval. Leave an interval blank if you don't
+            offer it; buyers won't see it. */}
         <fieldset className="space-y-2">
           <legend className="text-sm font-semibold text-black-others mb-2">
             Pricing {!isEdit && <span className="text-[#E5102E]">*</span>}
           </legend>
           <p className="text-xs text-subtle-text mb-4 leading-[150%]">
-            Each tier is priced separately. Leave an interval blank if you
-            don&apos;t offer it — buyers won&apos;t see it.
+            Set a monthly and/or quarterly price.
             {isEdit && " Blank fields keep the current price."}
           </p>
 
-          <div className="space-y-5">
-            <div className="rounded-[8px] border-[0.5px] border-[#B7B7B9] p-4 space-y-4">
-              <p className="text-sm font-medium text-black-others">
-                Mock Sessions Only
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label text="Monthly (£)" />
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="29.99"
-                    className={fieldClass}
-                    {...register("sessionsMonthly")}
-                  />
-                  <FieldError message={errors.sessionsMonthly?.message} />
-                </div>
-                <div className="space-y-2">
-                  <Label text="Quarterly (£)" />
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="79.99"
-                    className={fieldClass}
-                    {...register("sessionsQuarterly")}
-                  />
-                  <FieldError message={errors.sessionsQuarterly?.message} />
-                </div>
+          <div className="rounded-[8px] border-[0.5px] border-[#B7B7B9] p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label text="Monthly (£)" />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="49.99"
+                  className={fieldClass}
+                  {...register("monthlyPrice")}
+                />
+                <FieldError message={errors.monthlyPrice?.message} />
               </div>
-            </div>
-
-            <div className="rounded-[8px] border-[0.5px] border-[#B7B7B9] p-4 space-y-4">
-              <p className="text-sm font-medium text-black-others">
-                Mock Sessions + Lectures
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label text="Monthly (£)" />
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="49.99"
-                    className={fieldClass}
-                    {...register("lecturesMonthly")}
-                  />
-                  <FieldError message={errors.lecturesMonthly?.message} />
-                </div>
-                <div className="space-y-2">
-                  <Label text="Quarterly (£)" />
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="129.99"
-                    className={fieldClass}
-                    {...register("lecturesQuarterly")}
-                  />
-                  <FieldError message={errors.lecturesQuarterly?.message} />
-                </div>
+              <div className="space-y-2">
+                <Label text="Quarterly (£)" />
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="129.99"
+                  className={fieldClass}
+                  {...register("quarterlyPrice")}
+                />
+                <FieldError message={errors.quarterlyPrice?.message} />
               </div>
             </div>
           </div>
         </fieldset>
 
-        {/* Google Drive folders — course materials live here; the backend shares them
-            with each buyer's email according to their access tier. */}
+        {/* Google Drive folder — the course's materials live here; enrolled buyers are
+            granted Viewer access to it. */}
         <fieldset className="space-y-2">
           <legend className="text-sm font-semibold text-black-others mb-2">
-            Google Drive folders{" "}
+            Google Drive folder{" "}
             {!isEdit && <span className="text-[#E5102E]">*</span>}
           </legend>
           <p className="text-xs text-subtle-text mb-3 leading-[150%]">
-            Share each folder with the Native Med service account (Editor role)
+            Share the folder with the Native Med service account (Editor role)
             before saving. Paste the folder link or its ID.
-            {isEdit && (
-              <>
-                {" "}
-                <span className="text-[#7A4B00]">
-                  Existing links can&apos;t be shown for security, so these
-                  start blank — leave them empty to keep the current folders, or
-                  paste a new link to replace one.
-                </span>
-              </>
-            )}
+            {isEdit && " Leave it empty to keep the current folder."}
           </p>
-          <div className="space-y-6">
+          <div className="space-y-2">
+            <Label text="Course materials folder" required={!isEdit} />
+            <input
+              type="text"
+              placeholder="https://drive.google.com/drive/folders/…"
+              className={fieldClass}
+              {...register("driveFolderId")}
+            />
+            <FieldError message={errors.driveFolderId?.message} />
+          </div>
+        </fieldset>
+
+        {/* Community invite links — emailed to a buyer on enrollment, and shown publicly
+            on the course page. */}
+        <fieldset className="space-y-2">
+          <legend className="text-sm font-semibold text-black-others mb-2">
+            Community links
+          </legend>
+          <p className="text-xs text-subtle-text mb-3 leading-[150%]">
+            Optional. Shown on the course page and emailed to a buyer when they enroll.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label text="Lectures folder" required={!isEdit} />
+              <Label text="Telegram invite link" />
               <input
                 type="text"
-                placeholder="https://drive.google.com/drive/folders/…"
+                placeholder="https://t.me/…"
                 className={fieldClass}
-                {...register("lecturesDriveFolderId")}
+                {...register("telegramChannel")}
               />
-              <FieldError message={errors.lecturesDriveFolderId?.message} />
+              <FieldError message={errors.telegramChannel?.message} />
             </div>
             <div className="space-y-2">
-              <Label text="Mock sessions folder" required={!isEdit} />
+              <Label text="WhatsApp invite link" />
               <input
                 type="text"
-                placeholder="https://drive.google.com/drive/folders/…"
+                placeholder="https://chat.whatsapp.com/…"
                 className={fieldClass}
-                {...register("mockSessionsDriveFolderId")}
+                {...register("whatsappChannel")}
               />
-              <FieldError
-                message={errors.mockSessionsDriveFolderId?.message}
-              />
+              <FieldError message={errors.whatsappChannel?.message} />
             </div>
           </div>
         </fieldset>

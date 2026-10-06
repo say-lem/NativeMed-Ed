@@ -50,7 +50,7 @@ export default function SubscriptionsBrowser({
 
   const manage = () => {
     startTransition(async () => {
-      const res = await openBillingPortal();
+      const res = await openBillingPortal(window.location.origin);
       if (res.ok && res.url) {
         window.location.assign(res.url);
       } else {

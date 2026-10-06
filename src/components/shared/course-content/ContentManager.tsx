@@ -7,52 +7,103 @@ import {
   FileText,
   GripVertical,
   Loader2,
+  Music,
   Pencil,
   Plus,
   Trash2,
   Upload,
   Video,
 } from "lucide-react";
-import type { Lesson } from "@/types/api";
+import type { FormActionResult, Lesson, PdfSignatureResult } from "@/types/api";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
+import { uploadPdfDirect } from "@/lib/pdf-upload";
 import LessonEditModal from "./LessonEditModal";
-import {
-  addDriveLessonAction,
-  addPdfLessonAction,
-  deleteLessonAction,
-  reorderLessonsAction,
-  updateLessonAction,
-} from "../actions";
 
 const fieldClass =
   "w-full rounded-[8px] border-[0.5px] border-[#B7B7B9] px-4 py-3 text-sm text-black-others placeholder:text-[#B7B7B9] outline-none focus:border-primary-100";
 
-type Kind = "pdf" | "video";
+type Kind = "pdf" | "video" | "audio";
 
-function isVideo(type: string): boolean {
-  return type?.toLowerCase() === "video";
+const KIND_META: Record<Kind, { label: string; icon: typeof FileText }> = {
+  pdf: { label: "PDF", icon: FileText },
+  video: { label: "Video (Drive link)", icon: Video },
+  audio: { label: "Audio (Drive link)", icon: Music },
+};
+
+function typeOf(type: string): Kind {
+  const t = type?.toLowerCase();
+  return t === "video" || t === "audio" ? t : "pdf";
 }
 
 function TypeBadge({ type }: { type: string }) {
-  const video = isVideo(type);
+  const kind = typeOf(type);
+  const { icon: Icon, label } = KIND_META[kind];
+  const cls =
+    kind === "video"
+      ? "bg-[#EEF2FF] text-[#3538CD]"
+      : kind === "audio"
+        ? "bg-[#F3E8FF] text-[#7E22CE]"
+        : "bg-[#FFF4E5] text-[#B25E09]";
   return (
-    <span
-      className={`inline-flex items-center gap-1 px-2.5 py-[2px] rounded-full text-xs font-semibold ${
-        video ? "bg-[#EEF2FF] text-[#3538CD]" : "bg-[#FFF4E5] text-[#B25E09]"
-      }`}
-    >
-      {video ? <Video size={12} /> : <FileText size={12} />}
-      {video ? "Video" : "PDF"}
+    <span className={`inline-flex items-center gap-1 px-2.5 py-[2px] rounded-full text-xs font-semibold ${cls}`}>
+      <Icon size={12} />
+      {label.split(" ")[0]}
     </span>
   );
+}
+
+function parseDuration(v: string): number | undefined {
+  const s = v.trim();
+  if (!s) return undefined;
+  const parts = s.split(":").map((p) => Number(p));
+  if (parts.some((n) => !Number.isFinite(n) || n < 0)) return undefined;
+  if (parts.length === 1) return Math.round(parts[0]);
+  if (parts.length === 2) return parts[0] * 60 + parts[1];
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+  return undefined;
+}
+
+function formatDuration(seconds?: number): string {
+  if (seconds == null) return "";
+  const m = Math.floor(seconds / 60);
+  const s = Math.round(seconds % 60);
+  return `${m}:${String(s).padStart(2, "0")}`;
+}
+
+/** Server-action bindings — lets the same UI drive either `/courses/:id/content` or
+ *  `/live-courses/:id/content` (identical backend contract, different base path). */
+export interface ContentManagerActions {
+  getPdfSignature: () => Promise<PdfSignatureResult>;
+  addPdf: (
+    courseId: string,
+    payload: { title: string; order: number; fileUrl: string; publicId: string },
+  ) => Promise<FormActionResult>;
+  addDriveLink: (
+    courseId: string,
+    payload: {
+      title: string;
+      type: "video" | "audio";
+      fileUrl: string;
+      order: number;
+      duration?: number;
+    },
+  ) => Promise<FormActionResult>;
+  update: (
+    courseId: string,
+    id: string,
+    payload: { title?: string; order?: number; duration?: number },
+  ) => Promise<FormActionResult>;
+  remove: (courseId: string, id: string) => Promise<FormActionResult>;
 }
 
 export default function ContentManager({
   courseId,
   lessons,
+  actions,
 }: {
   courseId: string;
   lessons: Lesson[];
+  actions: ContentManagerActions;
 }) {
   const router = useRouter();
   const confirm = useConfirm();
@@ -99,9 +150,11 @@ export default function ContentManager({
     setItems(renumbered); // optimistic
     if (!changed.length) return;
     startReorder(async () => {
-      const res = await reorderLessonsAction(courseId, changed);
-      if (!res.ok) {
-        toast.error(res.message ?? "Couldn't save the new order");
+      const results = await Promise.all(
+        changed.map((c) => actions.update(courseId, c.id, { order: c.order })),
+      );
+      if (results.some((r) => !r.ok)) {
+        toast.error("Couldn't save the new order");
         router.refresh(); // revert to server truth
       }
     });
@@ -127,27 +180,41 @@ export default function ContentManager({
     }
     const ord = nextOrder; // always append at the end; reorder by dragging
     startAdd(async () => {
-      let res;
+      let res: FormActionResult;
       if (kind === "pdf") {
         if (!file) {
           toast.error("Choose a PDF file");
           return;
         }
-        const fd = new FormData();
-        fd.append("file", file);
-        fd.append("title", title.trim());
-        fd.append("order", String(ord));
-        res = await addPdfLessonAction(courseId, fd);
-      } else {
-        if (!fileUrl.trim()) {
-          toast.error("Add the video link");
+        const sig = await actions.getPdfSignature();
+        if (!sig.ok || !sig.data) {
+          toast.error(sig.message ?? "Couldn't start the upload");
           return;
         }
-        res = await addDriveLessonAction(courseId, {
+        let uploaded: { secure_url: string; public_id: string };
+        try {
+          uploaded = await uploadPdfDirect(file, sig.data);
+        } catch {
+          toast.error("PDF upload failed");
+          return;
+        }
+        res = await actions.addPdf(courseId, {
           title: title.trim(),
+          order: ord,
+          fileUrl: uploaded.secure_url,
+          publicId: uploaded.public_id,
+        });
+      } else {
+        if (!fileUrl.trim()) {
+          toast.error("Add the Drive link");
+          return;
+        }
+        res = await actions.addDriveLink(courseId, {
+          title: title.trim(),
+          type: kind,
           fileUrl: fileUrl.trim(),
           order: ord,
-          duration: duration.trim() || undefined,
+          duration: parseDuration(duration),
         });
       }
       if (res.ok) {
@@ -160,15 +227,11 @@ export default function ContentManager({
     });
   };
 
-  const saveEdit = (payload: {
-    title: string;
-    duration?: string;
-    fileUrl?: string;
-  }) => {
+  const saveEdit = (payload: { title: string; duration?: number }) => {
     if (!editing) return;
     const id = editing._id;
     startEdit(async () => {
-      const res = await updateLessonAction(courseId, id, payload);
+      const res = await actions.update(courseId, id, payload);
       if (res.ok) {
         toast.success(res.message ?? "Lesson updated");
         setEditing(null);
@@ -189,7 +252,7 @@ export default function ContentManager({
     if (!ok) return;
     setDeletingId(l._id);
     startDelete(async () => {
-      const res = await deleteLessonAction(courseId, l._id);
+      const res = await actions.remove(courseId, l._id);
       if (res.ok) toast.success(res.message ?? "Lesson deleted");
       else toast.error(res.message ?? "Something went wrong");
       setDeletingId(null);
@@ -204,22 +267,25 @@ export default function ContentManager({
         <h2 className="text-lg font-semibold text-black-others">Add Lesson</h2>
 
         {/* Type toggle */}
-        <div className="mt-4 inline-flex rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
-          {(["pdf", "video"] as Kind[]).map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setKind(k)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-[6px] text-sm font-medium cursor-pointer ${
-                kind === k
-                  ? "bg-white shadow-sm text-primary-100"
-                  : "text-subtle-text"
-              }`}
-            >
-              {k === "pdf" ? <FileText size={15} /> : <Video size={15} />}
-              {k === "pdf" ? "PDF" : "Video (Drive link)"}
-            </button>
-          ))}
+        <div className="mt-4 inline-flex flex-wrap rounded-[8px] border border-[#EDEDED] p-1 bg-gray-50">
+          {(Object.keys(KIND_META) as Kind[]).map((k) => {
+            const { label, icon: Icon } = KIND_META[k];
+            return (
+              <button
+                key={k}
+                type="button"
+                onClick={() => setKind(k)}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-[6px] text-sm font-medium cursor-pointer ${
+                  kind === k
+                    ? "bg-white shadow-sm text-primary-100"
+                    : "text-subtle-text"
+                }`}
+              >
+                <Icon size={15} />
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -264,7 +330,7 @@ export default function ContentManager({
               </div>
               <div className="space-y-2">
                 <label className="block text-sm text-[#080A0D]">
-                  Duration <span className="text-subtle-text">(optional)</span>
+                  Duration <span className="text-subtle-text">(optional, mm:ss)</span>
                 </label>
                 <input
                   className={fieldClass}
@@ -340,9 +406,9 @@ export default function ContentManager({
                   </p>
                   <div className="mt-1 flex items-center gap-3">
                     <TypeBadge type={l.type} />
-                    {l.duration && (
+                    {l.duration != null && (
                       <span className="text-xs text-subtle-text">
-                        {l.duration}
+                        {formatDuration(l.duration)}
                       </span>
                     )}
                   </div>

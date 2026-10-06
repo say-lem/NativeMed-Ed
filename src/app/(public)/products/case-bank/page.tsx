@@ -1,6 +1,6 @@
 import axios from "axios";
-import Image from "next/image";
 // import CountDownToClass from "@/components/shared/Countdown";
+import ContainedImage from "@/components/shared/ContainedImage";
 import { Markdown } from "@/components/shared/Markdown";
 import ProductsCard from "@/components/shared/ProductsCard";
 import TitleCase from "@/components/shared/TitleCase";
@@ -8,6 +8,7 @@ import { getCatalog } from "@/services/catalog.service";
 import { getCaseBankOverview } from "@/services/cases.service";
 import { getCaseBankStatus } from "@/services/subscriptions.service";
 import { getOptionalUser } from "@/lib/current-user";
+import { roundDownToNearestTen } from "@/lib/stats";
 import CaseBankActions from "./_components/CaseBankActions";
 import type { CatalogCaseBankProduct } from "@/types/api";
 
@@ -78,12 +79,10 @@ export default async function CaseBankProductPage() {
       <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-8 sm:pt-12 lg:pt-20 pb-16 sm:pb-24 lg:pb-36">
         <aside className="px-0 sm:px-4 lg:px-10">
           <div className="authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-5 md:gap-6 lg:gap-8 flex flex-col md:flex-row justify-center overflow-x-hidden">
-            <aside className="relative w-full md:basis-1/2 min-h-[35vh] sm:min-h-[40vh] md:min-h-[50vh] lg:min-h-[60vh]">
-              <Image
+            <aside className="relative w-full md:basis-1/2 aspect-[4/3] bg-gray-from-radial-bg rounded-lg overflow-hidden">
+              <ContainedImage
                 src={caseBank.imageUrl || "/Images/card image.png"}
                 alt={`image of ${caseBank.title}`}
-                fill
-                className="object-cover object-center rounded-lg"
                 sizes="(max-width: 768px) 100vw, 50vw"
                 priority
               />
@@ -97,7 +96,7 @@ export default async function CaseBankProductPage() {
                   {caseBank.description}
                 </p>
                 <p className="text-sm text-subtle-text">
-                  {caseBank.caseCount}+ cases · {priceLabel ?? "—"}
+                  {roundDownToNearestTen(caseBank.caseCount)}+ cases · {priceLabel ?? "—"}
                 </p>
               </div>
               <CaseBankActions

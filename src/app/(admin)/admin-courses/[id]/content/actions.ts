@@ -2,13 +2,14 @@
 
 import axios from "axios";
 import { revalidatePath } from "next/cache";
+import { getPdfUploadSignatureAction } from "@/app/(admin)/actions";
 import {
   addDriveLesson,
   deleteLesson,
+  registerPdfLesson,
   updateLesson,
-  uploadPdfLesson,
 } from "@/services/courses.service";
-import type { ApiFailure, FormActionResult, Lesson } from "@/types/api";
+import type { ApiFailure, FormActionResult, PdfSignatureResult } from "@/types/api";
 
 function fail(err: unknown, tag: string, fallback: string): FormActionResult {
   if (axios.isAxiosError(err)) {
@@ -20,20 +21,22 @@ function fail(err: unknown, tag: string, fallback: string): FormActionResult {
   return { ok: false, message: "Something went wrong." };
 }
 
-/** Add a PDF lesson (multipart) — reads `file`, `title`, `order` from formData. */
+/** Issues a signed Cloudinary upload request for a course PDF lesson. A direct re-export
+ *  (not a wrapper arrow function) — Server Components can only pass genuine Server
+ *  Actions as props to Client Components, so this must live in a "use server" file. */
+export async function getPdfSignatureAction(): Promise<PdfSignatureResult> {
+  return getPdfUploadSignatureAction("course-content");
+}
+
+/** Register a PDF lesson already uploaded directly to Cloudinary by the browser. */
 export async function addPdfLessonAction(
   courseId: string,
-  formData: FormData,
+  payload: { title: string; order: number; fileUrl: string; publicId: string },
 ): Promise<FormActionResult> {
   try {
-    const file = formData.get("file");
-    const title = String(formData.get("title") ?? "").trim();
-    const order = Number(formData.get("order") ?? 0);
-    if (!(file instanceof File) || file.size === 0)
-      return { ok: false, message: "Please choose a PDF file." };
-    if (!title) return { ok: false, message: "Title is required." };
+    if (!payload.title.trim()) return { ok: false, message: "Title is required." };
 
-    const res = await uploadPdfLesson(courseId, { file, title, order });
+    const res = await registerPdfLesson(courseId, payload);
     if (!res.success) return { ok: false, message: res.message };
     revalidatePath(`/admin-courses/${courseId}/content`);
     return { ok: true, message: "PDF lesson added" };
@@ -42,27 +45,33 @@ export async function addPdfLessonAction(
   }
 }
 
-/** Add a video lesson (Google-Drive link, JSON). */
+/** Add a video or audio lesson (Google-Drive link, JSON). */
 export async function addDriveLessonAction(
   courseId: string,
-  payload: { title: string; fileUrl: string; order: number; duration?: string },
+  payload: {
+    title: string;
+    type: "video" | "audio";
+    fileUrl: string;
+    order: number;
+    duration?: number;
+  },
 ): Promise<FormActionResult> {
   try {
     const res = await addDriveLesson(courseId, payload);
     if (!res.success)
       return { ok: false, message: res.message, fieldErrors: res.errors };
     revalidatePath(`/admin-courses/${courseId}/content`);
-    return { ok: true, message: "Video lesson added" };
+    return { ok: true, message: `${payload.type === "audio" ? "Audio" : "Video"} lesson added` };
   } catch (err) {
-    return fail(err, "addDriveLessonAction", "Couldn't add the video lesson.");
+    return fail(err, "addDriveLessonAction", "Couldn't add the lesson.");
   }
 }
 
-/** Update a lesson's title / order / duration / fileUrl. */
+/** Update a lesson's title / order / duration. Also used (per-item) to persist reordering. */
 export async function updateLessonAction(
   courseId: string,
   id: string,
-  payload: Partial<Pick<Lesson, "title" | "order" | "duration" | "fileUrl">>,
+  payload: { title?: string; order?: number; duration?: number },
 ): Promise<FormActionResult> {
   try {
     const res = await updateLesson(courseId, id, payload);
@@ -72,22 +81,6 @@ export async function updateLessonAction(
     return { ok: true, message: "Lesson updated" };
   } catch (err) {
     return fail(err, "updateLessonAction", "Couldn't update the lesson.");
-  }
-}
-
-/** Persist a new lesson order — PATCHes each changed lesson's `order`. */
-export async function reorderLessonsAction(
-  courseId: string,
-  ordered: { id: string; order: number }[],
-): Promise<FormActionResult> {
-  try {
-    await Promise.all(
-      ordered.map((o) => updateLesson(courseId, o.id, { order: o.order })),
-    );
-    revalidatePath(`/admin-courses/${courseId}/content`);
-    return { ok: true, message: "Order saved" };
-  } catch (err) {
-    return fail(err, "reorderLessonsAction", "Couldn't save the new order.");
   }
 }
 

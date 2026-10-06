@@ -270,7 +270,6 @@ export default function Enrollments({
           course={extractCourse(selected)}
           status={statusOf(selected)}
           source={selected.source}
-          tier={selected.accessTier}
           createdAt={selected.accessGrantedAt ?? selected.createdAt}
           busy={busyId === selected._id}
           onClose={() => setSelected(null)}

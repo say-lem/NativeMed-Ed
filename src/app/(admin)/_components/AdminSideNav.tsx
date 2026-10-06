@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import AdminSideNavLink from "./AdminSideNavLink";
-import { CalendarClock, CalendarDays, GraduationCap, Home, Star, Users as UsersIcon } from "lucide-react";
+import { CalendarClock, CalendarDays, GraduationCap, Home, Radio, Star, Users as UsersIcon } from "lucide-react";
 import {
   CoursesIcon,
   DashboardIcon,
@@ -71,6 +71,11 @@ export default function AdminSideNav() {
           icon={<CoursesIcon color={color("/admin-courses")} />}
           href="/admin-courses"
           label="Courses"
+        />
+        <AdminSideNavLink
+          icon={<Radio size={22} color={color("/admin-live-courses")} />}
+          href="/admin-live-courses"
+          label="Live Courses"
         />
         <AdminSideNavLink
           icon={<Star size={22} color={color("/admin-reviews")} />}

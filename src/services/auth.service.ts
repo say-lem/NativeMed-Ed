@@ -6,7 +6,12 @@ import type {
   AuthTokens,
   User,
 } from "@/types/api";
-import type { LoginValues, RegisterValues } from "@/lib/schemas/auth";
+import type {
+  LoginValues,
+  RegisterValues,
+  ForgotPasswordValues,
+  ResetPasswordValues,
+} from "@/lib/schemas/auth";
 
 export async function login(
   payload: LoginValues,
@@ -25,6 +30,32 @@ export async function register(
     "/auth/register",
     payload,
   );
+  return res.data;
+}
+
+/** POST /auth/forgot-password — always returns a generic success message,
+ *  regardless of whether the email is registered (avoids account enumeration). */
+export async function forgotPassword(
+  payload: ForgotPasswordValues,
+): Promise<ApiResponse<null>> {
+  const res = await api.post<ApiResponse<null>>(
+    "/auth/forgot-password",
+    payload,
+  );
+  return res.data;
+}
+
+/** POST /auth/reset-password — `token` comes from the emailed reset link.
+ *  A bad/expired token comes back as a plain `400` (no `errors` field), unlike
+ *  field validation which is `422` with `errors`. */
+export async function resetPassword(
+  payload: ResetPasswordValues,
+): Promise<ApiResponse<null>> {
+  const res = await api.post<ApiResponse<null>>("/auth/reset-password", {
+    token: payload.token,
+    newPassword: payload.newPassword,
+    confirmPassword: payload.confirmPassword,
+  });
   return res.data;
 }
 

@@ -1,19 +1,17 @@
 import axios from "axios";
-import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import ContainedImage from "@/components/shared/ContainedImage";
 import { Markdown } from "@/components/shared/Markdown";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import CoursePurchase from "./_components/CoursePurchase";
 import { getCourse } from "@/services/courses.service";
-import { getPaymentPlans } from "@/services/payments.service";
 import { getHomepageData } from "@/services/homepage.service";
 import { getCourseAccess } from "@/lib/access";
-import { tierLabel } from "@/lib/tiers";
 import { formatDate } from "@/lib/date";
-import type { Course, PaymentPlan } from "@/types/api";
+import type { Course } from "@/types/api";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -33,17 +31,6 @@ async function loadCourse(id: string): Promise<Course | null> {
   }
 }
 
-async function loadPlans(): Promise<PaymentPlan[]> {
-  try {
-    const res = await getPaymentPlans();
-    return res.success ? res.data : [];
-  } catch (err) {
-    if (!axios.isAxiosError(err)) throw err;
-    console.error("[payments/plans] fetch error:", err.code, err.message);
-    return [];
-  }
-}
-
 /** For the "payments paused" contact-admin message — falls back to null if unset/unavailable. */
 async function loadContactEmail(): Promise<string | null> {
   try {
@@ -57,9 +44,8 @@ async function loadContactEmail(): Promise<string | null> {
 
 export default async function CourseDetailPage({ params }: PageProps) {
   const { id } = await params;
-  const [course, plans, access, contactEmail] = await Promise.all([
+  const [course, access, contactEmail] = await Promise.all([
     loadCourse(id),
-    loadPlans(),
     getCourseAccess(id),
     loadContactEmail(),
   ]);
@@ -102,7 +88,6 @@ export default async function CourseDetailPage({ params }: PageProps) {
             <div className="inline-flex items-center gap-2 rounded-full bg-green-50 border border-green-200 px-3 py-1.5 text-sm font-medium text-green-700">
               <CheckCircle2 size={16} />
               You have access
-              {access.tier ? ` — ${tierLabel(access.tier)}` : ""}
             </div>
             {access.currentPeriodEnd && (
               <span className="text-xs text-subtle-text">
@@ -121,12 +106,10 @@ export default async function CourseDetailPage({ params }: PageProps) {
 
       {/* Hero */}
       <div className="authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-6 lg:gap-8 flex flex-col md:flex-row overflow-hidden">
-        <aside className="relative w-full md:basis-1/2 min-h-[35vh] sm:min-h-[40vh] md:min-h-[50vh]">
-          <Image
+        <aside className="relative w-full md:basis-1/2 aspect-[4/3] bg-gray-from-radial-bg rounded-lg overflow-hidden">
+          <ContainedImage
             src={course.thumbnailUrl || "/Images/coursesImage.png"}
             alt={`image of ${course.title}`}
-            fill
-            className="object-cover object-center rounded-lg"
             sizes="(max-width: 768px) 100vw, 50vw"
             priority
           />
@@ -160,7 +143,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
           <h2 className="font-semibold text-xl sm:text-2xl text-black-others">
             Choose your plan
           </h2>
-          <CoursePurchase course={course} plans={plans} contactEmail={contactEmail} />
+          <CoursePurchase course={course} contactEmail={contactEmail} />
         </div>
       )}
       </section>

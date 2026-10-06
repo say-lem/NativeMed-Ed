@@ -131,6 +131,7 @@ export default function DoctorStep() {
         <MarkdownField
           name="recentNotes"
           label="Recent Notes/Consultation"
+          required
           placeholder="Enter consultation notes, examination findings, plans, etc..."
           error={errors.recentNotes?.message}
         />

@@ -1,9 +1,6 @@
 "use server";
 import { runCheckout, type CheckoutActionResult } from "@/lib/checkout";
-import type {
-  CourseTier,
-  PaymentInterval,
-} from "@/services/payments.service";
+import type { PaymentInterval } from "@/services/payments.service";
 
 // NOTE: a "use server" module may only export async functions. Do NOT re-export the
 // result type from here — it compiles to a runtime export that doesn't exist and the
@@ -13,12 +10,13 @@ import type {
 /** Kick off Stripe checkout for a course subscription and return the redirect URL. */
 export async function startCourseCheckout(
   courseId: string,
-  tier: CourseTier,
   interval: PaymentInterval,
+  clientOrigin?: string,
 ): Promise<CheckoutActionResult> {
   const res = await runCheckout(
-    { type: "course", tier, interval, courseId },
+    { type: "course", interval, courseId },
     "payments/checkout course",
+    clientOrigin,
   );
 
   // Course-specific wording for the documented 404 / 409 cases.

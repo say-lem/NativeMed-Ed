@@ -20,6 +20,16 @@ export interface User {
   updatedAt?: string;
 }
 
+/** Payload for POST /auth/admin/users — admin only. Creates a new admin account
+ *  (`role: "admin"`, `mustChangePassword: true`); the backend auto-generates
+ *  `temporaryPassword` and emails it if omitted here. */
+export interface CreateAdminInput {
+  fullName: string;
+  email: string;
+  phone: string;
+  temporaryPassword?: string;
+}
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
@@ -45,6 +55,32 @@ export type FormActionResult = {
   ok: boolean;
   message?: string;
   fieldErrors?: Record<string, string[]>;
+};
+
+/** Whitelist of PDF destinations the direct-to-Cloudinary upload flow can target —
+ *  mirrors the backend's whitelist in POST /admin/uploads/pdf-signature. */
+export const PDF_UPLOAD_TARGETS = ["course-content", "free-product", "live-course-toc"] as const;
+export type PdfUploadTarget = (typeof PDF_UPLOAD_TARGETS)[number];
+
+/** POST /admin/uploads/pdf-signature response — lets the browser upload a PDF straight
+ *  to Cloudinary (folder/public_id/type are fixed server-side and baked into the
+ *  signature), bypassing our server entirely so large files never hit Vercel's 4.5MB
+ *  function body-size cap. */
+export interface PdfUploadSignature {
+  cloudName: string;
+  apiKey: string;
+  uploadUrl: string;
+  timestamp: number;
+  signature: string;
+  folder: string;
+  publicId: string;
+  type: "authenticated";
+}
+
+export type PdfSignatureResult = {
+  ok: boolean;
+  message?: string;
+  data?: PdfUploadSignature;
 };
 
 export interface JwtPayload {
@@ -244,29 +280,16 @@ export interface UpdateCaseBankOverviewInput {
   detailedDescription?: string;
 }
 
-/** Course access tier (`type: "course"` subscriptions + enrollments). Renamed by the
- *  backend 2026-08-07 from `pdf_only`/`pdf_drive`. Labels live in `@/lib/tiers`. */
-export type CourseTier = "mocksessions_only" | "mocksession_and_lectures";
-
-/** Prices for one access tier, in **GBP pounds** (e.g. 49.99) — NOT pence, unlike
- *  `PlanPrice.amount` and `/payments/me`. A missing interval means it isn't offered. */
-export interface TierPricing {
+/**
+ * Course pricing, in **GBP pounds** (e.g. 49.99) — NOT pence, unlike `PlanPrice.amount`
+ * and `/payments/me`. Flat — courses no longer have access tiers (removed by the backend;
+ * every course is now a single Drive folder + a single price per interval). A missing
+ * interval means it isn't offered; at least one of the two is always set.
+ */
+export interface CoursePricing {
   monthly?: number;
   quarterly?: number;
 }
-
-/**
- * Per-tier course pricing (replaced the flat `priceMonthly`/`priceQuarterly` on 2026-08-10).
- *
- * ⚠️ **Both tier keys are optional here, deliberately.** The backend guide types them as
- * required, but live data (verified by curl 2026-08-10) disagrees:
- *   - migrated courses carry ONLY `mocksession_and_lectures` — `mocksessions_only` is absent
- *     entirely (not `{}` as the doc claims)
- *   - some older courses have **no `pricing` key at all**
- * Typing these as required would make `course.pricing[tier].monthly` throw on real data.
- * Always go through the helpers in `@/lib/price`.
- */
-export type CoursePricing = Partial<Record<CourseTier, TierPricing>>;
 
 /** Course — public shape (`GET /courses`, `GET /courses/:id`). */
 export interface Course {
@@ -279,10 +302,14 @@ export interface Course {
   /** Absent on some legacy courses — treat as "not purchasable". */
   pricing?: CoursePricing;
   thumbnailUrl?: string;
+  /** Community invite links — returned on the public course endpoint too (not gated to
+   *  enrolled users), and also emailed to a user when they enroll. */
+  telegramChannel?: string | null;
+  whatsappChannel?: string | null;
   isPublished?: boolean;
   /** New checkouts/plan changes are blocked while true — visibility (`isPublished`) and
    *  existing subscriptions are untouched. Show the "payment not available" message
-   *  instead of a plan picker when set. */
+   *  instead of a plan picker when set. Toggled via `PATCH /courses/:id/{pause,resume}-payments`. */
   paymentsPaused?: boolean;
   createdBy?: string;
   createdAt?: string;
@@ -291,20 +318,18 @@ export interface Course {
 
 /**
  * Course — admin shape (`GET /courses/admin/*`, and the `POST`/`PATCH` responses).
- * Since 2026-08-10 these routes DO return the Drive folder links, so the admin edit form
- * can prefill them. Public routes still omit them — never spread an `AdminCourse` into a
- * public-facing component.
+ * These routes DO return the Drive folder id, so the admin edit form can prefill it.
+ * Public routes omit it — never spread an `AdminCourse` into a public-facing component.
  */
 export interface AdminCourse extends Course {
-  lecturesDriveFolderId?: string;
-  mockSessionsDriveFolderId?: string;
+  driveFolderId?: string;
 }
 
 /**
  * Payload for POST /courses (create) and PATCH /courses/:id (partial update).
- * Create requires: title, description, both Drive links, and **both** tier keys in
- * `pricing`, each with at least one interval. Update merges per tier/interval, so send
- * only what changed — but after the merge both tiers must still have a price.
+ * Create requires: title, description, the Drive link, and at least one of
+ * `pricing.monthly`/`pricing.quarterly`. Update merges per interval, so send only what
+ * changed — but after the merge at least one interval must still have a price.
  */
 export interface CourseInput {
   title: string;
@@ -312,8 +337,9 @@ export interface CourseInput {
   detailedDescription?: string;
   pricing?: CoursePricing;
   /** Full Drive folder URL or a raw folder ID — backend extracts the ID. */
-  lecturesDriveFolderId?: string;
-  mockSessionsDriveFolderId?: string;
+  driveFolderId?: string;
+  telegramChannel?: string | null;
+  whatsappChannel?: string | null;
   isPublished?: boolean;
 }
 
@@ -336,8 +362,6 @@ export interface Enrollment {
     | null;
   isActive?: boolean;
   source?: string; // "manual" | "payment"
-  /** Widened to string: legacy records may still carry pre-2026-08-07 tier names. */
-  accessTier?: CourseTier | string;
   accessGrantedAt?: string;
   grantedBy?: string;
   subscriptionId?: string;
@@ -346,10 +370,96 @@ export interface Enrollment {
   updatedAt?: string;
 }
 
-export type LessonType = "pdf" | "video";
+/**
+ * Live course — a one-time-payment course with a fixed start/end date, as opposed to the
+ * subscription-based `Course`. Content (lessons) and Drive-folder access work identically —
+ * same content module, same enrollment-grants-Drive-access pattern — just a different
+ * parent collection (`/live-courses/:id/content` instead of `/courses/:id/content`).
+ */
+export interface LiveCourse {
+  _id: string;
+  title: string;
+  /** Short summary — shown on live-course cards/listings. */
+  description?: string;
+  /** Longer-form write-up — shown on the detail page only, never inside a card. */
+  detailedDescription?: string;
+  /** GBP pounds — one-time price, not a subscription. */
+  price?: number;
+  startDate: string;
+  endDate: string;
+  thumbnailUrl?: string;
+  /** Admin-uploaded PDF (e.g. a course schedule / table of contents) shown on the
+   *  detail page to everyone, including unauthenticated visitors. Freshly signed on
+   *  every read (Cloudinary `authenticated` delivery) — never cache this URL. */
+  tocPdfUrl?: string;
+  telegramChannel?: string | null;
+  whatsappChannel?: string | null;
+  isPublished?: boolean;
+  /** New purchases are blocked while true — visibility (`isPublished`) and existing
+   *  enrollments are untouched. */
+  paymentsPaused?: boolean;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
-/** A course lesson (GET /courses/:courseId/content). Verified 2026-07-10:
- *  PDF lessons carry a Cloudinary `fileUrl`; video lessons a Google-Drive link. */
+/** Live course — admin shape (`GET /live-courses/admin/*`, and the `POST`/`PATCH`
+ *  responses). These routes DO return the Drive folder id, so the admin edit form can
+ *  prefill it. Public routes omit it. */
+export interface AdminLiveCourse extends LiveCourse {
+  driveFolderId?: string;
+}
+
+/**
+ * Payload for POST /live-courses (create) and PATCH /live-courses/:id (partial update).
+ * Create requires: title, description, price, startDate, endDate, and the Drive link.
+ */
+export interface LiveCourseInput {
+  title: string;
+  description?: string;
+  detailedDescription?: string;
+  price?: number;
+  /** ISO 8601 date string. */
+  startDate?: string;
+  endDate?: string;
+  driveFolderId?: string;
+  telegramChannel?: string | null;
+  whatsappChannel?: string | null;
+  isPublished?: boolean;
+}
+
+/** Live course enrollment — one-time purchase, no subscription. Same shape/semantics as
+ *  `Enrollment` minus `subscriptionId` (live courses have nothing recurring to reference). */
+export interface LiveCourseEnrollment {
+  _id: string;
+  userId?: UserRef | string;
+  courseId?:
+    | {
+        _id: string;
+        title?: string;
+        description?: string;
+        price?: number;
+        startDate?: string;
+        endDate?: string;
+        thumbnailUrl?: string;
+      }
+    | string
+    | null;
+  isActive?: boolean;
+  source?: string; // "manual" | "payment"
+  accessGrantedAt?: string;
+  grantedBy?: string;
+  paymentId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type LessonType = "pdf" | "video" | "audio";
+
+/** A course lesson (GET /courses/:courseId/content). PDF lessons carry a Cloudinary
+ *  `fileUrl` (freshly-signed on every read — never cache it). Video/audio lessons carry
+ *  a Google-Drive share link the admin pastes in manually — opened externally, never
+ *  proxied. `duration` is in **seconds** (video/audio only). */
 export interface Lesson {
   _id: string;
   courseId?: string;
@@ -357,7 +467,7 @@ export interface Lesson {
   type: LessonType | string;
   fileUrl?: string;
   order?: number;
-  duration?: string;
+  duration?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -372,14 +482,15 @@ export interface PlanPrice {
   label: string; // pre-formatted, e.g. "£69.99 / month"
 }
 
-/** A payment plan group (GET /payments/plans). `tier` is present only for
- *  `type: "course"` plans. Verified 2026-07-10. */
+/** A payment plan group (GET /payments/plans). */
 export interface PaymentPlan {
   type: "case_bank" | "course";
-  tier?: CourseTier;
   name: string;
   description: string;
   prices: PlanPrice[];
+  /** Live toggle — only present (and meaningful) on the `case_bank` plan group. Merged in
+   *  at request time from admin state, not a static plan detail. */
+  paymentsPaused?: boolean;
 }
 
 /** Stripe subscription status. `past_due` STILL GRANTS ACCESS (payment retry in
@@ -397,14 +508,13 @@ export type SubscriptionStatus =
  *  (it's absent from the `{ active: false }` form). */
 export interface CourseSubStatus {
   active: boolean;
-  tier?: CourseTier | string;
   currentPeriodEnd?: string;
   cancelAtPeriodEnd?: boolean;
   billingInterval?: string;
 }
 
 /** GET /subscriptions/case-bank/status — one subscription unlocks ALL cases.
- *  Same extra fields as the course status, minus `tier`. */
+ *  Same extra fields as the course status. */
 export interface CaseBankStatus {
   active: boolean;
   currentPeriodEnd?: string;
@@ -413,13 +523,12 @@ export interface CaseBankStatus {
 }
 
 /** GET /subscriptions/me — a user's Stripe subscription. `courseId` (populated)
- *  and `tier` are present only for `type: "course"`. Verified 2026-07-10. */
+ *  is present only for `type: "course"`. Verified 2026-07-10. */
 export interface Subscription {
   _id: string;
   type: "case_bank" | "course";
   userId: string;
   courseId?: { _id: string; title?: string; thumbnailUrl?: string } | null;
-  tier?: CourseTier | string;
   billingInterval: string; // "monthly" | "quarterly" | …
   status: SubscriptionStatus;
   cancelAtPeriodEnd: boolean;
@@ -431,11 +540,20 @@ export interface Subscription {
   updatedAt?: string;
 }
 
+/** Response of PATCH /subscriptions/case-bank/{pause,resume}-payments — admin. Singleton
+ *  settings doc; there is no GET for it, so the frontend only learns the current
+ *  `paymentsPaused` value from the response of whichever action was last taken. */
+export interface CaseBankSettings {
+  _id: string;
+  paymentsPaused: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /** GET /enrollments/check/:courseId — access via an enrollment (manual grant or
- *  a past payment). `accessTier` is the level granted. Verified 2026-07-10. */
+ *  a past payment). Verified 2026-07-10. */
 export interface EnrollmentCheck {
   enrolled: boolean;
-  accessTier?: CourseTier | string;
   accessGrantedAt?: string;
 }
 
@@ -500,6 +618,13 @@ export interface HomepageData {
   registrarsCount: number;
   contactEmail: string | null;
   contactPhone: string | null;
+  /** Social profile/channel links — `null` until an admin sets them. `youtubeUrl` is the
+   *  channel/profile link, distinct from `youtubeLinks` (embedded videos) below. */
+  facebookUrl: string | null;
+  whatsappUrl: string | null;
+  twitterUrl: string | null;
+  instagramUrl: string | null;
+  youtubeUrl: string | null;
   youtubeLinks: YoutubeLink[];
 }
 
@@ -511,6 +636,11 @@ export interface HomepageSettings {
   registrarsCount: number;
   contactEmail?: string;
   contactPhone?: string;
+  facebookUrl?: string;
+  whatsappUrl?: string;
+  twitterUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
   youtubeLinks: YoutubeLink[];
   faqs: Faq[];
   createdAt: string;
@@ -523,6 +653,11 @@ export interface UpdateHomepageStatsInput {
   registrarsCount?: number;
   contactEmail?: string;
   contactPhone?: string;
+  facebookUrl?: string;
+  whatsappUrl?: string;
+  twitterUrl?: string;
+  instagramUrl?: string;
+  youtubeUrl?: string;
 }
 
 /** Payload for POST /admin/homepage/youtube-links (all required) and PATCH .../:linkId (partial). */
@@ -660,11 +795,26 @@ export interface CatalogCourseProduct {
   pricing?: CoursePricing;
 }
 
+export interface CatalogLiveCourseProduct {
+  type: "live_course";
+  _id: string;
+  title: string;
+  description?: string;
+  thumbnailUrl?: string;
+  /** GBP pounds — one-time price, not a subscription. */
+  price: number;
+  startDate: string;
+  endDate: string;
+}
+
 export interface CatalogOneOnOneProduct {
   type: "one_on_one";
   _id: string;
   title: string;
   description: string;
+  /** GET /products omits this even though the underlying booking product has one —
+   *  backfilled in catalog.service.ts from GET /booking by matching `_id`. */
+  imageUrl?: string | null;
   /** GBP pounds, informational only — booking has no payment gate. */
   price: number;
 }
@@ -683,6 +833,7 @@ export interface CatalogCaseBankProduct {
 
 export type CatalogProduct =
   | CatalogCourseProduct
+  | CatalogLiveCourseProduct
   | CatalogOneOnOneProduct
   | CatalogCaseBankProduct;
 
@@ -771,11 +922,18 @@ export type SessionBookingStatus = "pending" | "confirmed" | "cancelled";
 
 /** POST /booking/:id/book response — a booking is NOT confirmed at this point. Redirect
  *  the browser to `url` to complete payment; the booking becomes `confirmed` only once
- *  Stripe's webhook fires. `url` mirrors Stripe's own type (`string | null`). */
+ *  Stripe's webhook fires. `url` mirrors Stripe's own type (`string | null`).
+ *  `GET /booking/:bookingId/resume-payment` returns this same shape for a still-pending
+ *  booking's existing checkout session. */
 export interface BookingCheckout {
   bookingId: string;
   sessionId: string;
   url: string | null;
+  /** ISO 8601 — when this booking's checkout session was created. */
+  paymentInitiatedAt: string;
+  /** ISO 8601 — `paymentInitiatedAt` + 1 hour; matches both Stripe's own session expiry
+   *  and the backend sweep that releases unpaid holds. Drive a countdown off this. */
+  expiresAt: string;
 }
 
 export interface SessionBooking {
@@ -786,6 +944,10 @@ export interface SessionBooking {
   time: string;
   status: SessionBookingStatus;
   stripeCheckoutSessionId?: string;
+  /** Present only while `status === "pending"` — derived from `createdAt`, not stored.
+   *  Mirrors `BookingCheckout.paymentInitiatedAt`/`expiresAt`. */
+  paymentInitiatedAt?: string;
+  paymentExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -799,6 +961,8 @@ export interface AdminSessionBooking {
   time: string;
   status: SessionBookingStatus;
   stripeCheckoutSessionId?: string;
+  paymentInitiatedAt?: string;
+  paymentExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -816,6 +980,10 @@ export interface MyBooking {
   time: string;
   stripeCheckoutSessionId?: string;
   status: SessionBookingStatus;
+  /** Present only while `status === "pending"` — drive the "complete payment" countdown
+   *  (and when to offer "resume payment") off `paymentExpiresAt`. */
+  paymentInitiatedAt?: string;
+  paymentExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
 }

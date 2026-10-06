@@ -1,7 +1,7 @@
 import ButtonTag from "@/components/shared/ButtonTag";
 import Image from "next/image";
 import SubtleText from "@/components/shared/SubtleText";
-import { formatStatCount, roundToNearestTen } from "@/lib/stats";
+import { formatStatCount, roundDownToNearestTen } from "@/lib/stats";
 
 export default function EverythingYouNeed({
   caseNumber,
@@ -12,9 +12,9 @@ export default function EverythingYouNeed({
   testimonialsCount: number;
   registrarsCount: number;
 }) {
-  // Rounded so the live case count reads as a round marketing figure (e.g. 247 -> 250)
-  // rather than a precise-looking number that draws attention to being exact.
-  const displayedCaseNumber = roundToNearestTen(caseNumber);
+  // Rounded down so the live case count never overstates what's actually available
+  // (e.g. 247 -> 240) rather than rounding up to a figure not yet reached.
+  const displayedCaseNumber = roundDownToNearestTen(caseNumber);
   // Top padding intentionally mirrors the bottom (pb-*) so the section reads as one
   // rhythm. It used to be pt-32/pt-64, which left a ~250px void under the hero.
   return (

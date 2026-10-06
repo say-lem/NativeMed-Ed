@@ -6,9 +6,18 @@ const wholeNumberField = z
   .trim()
   .regex(/^\d+$/, "Must be a whole non-negative number");
 
-/** Mirrors the backend's Zod rules for PATCH /admin/homepage. `contactEmail`/`contactPhone`
- *  are blank-allowed here — an empty value is omitted from the payload rather than sent,
- *  so leaving them blank never overwrites an already-set value with an invalid one. */
+/** Blank-allowed URL field — mirrors the backend's `socialUrlField` (any valid URL, no
+ *  platform-specific pattern check), but permits an empty string so leaving it blank never
+ *  overwrites an already-set value with an invalid one. */
+const socialUrlField = z
+  .string()
+  .trim()
+  .refine((v) => v === "" || z.string().url().safeParse(v).success, "Must be a valid URL");
+
+/** Mirrors the backend's Zod rules for PATCH /admin/homepage. `contactEmail`/`contactPhone`/
+ *  the social links are blank-allowed here — an empty value is omitted from the payload
+ *  rather than sent, so leaving them blank never overwrites an already-set value with an
+ *  invalid one. */
 export const homepageStatsSchema = z.object({
   testimonialsCount: wholeNumberField,
   registrarsCount: wholeNumberField,
@@ -20,6 +29,11 @@ export const homepageStatsSchema = z.object({
     .string()
     .trim()
     .refine((v) => v === "" || v.length >= 7, "Phone must be at least 7 characters"),
+  facebookUrl: socialUrlField,
+  whatsappUrl: socialUrlField,
+  twitterUrl: socialUrlField,
+  instagramUrl: socialUrlField,
+  youtubeUrl: socialUrlField,
 });
 
 export type HomepageStatsValues = z.infer<typeof homepageStatsSchema>;
@@ -32,6 +46,11 @@ export function homepageStatsPayload(
     registrarsCount: Number(values.registrarsCount),
     contactEmail: values.contactEmail === "" ? undefined : values.contactEmail,
     contactPhone: values.contactPhone === "" ? undefined : values.contactPhone,
+    facebookUrl: values.facebookUrl === "" ? undefined : values.facebookUrl,
+    whatsappUrl: values.whatsappUrl === "" ? undefined : values.whatsappUrl,
+    twitterUrl: values.twitterUrl === "" ? undefined : values.twitterUrl,
+    instagramUrl: values.instagramUrl === "" ? undefined : values.instagramUrl,
+    youtubeUrl: values.youtubeUrl === "" ? undefined : values.youtubeUrl,
   };
 }
 
@@ -66,13 +85,17 @@ export function youtubeLinkPayload(values: YoutubeLinkValues): YoutubeLinkInput 
   };
 }
 
-/** Mirrors the backend's Zod rules for PATCH /admin/homepage/{terms,legal-disclaimer}. */
+/** Mirrors the backend's Zod rules for PATCH /admin/homepage/{terms,legal-disclaimer}.
+ *  40000 (not 20000) — legal documents like the privacy policy routinely run
+ *  15-20k characters as markdown, and pasting from Word/Docs can inflate that
+ *  further once the rich-text editor re-serializes it; 20000 was cutting real
+ *  saves off mid-document. */
 export const legalPageSchema = z.object({
   content: z
     .string()
     .trim()
     .min(1, "Content is required")
-    .max(20000, "Content must be 20000 characters or fewer"),
+    .max(40000, "Content must be 40000 characters or fewer"),
 });
 
 export type LegalPageValues = z.infer<typeof legalPageSchema>;

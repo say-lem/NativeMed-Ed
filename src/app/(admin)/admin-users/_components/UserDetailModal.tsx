@@ -132,8 +132,13 @@ export default function UserDetailModal({
           <button
             type="button"
             onClick={onToggle}
-            disabled={pending}
-            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white cursor-pointer disabled:opacity-60 ${
+            disabled={pending || (active && user.role === "admin")}
+            title={
+              active && user.role === "admin"
+                ? "Admin accounts can't be deactivated here"
+                : undefined
+            }
+            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed ${
               active
                 ? "bg-red-600 hover:bg-red-700"
                 : "bg-primary-100 hover:bg-primary-100/90"

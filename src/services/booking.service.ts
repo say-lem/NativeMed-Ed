@@ -67,6 +67,19 @@ export async function bookSession(
   return res.data;
 }
 
+/** GET /booking/:bookingId/resume-payment — auth. Returns the SAME Stripe checkout session
+ *  for a booking that's still `pending` and within its hour-long payment window, rather than
+ *  minting a new one. 404 if not found/not owned, 400 if no longer pending, 410 once the
+ *  window (ours or Stripe's own session expiry) has passed. */
+export async function resumeBookingPayment(
+  bookingId: string,
+): Promise<ApiResponse<BookingCheckout>> {
+  const res = await api.get<ApiResponse<BookingCheckout>>(
+    `/booking/${bookingId}/resume-payment`,
+  );
+  return res.data;
+}
+
 /** GET /booking/me — auth. The signed-in user's own bookings, newest date first. */
 export async function getMyBookings(
   page = 1,

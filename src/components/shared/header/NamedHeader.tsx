@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { User } from "@/types/api";
 
 type AvatarSize = "sm" | "md" | "lg";
@@ -25,7 +26,11 @@ export default function NamedHeader({
 
   return (
     <div className="flex gap-3 sm:gap-4 md:gap-6 items-center">
-      <div className="flex items-center gap-1.5 sm:gap-2">
+      <Link
+        href="/settings"
+        className="flex items-center gap-1.5 sm:gap-2"
+        aria-label="Go to settings"
+      >
         <aside
           className={`${sizeMap[avatarSize]} rounded-full bg-primary-40 text-secondary-100 flex items-center justify-center font-medium select-none shrink-0`}
         >
@@ -39,7 +44,7 @@ export default function NamedHeader({
             {accountLabel} account
           </p>
         </aside>
-      </div>
+      </Link>
     </div>
   );
 }

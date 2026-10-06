@@ -3,12 +3,18 @@ import { ArrowLeft } from "lucide-react";
 import BannerBg from "@/app/(marketplace)/_components/BannerBg";
 import { BannerTitleCase } from "@/components/shared/TitleCase";
 
-export default function AdminContentHero({ title }: { title: string }) {
+export default function AdminContentHero({
+  title,
+  backHref,
+}: {
+  title: string;
+  backHref: string;
+}) {
   return (
     <section>
       <BannerBg color="#2D135C">
         <Link
-          href="/admin-courses"
+          href={backHref}
           className="inline-flex items-center gap-1.5 text-sm text-white/80 hover:text-white mb-2"
         >
           <ArrowLeft size={16} /> Back to Courses

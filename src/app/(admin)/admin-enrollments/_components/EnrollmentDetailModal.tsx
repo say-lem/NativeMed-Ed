@@ -1,6 +1,5 @@
 "use client";
 import { Loader2, X } from "lucide-react";
-import { tierLabel } from "@/lib/tiers";
 
 function fmt(iso?: string): string {
   if (!iso) return "—";
@@ -29,7 +28,6 @@ export default function EnrollmentDetailModal({
   course,
   status,
   source,
-  tier,
   createdAt,
   busy,
   onClose,
@@ -40,7 +38,6 @@ export default function EnrollmentDetailModal({
   course: { title: string };
   status: "active" | "revoked";
   source?: string;
-  tier?: string;
   createdAt?: string;
   busy: boolean;
   onClose: () => void;
@@ -82,10 +79,6 @@ export default function EnrollmentDetailModal({
           <DetailRow
             label="Source"
             value={<span className="capitalize">{source ?? "—"}</span>}
-          />
-          <DetailRow
-            label="Tier"
-            value={tierLabel(tier)}
           />
           <DetailRow
             label="Status"

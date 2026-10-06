@@ -25,7 +25,7 @@ export default function CaseBankActions({
       return;
     }
     startTransition(async () => {
-      const res = await startCaseBankCheckout();
+      const res = await startCaseBankCheckout("monthly", window.location.origin);
       if (res.ok && res.url) {
         window.location.assign(res.url);
       } else {
