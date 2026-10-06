@@ -29,12 +29,13 @@ export interface BookSessionActionResult {
 export async function bookSessionAction(
   productId: string,
   values: { date: string; time: string },
+  clientOrigin?: string,
 ): Promise<BookSessionActionResult> {
   if (!values.date) return { ok: false, message: "Choose a date first." };
   if (!values.time) return { ok: false, message: "Choose a time first." };
 
   try {
-    const origin = await getOrigin();
+    const origin = await getOrigin(clientOrigin);
     const successUrl = `${origin}/payment/success?type=booking&session_id={CHECKOUT_SESSION_ID}`;
     const cancelUrl = `${origin}/payment/cancel?from=booking`;
 

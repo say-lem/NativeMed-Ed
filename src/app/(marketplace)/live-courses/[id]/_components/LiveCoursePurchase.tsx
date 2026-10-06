@@ -22,7 +22,10 @@ export default function LiveCoursePurchase({
 
   const buy = () => {
     startTransition(async () => {
-      const res = await startLiveCourseCheckout(course._id);
+      const res = await startLiveCourseCheckout(
+        course._id,
+        window.location.origin,
+      );
       if (res.ok && res.url) {
         window.location.assign(res.url);
         return;
