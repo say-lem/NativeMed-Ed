@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import ContainedImage from "./ContainedImage";
 import type { LiveCourseEnrollment } from "@/types/api";
 
 function populatedCourse(e: LiveCourseEnrollment) {
@@ -106,12 +107,10 @@ export default function MyLiveCoursesList({
               href={`/my-live-courses/${course._id}`}
               className="rounded-[16px] overflow-hidden courseBorder pb-4 bg-white hover:scale-[1.02] transition-transform flex flex-col"
             >
-              <div className="relative w-full min-h-40 sm:min-h-48">
-                <Image
+              <div className="relative w-full min-h-40 sm:min-h-48 overflow-hidden bg-gray-from-radial-bg">
+                <ContainedImage
                   src={course.thumbnailUrl || "/Images/coursesImage.png"}
                   alt={`image of ${course.title ?? "live course"}`}
-                  fill
-                  className="object-cover object-center"
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               </div>

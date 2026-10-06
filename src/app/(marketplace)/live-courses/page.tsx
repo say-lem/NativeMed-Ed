@@ -24,7 +24,7 @@ export default async function LiveCoursesPage() {
     <>
       <LiveCoursesBrowser courses={courses} error={error} />
       <Suspense fallback={<YmalSkeleton />}>
-        <YouMightAlsoLike />
+        <YouMightAlsoLike excludeType="live_course" />
       </Suspense>
     </>
   );

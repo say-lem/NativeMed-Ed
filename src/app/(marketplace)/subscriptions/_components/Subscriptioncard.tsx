@@ -23,7 +23,7 @@ export default function SubscriptionCard({ sub }: { sub: Subscription }) {
 
   return (
     <div className="rounded-[16px] overflow-hidden courseBorder pb-4 bg-white flex flex-col">
-      <div className="relative w-full min-h-40 sm:min-h-48">
+      <div className="relative w-full aspect-[4/3]">
         <Image
           src={thumb || "/Images/coursesImage.png"}
           alt={`image of ${title}`}

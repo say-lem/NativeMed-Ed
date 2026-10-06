@@ -1,15 +1,63 @@
 "use client";
-import { useState } from "react";
-import { CalendarClock } from "lucide-react";
+import { useEffect, useState, useTransition } from "react";
+import { CalendarClock, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import { bookingStatusMeta } from "@/lib/booking-status";
 import { byBookingTimeAsc, formatDate, isBookingPast } from "@/lib/date";
 import { formatMoney } from "@/lib/price";
 import type { MyBooking } from "@/types/api";
+import { resumeBookingPaymentAction } from "../actions";
 
 type View = "upcoming" | "past";
 
+function msRemaining(expiresAt: string): number {
+  return new Date(expiresAt).getTime() - Date.now();
+}
+
+function formatCountdown(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+/** Ticks every second while a booking is pending so the "complete payment" countdown stays
+ *  live without a page refresh. `null` once there's nothing to count down to. The tick
+ *  counter only forces a re-render — `remaining` itself is derived fresh on every render
+ *  from the current time, not stored in state. */
+function usePaymentCountdown(expiresAt?: string): number | null {
+  const [, forceTick] = useState(0);
+
+  useEffect(() => {
+    if (!expiresAt) return;
+    const id = setInterval(() => forceTick((t) => t + 1), 1000);
+    return () => clearInterval(id);
+  }, [expiresAt]);
+
+  return expiresAt ? msRemaining(expiresAt) : null;
+}
+
 function BookingCard({ booking, past }: { booking: MyBooking; past: boolean }) {
   const statusMeta = bookingStatusMeta(booking.status);
+  const [pending, startTransition] = useTransition();
+  const isAwaitingPayment = booking.status === "pending";
+  const remaining = usePaymentCountdown(
+    isAwaitingPayment ? booking.paymentExpiresAt : undefined,
+  );
+  const expired = remaining != null && remaining <= 0;
+
+  const resume = () => {
+    startTransition(async () => {
+      const res = await resumeBookingPaymentAction(booking._id);
+      if (res.ok && res.url) {
+        window.location.assign(res.url);
+        return;
+      }
+      toast.error(res.message ?? "Couldn't resume payment.");
+    });
+  };
+
   return (
     <div
       className={`rounded-[16px] courseBorder p-4 sm:p-5 bg-white flex flex-col gap-3 ${
@@ -39,6 +87,28 @@ function BookingCard({ booking, past }: { booking: MyBooking; past: boolean }) {
       <p className="text-base sm:text-lg font-semibold leading-[130%] tracking-[-1%] text-black-others line-clamp-2">
         {booking.productId?.title ?? "Session no longer available"}
       </p>
+
+      {isAwaitingPayment && remaining != null && (
+        <div className="rounded-[8px] bg-amber-50 border border-amber-200 px-3 py-2 flex items-center justify-between gap-2">
+          <span className="text-xs text-amber-700 font-medium">
+            {expired
+              ? "Payment window expired"
+              : `Complete payment within ${formatCountdown(remaining)}`}
+          </span>
+          {!expired && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={resume}
+              disabled={pending}
+              className="font-bold bg-black-others shrink-0 disabled:opacity-60"
+            >
+              {pending && <Loader2 className="size-3 animate-spin" />}
+              Resume
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="mt-auto pt-2 border-t border-[#EDEDED] flex items-center justify-between text-sm">
         <span className="text-black-others font-medium">{formatDate(booking.date)}</span>
