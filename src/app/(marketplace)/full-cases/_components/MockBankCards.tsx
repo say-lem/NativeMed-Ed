@@ -15,7 +15,7 @@ const SPECIALTY_IMAGES: Record<string, string> = {
   "dermatology/allergy/immunology": "/Images/Dermatology.jpeg",
   "elderly medicine/ palliative": "/Images/Elderly Medicine.jpeg",
   "endocrine and nephrology": "/Images/Endocrine and Nephrology.jpeg",
-  "ent & eye": "/Images/Ent & Eye.jpeg",
+  "ent & eye": "/Images/Ent and Eye.jpeg",
   ethics: "/Images/medical ethics.jpeg",
   "gastroenterology/ haematology": "/Images/Gastroenterology and haematology.jpeg",
   genetics: "/Images/Genetics.jpeg",
@@ -25,7 +25,7 @@ const SPECIALTY_IMAGES: Record<string, string> = {
   neurology: "/Images/Neurology.jpeg",
   paediatrics: "/Images/Paediatrics.jpeg",
   respiratory: "/Images/Respiratory.jpeg",
-  "rheumatology/ musculoskeletal": "/Images/Rheumatology & Musculoskeletal.jpeg",
+  "rheumatology/ musculoskeletal": "/Images/Rheumatology and Musculoskeletal.jpeg",
   "travel health/ infectious disease": "/Images/Infectious Disease.jpeg",
 };
 
