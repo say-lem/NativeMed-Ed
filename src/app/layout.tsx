@@ -62,6 +62,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fustat.className} h-full antialiased`}>
+      <head>
+        <link rel="sitemap" type="application/xml" href={`${SITE_URL}/sitemap.xml`} />
+      </head>
       <body className="min-h-full">
         <script
           type="application/ld+json"
