@@ -41,20 +41,21 @@ export default function ManageDatesModal({
   const [busyId, setBusyId] = useState<string | null>(null);
   const [, startRemove] = useTransition();
 
-  const sorted = [...product.availableDates].sort(
+  const dates = product.availableDates ?? [];
+  const times = product.availableTimes ?? [];
+  const sorted = [...dates].sort(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
 
-  const hasOpenDate = product.availableDates.some((d) =>
-    product.availableTimes.some(
-      (t) => !d.bookedTimes.includes(t) && !isBookingPast(d.date, t),
+  const hasOpenDate = dates.some((d) =>
+    times.some(
+      (t) => !(d.bookedTimes ?? []).includes(t) && !isBookingPast(d.date, t),
     ),
   );
   // No `availableTimes` at all makes the `.some()` above vacuously false for every date
   // no matter how far in the future it is — that's "no times configured", not "expired".
-  const noTimesConfigured = product.availableTimes.length === 0;
-  const allDatesExpired =
-    !noTimesConfigured && !hasOpenDate && product.availableDates.length > 0;
+  const noTimesConfigured = times.length === 0;
+  const allDatesExpired = !noTimesConfigured && !hasOpenDate && dates.length > 0;
 
   const add = () => {
     if (!date) {
@@ -229,13 +230,13 @@ export default function ManageDatesModal({
             sorted.map((d) => {
               const busy = busyId === d._id;
               const label = formatDate(d.date);
-              const hasBookings = d.bookedTimes.length > 0;
+              const bookedTimes = d.bookedTimes ?? [];
+              const hasBookings = bookedTimes.length > 0;
               // Expired = every configured time on this date has already passed — distinct
               // from "booked"; a date can clear the old bookedTimes check yet still be
               // unbookable because the clock has simply moved past it (see BookingProductsManager).
               const expired =
-                product.availableTimes.length > 0 &&
-                product.availableTimes.every((t) => isBookingPast(d.date, t));
+                times.length > 0 && times.every((t) => isBookingPast(d.date, t));
               return (
                 <div key={d._id} className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
@@ -245,10 +246,10 @@ export default function ManageDatesModal({
                         Expired
                       </span>
                     )}
-                    {product.availableTimes.length > 0 && (
+                    {times.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {product.availableTimes.map((time) => {
-                          const isBooked = d.bookedTimes.includes(time);
+                        {times.map((time) => {
+                          const isBooked = bookedTimes.includes(time);
                           const isPast = !isBooked && isBookingPast(d.date, time);
                           return (
                             <span

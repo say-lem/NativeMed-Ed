@@ -83,18 +83,21 @@ export default function BookingProductsManager({
             // booked AND hasn't already passed — a date can clear the old "not fully
             // booked" bar yet still be unbookable because every slot on it is in the past
             // (exactly what the public booking page checks before showing it).
-            const availableCount = product.availableDates.filter((d) =>
-              product.availableTimes.some(
-                (t) => !d.bookedTimes.includes(t) && !isBookingPast(d.date, t),
+            const dates = product.availableDates ?? [];
+            const times = product.availableTimes ?? [];
+            const availableCount = dates.filter((d) =>
+              times.some(
+                (t) =>
+                  !(d.bookedTimes ?? []).includes(t) && !isBookingPast(d.date, t),
               ),
             ).length;
             // No `availableTimes` at all means `.some()` above is vacuously false for
             // every date regardless of how far in the future it is — that's a "no times
             // configured" problem, not an "expired" one, and needs its own message so a
             // product with perfectly good future dates doesn't get told they've all passed.
-            const noTimesConfigured = product.availableTimes.length === 0;
+            const noTimesConfigured = times.length === 0;
             const allDatesExpired =
-              !noTimesConfigured && availableCount === 0 && product.availableDates.length > 0;
+              !noTimesConfigured && availableCount === 0 && dates.length > 0;
             return (
               <div
                 key={product._id}
@@ -135,8 +138,8 @@ export default function BookingProductsManager({
                   </p>
                   <p className="text-xs text-subtle-text mt-0.5">
                     {availableCount} open date{availableCount === 1 ? "" : "s"} ·{" "}
-                    {product.availableTimes.length} time
-                    {product.availableTimes.length === 1 ? "" : "s"}
+                    {times.length} time
+                    {times.length === 1 ? "" : "s"}
                   </p>
                   {noTimesConfigured ? (
                     <p className="text-xs text-amber-600 mt-0.5 flex items-center gap-1">

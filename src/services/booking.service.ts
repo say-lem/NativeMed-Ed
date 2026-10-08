@@ -109,6 +109,37 @@ export async function requestSlotAvailability(
 // Admin — products
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Subdocuments after a date `$pull` can arrive with missing arrays or null holes.
+ *  The admin UI maps over these on render — unguarded `.filter` / `.includes` throws
+ *  and the route error boundary replaces the whole 1-on-1 page. */
+export function normalizeAdminBookingProduct(
+  product: AdminBookingProduct,
+): AdminBookingProduct {
+  const dates = Array.isArray(product.availableDates)
+    ? product.availableDates.filter(
+        (d): d is AdminBookingProduct["availableDates"][number] =>
+          d != null && typeof d === "object",
+      )
+    : [];
+  return {
+    ...product,
+    availableTimes: Array.isArray(product.availableTimes)
+      ? product.availableTimes.filter((t): t is string => typeof t === "string")
+      : [],
+    availableDates: dates.map((d) => ({
+      _id: d._id,
+      date: d.date,
+      bookedTimes: Array.isArray(d.bookedTimes) ? d.bookedTimes : [],
+    })),
+  };
+}
+
+function paginatedItems<T>(data: Paginated<T> | T[] | null | undefined): T[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data;
+  return Array.isArray(data.items) ? data.items : [];
+}
+
 /** GET /admin/booking/products — admin, every product incl. drafts and booked dates. */
 export async function getAdminBookingProducts(
   page = 1,
@@ -118,7 +149,13 @@ export async function getAdminBookingProducts(
     "/admin/booking/products",
     { params: { page, limit } },
   );
-  return res.data;
+  const body = res.data;
+  if (!body.success) return body;
+  const items = paginatedItems(body.data).map(normalizeAdminBookingProduct);
+  const data = Array.isArray(body.data)
+    ? { items, total: items.length, page, limit, totalPages: 1 }
+    : { ...body.data, items };
+  return { ...body, data };
 }
 
 /** POST /admin/booking/products — admin. */

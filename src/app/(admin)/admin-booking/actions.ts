@@ -35,9 +35,15 @@ function fail(err: unknown, tag: string, fallback: string): FormActionResult {
 
 function revalidateBooking() {
   revalidatePath("/admin-booking");
+  // Public catalog is safe to purge from an admin session. Do NOT revalidate
+  // `/one-on-one` or `/dashboard`: those live under the marketplace layout,
+  // which `redirect()`s admins to `/admin-dashboard`. On self-hosted Node
+  // (Hostinger) `revalidatePath` can render the target in this request; the
+  // redirect throw then poisons the follow-up refresh of `/admin-booking`
+  // (delete succeeds, then "Couldn't load this page"). Vercel only marks the
+  // cache stale, so the same action looks fine there. Member 1-on-1 pages
+  // already call `cookies()` and fetch fresh on each request.
   revalidatePath("/products");
-  revalidatePath("/one-on-one");
-  revalidatePath("/dashboard");
 }
 
 export async function addBookingProductAction(
