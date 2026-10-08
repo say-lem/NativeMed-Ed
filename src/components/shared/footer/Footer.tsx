@@ -18,7 +18,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-6 lg:gap-0">
           <Image
             src={"/Images/main_logo.png"}
-            alt="NativeMed Logo"
+            alt="Native Medical Education"
             width={100}
             height={100}
             className="w-20 lg:w-28"

@@ -35,7 +35,7 @@ export default function PublicHeader({ user }: { user?: User | null }) {
       <Link href="/" onClick={onLogoClick}>
         <Image
           src={"/Images/main_logo.png"}
-          alt="NativeMed Logo"
+          alt="Native Medical Education"
           width={100}
           height={100}
           className="w-25 lg:w-35 mix-blend-multiply"

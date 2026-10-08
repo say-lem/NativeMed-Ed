@@ -6,7 +6,7 @@ import { getReviews } from "@/services/reviews.service";
 import type { Paginated, Review } from "@/types/api";
 
 export const metadata = {
-  title: "Reviews | Native Medical Education",
+  title: "Reviews",
 };
 
 const PAGE_LIMIT = 12;

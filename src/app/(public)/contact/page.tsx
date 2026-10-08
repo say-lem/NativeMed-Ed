@@ -25,6 +25,10 @@ const EMPTY_CONTACT_INFO: ContactInfo = {
   youtubeUrl: null,
 };
 
+export const metadata = {
+  title: "Contact",
+};
+
 async function loadContactInfo(): Promise<ContactInfo> {
   try {
     const res = await getHomepageData();

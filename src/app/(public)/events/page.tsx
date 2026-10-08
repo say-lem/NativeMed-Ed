@@ -5,7 +5,7 @@ import { getActivities } from "@/services/activities.service";
 import type { Activity, Paginated } from "@/types/api";
 
 export const metadata = {
-  title: "Events | Native Medical Education",
+  title: "Events",
 };
 
 const PAGE_LIMIT = 12;

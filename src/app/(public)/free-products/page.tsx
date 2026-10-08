@@ -4,7 +4,7 @@ import { getAllFreeProducts } from "@/services/freeProducts.service";
 import type { FreeProduct } from "@/types/api";
 
 export const metadata = {
-  title: "Free Resources | Native Medical Education",
+  title: "Free Resources",
 };
 
 async function loadFreeProducts(): Promise<FreeProduct[]> {

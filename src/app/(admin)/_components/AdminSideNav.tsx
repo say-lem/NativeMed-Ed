@@ -27,7 +27,7 @@ export default function AdminSideNav() {
         <Link href="/">
           <Image
             src={"/Images/main_logo.png"}
-            alt="NativeMed Logo"
+            alt="Native Medical Education"
             width={100}
             height={100}
             className="w-20 lg:w-28 mix-blend-multiply"

@@ -1,7 +1,7 @@
 import Image from "next/image";
 
 /**
- * Branded loading indicator — the Native Med logo inside a spinning ring.
+ * Branded loading indicator — the Native Medical Education logo inside a spinning ring.
  * Use where a skeleton/shimmer doesn't fit (in-flight actions, modal pending,
  * full-form saves, indeterminate waits).
  */

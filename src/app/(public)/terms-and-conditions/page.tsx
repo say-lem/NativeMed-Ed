@@ -5,7 +5,7 @@ import { DEFAULT_TERMS_AND_CONDITIONS } from "@/lib/legal-content";
 import { getTermsAndConditions } from "@/services/homepage.service";
 
 export const metadata = {
-  title: "Terms & Conditions | Native Medical Education",
+  title: "Terms & Conditions",
 };
 
 async function loadTerms(): Promise<{ content: string; updatedAt: string | null }> {

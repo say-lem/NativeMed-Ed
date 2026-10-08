@@ -2,6 +2,10 @@ import ProductsHero from "./_components/Hero";
 import type { CatalogProduct } from "@/types/api";
 // import CountDownToClass from "@/components/shared/Countdown";
 
+export const metadata = {
+  title: "Products",
+};
+
 const VALID_TYPES: CatalogProduct["type"][] = [
   "case_bank",
   "live_course",

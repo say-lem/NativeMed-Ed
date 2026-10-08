@@ -5,7 +5,7 @@ import { DEFAULT_LEGAL_DISCLAIMER } from "@/lib/legal-content";
 import { getLegalDisclaimer } from "@/services/homepage.service";
 
 export const metadata = {
-  title: "Legal Disclaimer | Native Medical Education",
+  title: "Legal Disclaimer",
 };
 
 async function loadLegalDisclaimer(): Promise<{ content: string; updatedAt: string | null }> {

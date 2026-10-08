@@ -5,7 +5,7 @@ import { DEFAULT_PRIVACY_POLICY } from "@/lib/legal-content";
 import { getPrivacyPolicy } from "@/services/homepage.service";
 
 export const metadata = {
-  title: "Privacy Policy | Native Medical Education",
+  title: "Privacy Policy",
 };
 
 async function loadPrivacyPolicy(): Promise<{ content: string; updatedAt: string | null }> {

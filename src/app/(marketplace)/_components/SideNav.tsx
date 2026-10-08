@@ -20,7 +20,7 @@ export default function SideNav() {
       <aside className="flex items-center px-5 justify-center">
         {/* <Image
           src={"/Images/nativeMedLogo.png"}
-          alt="NativeMed Logo"
+          alt="Native Medical Education"
           width={45}
           height={45}
         /> */}
@@ -31,7 +31,7 @@ export default function SideNav() {
         <Link href="/">
           <Image
             src={"/Images/main_logo.png"}
-            alt="NativeMed Logo"
+            alt="Native Medical Education"
             width={100}
             height={100}
             className="w-20 lg:w-28 mix-blend-multiply"
