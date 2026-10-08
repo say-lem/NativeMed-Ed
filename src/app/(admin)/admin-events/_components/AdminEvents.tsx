@@ -3,7 +3,8 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import type { Activity, Course } from "@/types/api";
+import type { Activity } from "@/types/api";
+import type { ActivityProductOption } from "@/lib/activity-product";
 import { formatDate } from "@/lib/date";
 import { useAdminList } from "../../_components/AdminListContext";
 import Pagination from "../../_components/Pagination";
@@ -22,7 +23,7 @@ function isUpcoming(e: Activity): boolean {
   return new Date(e.date).getTime() >= Date.now();
 }
 
-export default function AdminEvents({ events, courses }: { events: Activity[]; courses: Pick<Course, "_id" | "title" | "isPublished">[] }) {
+export default function AdminEvents({ events, products }: { events: Activity[]; products: ActivityProductOption[] }) {
   const [tab, setTab] = useState<Tab>("Upcoming");
   const { query, page, setPage } = useAdminList();
   const router = useRouter();
@@ -167,7 +168,7 @@ export default function AdminEvents({ events, courses }: { events: Activity[]; c
 
       {creating && (
         <EventFormModal
-          courses={courses}
+          products={products}
           onClose={() => setCreating(false)}
           onSaved={() => {
             setCreating(false);
@@ -178,7 +179,7 @@ export default function AdminEvents({ events, courses }: { events: Activity[]; c
 
       {editing && (
         <EventFormModal
-          courses={courses}
+          products={products}
           event={editing}
           onClose={() => setEditing(null)}
           onSaved={() => {

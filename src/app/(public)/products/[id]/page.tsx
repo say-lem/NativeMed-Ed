@@ -4,7 +4,7 @@ import Link from "next/link";
 import ContainedImage from "@/components/shared/ContainedImage";
 import CourseSchedule from "@/components/shared/CourseSchedule";
 import { Markdown } from "@/components/shared/Markdown";
-import ProductsCard from "@/components/shared/ProductsCard";
+import CatalogGrid from "../_components/CatalogGrid";
 import TitleCase from "@/components/shared/TitleCase";
 import { Button } from "@/components/ui/button";
 import { getCourses } from "@/services/courses.service";
@@ -130,7 +130,7 @@ export default async function ProductByIdPage({ params }: PageProps) {
         <aside className="pt-10 sm:pt-12 lg:pt-16 space-y-6 sm:space-y-8">
           <TitleCase text="You Might Also Like" />
           <div className="px-0 sm:px-4 lg:px-10">
-            <ProductsCard cutBy={4} />
+            <CatalogGrid cutBy={4} excludeKey={`${kind}:${data._id}`} />
           </div>
         </aside>
       </section>

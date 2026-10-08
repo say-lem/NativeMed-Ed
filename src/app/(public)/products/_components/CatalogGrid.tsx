@@ -5,6 +5,7 @@ import ContainedImage from "@/components/shared/ContainedImage";
 import { courseBadgePrice, formatMoney, liveCourseBadgePrice } from "@/lib/price";
 import { roundDownToNearestTen } from "@/lib/stats";
 import { getCatalog } from "@/services/catalog.service";
+import { recommendProducts } from "@/lib/product-recommendations";
 import type { CatalogProduct } from "@/types/api";
 
 // Catalogue order (home page preview + full /products grid): case bank first,
@@ -19,10 +20,12 @@ const TYPE_PRIORITY: Record<CatalogProduct["type"], number> = {
 async function loadCatalog(
   cutBy: number,
   filterType?: CatalogProduct["type"],
+  excludeKey?: string,
 ): Promise<CatalogProduct[]> {
   try {
     const res = await getCatalog();
     if (!res.success) return [];
+    if (excludeKey) return recommendProducts(res.data, excludeKey, cutBy);
     const filtered = filterType
       ? res.data.filter((p) => p.type === filterType)
       : res.data;
@@ -63,11 +66,14 @@ function CtaBadge({
 export default async function CatalogGrid({
   cutBy = 0,
   filterType,
+  excludeKey,
 }: {
   cutBy?: number;
   filterType?: CatalogProduct["type"];
+  /** Enables random recommendations from all product types. */
+  excludeKey?: string;
 }) {
-  const products = await loadCatalog(cutBy, filterType);
+  const products = await loadCatalog(cutBy, filterType, excludeKey);
 
   if (products.length === 0) {
     return (

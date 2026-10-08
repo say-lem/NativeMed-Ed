@@ -11,7 +11,8 @@ import {
   emptyActivityValues,
   type ActivityValues,
 } from "@/lib/schemas/activity";
-import type { Activity, Course } from "@/types/api";
+import type { Activity } from "@/types/api";
+import { activityProduct, activityProductValue, type ActivityProductOption } from "@/lib/activity-product";
 import { createActivityAction, updateActivityAction } from "../actions";
 
 const inputClass =
@@ -42,15 +43,16 @@ function toDateInputValue(iso: string): string {
 
 export default function EventFormModal({
   event,
-  courses,
+  products,
   onClose,
   onSaved,
 }: {
   event?: Activity;
-  courses: Pick<Course, "_id" | "title" | "isPublished">[];
+  products: ActivityProductOption[];
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const savedProduct = event ? activityProductValue(activityProduct(event)) : "";
   const [pending, startTransition] = useTransition();
 
   const {
@@ -61,7 +63,7 @@ export default function EventFormModal({
   } = useForm<ActivityValues>({
     resolver: zodResolver(activitySchema),
     defaultValues: event
-      ? { date: toDateInputValue(event.date), description: event.description, time: event.time ?? "", activityType: event.activityType ?? "", activityStatus: event.activityStatus ?? "", courseId: event.courseId ?? "", isPublished: event.isPublished !== false }
+      ? { date: toDateInputValue(event.date), description: event.description, time: event.time ?? "", activityType: event.activityType ?? "", activityStatus: event.activityStatus ?? "", product: savedProduct, isPublished: event.isPublished !== false }
       : emptyActivityValues,
   });
 
@@ -139,21 +141,21 @@ export default function EventFormModal({
 
           {(["activityStatus", "activityType", "time"] as const).map((field) => (
             <div key={field} className="space-y-2">
-              <Label text={`${field === "activityStatus" ? "Course status (event title)" : field === "activityType" ? "Activity type" : "Time"} (optional)`} htmlFor={`event-${field}`} />
+              <Label text={`${field === "activityStatus" ? "Event title" : field === "activityType" ? "Activity type" : "Time"} (optional)`} htmlFor={`event-${field}`} />
               <input id={`event-${field}`} type={field === "time" ? "time" : "text"} maxLength={field === "time" ? undefined : 100} className={inputClass} {...register(field)} />
               <FieldError message={errors[field]?.message} />
             </div>
           ))}
-          {event && <p className="text-xs text-subtle-text">Leaving time, course status, or activity type blank keeps its saved value.</p>}
+          {event && <p className="text-xs text-subtle-text">Leaving time, event title, or activity type blank keeps its saved value.</p>}
           <div className="space-y-2">
-            <Label text="Linked course (optional)" htmlFor="event-course" />
-            <select id="event-course" className={inputClass} {...register("courseId")}>
-              <option value="">No linked course</option>
-              {event?.courseId && !courses.some((course) => course._id === event.courseId) && <option value={event.courseId}>Previously linked course (unavailable)</option>}
-              {courses.map((course) => <option key={course._id} value={course._id}>{course.title}{!course.isPublished ? " (draft)" : ""}</option>)}
+            <Label text="Linked product (optional)" htmlFor="event-product" />
+            <select id="event-product" className={inputClass} {...register("product")}>
+              <option value="">No linked product</option>
+              {savedProduct && !products.some((product) => product.value === savedProduct) && <option value={savedProduct}>Previously linked product (unavailable)</option>}
+              {products.map((product) => <option key={product.value} value={product.value}>{product.title}{!product.isPublished ? " (draft)" : ""}</option>)}
             </select>
-            <p className="text-xs text-subtle-text">Draft courses must be published before users can view their information. Select “No linked course” to remove a link.</p>
-            <FieldError message={errors.courseId?.message} />
+            <p className="text-xs text-subtle-text">Draft products must be published before users can view their information. Select “No linked product” to remove a link.</p>
+            <FieldError message={errors.product?.message} />
           </div>
           <label className="flex items-center gap-2 text-sm text-secondary-100">
             <input type="checkbox" {...register("isPublished")} /> Publish event (optional; enabled by default)

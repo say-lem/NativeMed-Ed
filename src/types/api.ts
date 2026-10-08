@@ -753,8 +753,13 @@ export interface UpdateFreeProductInput {
   isPublished?: boolean;
 }
 
+export type ActivityProduct =
+  | { type: "course" | "live_course" | "one_on_one" | "free_product"; id: string }
+  | { type: "case_bank"; id?: never };
+
 /** Backend activities are displayed as events; missing publication flags remain public. */
 export interface Activity {
+  product?: ActivityProduct | null;
   time?: string;
   activityType?: string;
   activityStatus?: string;
@@ -771,6 +776,7 @@ export interface Activity {
 
 /** Payload for POST/PATCH /admin/activities. */
 export interface ActivityInput {
+  product?: ActivityProduct | null;
   time?: string;
   activityType?: string;
   activityStatus?: string;

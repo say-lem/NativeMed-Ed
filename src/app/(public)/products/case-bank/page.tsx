@@ -2,7 +2,7 @@ import axios from "axios";
 // import CountDownToClass from "@/components/shared/Countdown";
 import ContainedImage from "@/components/shared/ContainedImage";
 import { Markdown } from "@/components/shared/Markdown";
-import ProductsCard from "@/components/shared/ProductsCard";
+import CatalogGrid from "../_components/CatalogGrid";
 import TitleCase from "@/components/shared/TitleCase";
 import { getCatalog } from "@/services/catalog.service";
 import { getCaseBankOverview } from "@/services/cases.service";
@@ -124,7 +124,7 @@ export default async function CaseBankProductPage() {
         <aside className="pt-10 sm:pt-12 lg:pt-16 space-y-6 sm:space-y-8">
           <TitleCase text="You Might Also Like" />
           <div className="px-0 sm:px-4 lg:px-10">
-            <ProductsCard cutBy={4} />
+            <CatalogGrid cutBy={4} excludeKey="case_bank" />
           </div>
         </aside>
       </section>
