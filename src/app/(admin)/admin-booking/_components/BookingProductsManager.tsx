@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { AlertTriangle, CalendarDays, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
@@ -24,10 +24,32 @@ export default function BookingProductsManager({
   const [editing, setEditing] = useState<AdminBookingProduct | null>(null);
   const [managingDatesId, setManagingDatesId] = useState<string | null>(null);
   const [, startAction] = useTransition();
+  const [localProducts, setLocalProducts] = useState(products);
 
-  // Derived from the live `products` prop (not a snapshot) so the dates modal reflects
-  // additions/removals immediately after each `router.refresh()`, instead of going stale.
-  const managingDates = products.find((p) => p._id === managingDatesId) ?? null;
+  useEffect(() => {
+    setLocalProducts(products);
+  }, [products]);
+
+  const applyProduct = (updated: AdminBookingProduct) => {
+    setLocalProducts((prev) =>
+      prev.map((p) => (p._id === updated._id ? updated : p)),
+    );
+  };
+
+  const dropDate = (productId: string, dateId: string) => {
+    setLocalProducts((prev) =>
+      prev.map((p) =>
+        p._id === productId
+          ? {
+              ...p,
+              availableDates: (p.availableDates ?? []).filter((d) => d._id !== dateId),
+            }
+          : p,
+      ),
+    );
+  };
+
+  const managingDates = localProducts.find((p) => p._id === managingDatesId) ?? null;
 
   const togglePublished = (product: AdminBookingProduct) => {
     setBusyId(product._id);
@@ -62,7 +84,7 @@ export default function BookingProductsManager({
     <div className="rounded-[16px] border border-[#EDEDED] p-4 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-black-others">
-          Session products ({products.length})
+          Session products ({localProducts.length})
         </h2>
         <button
           type="button"
@@ -74,10 +96,10 @@ export default function BookingProductsManager({
       </div>
 
       <div className="mt-5 divide-y divide-[#EDEDED]">
-        {products.length === 0 ? (
+        {localProducts.length === 0 ? (
           <p className="text-center text-subtle-text py-10">No session products yet.</p>
         ) : (
-          products.map((product) => {
+          localProducts.map((product) => {
             const busy = busyId === product._id;
             // A date is still "open" if at least one of the product's times hasn't been
             // booked AND hasn't already passed — a date can clear the old "not fully
@@ -221,7 +243,12 @@ export default function BookingProductsManager({
       )}
 
       {managingDates && (
-        <ManageDatesModal product={managingDates} onClose={() => setManagingDatesId(null)} />
+        <ManageDatesModal
+          product={managingDates}
+          onClose={() => setManagingDatesId(null)}
+          onProductChange={applyProduct}
+          onDateRemoved={(dateId) => dropDate(managingDates._id, dateId)}
+        />
       )}
     </div>
   );

@@ -7,6 +7,7 @@ import {
   createBookingProduct,
   deleteBookingProduct,
   deleteSlotAvailabilityRequest,
+  normalizeAdminBookingProduct,
   removeAvailableDate,
   resolveSlotAvailabilityRequest,
   setBookingProductPublished,
@@ -19,14 +20,23 @@ import {
   bookingProductUpdatePayload,
   type BookingProductValues,
 } from "@/lib/schemas/booking";
-import type { ApiFailure, FormActionResult } from "@/types/api";
+import type { AdminBookingProduct, ApiFailure, FormActionResult } from "@/types/api";
 
 type SaveBookingProductResult = FormActionResult & { productId?: string };
+type DatePoolResult = FormActionResult & { product?: AdminBookingProduct };
 
 function fail(err: unknown, tag: string, fallback: string): FormActionResult {
   if (axios.isAxiosError(err)) {
+    const status = err.response?.status;
     const data = err.response?.data as ApiFailure | undefined;
-    console.error(`[${tag}] axios error:`, err.code, err.message);
+    console.error(`[${tag}] axios error:`, status, err.code, err.message);
+    if (status === 429) {
+      return {
+        ok: false,
+        message:
+          data?.message ?? "Too many requests — wait a minute and try again.",
+      };
+    }
     return { ok: false, message: data?.message ?? fallback, fieldErrors: data?.errors };
   }
   console.error(`[${tag}] unexpected error:`, err);
@@ -132,17 +142,23 @@ export async function deleteBookingProductAction(id: string): Promise<FormAction
   }
 }
 
-/** `date` is a yyyy-mm-dd string from a native date input. */
+function productFrom(res: { data: AdminBookingProduct | null }): AdminBookingProduct | undefined {
+  return res.data ? normalizeAdminBookingProduct(res.data) : undefined;
+}
+
+/** `date` is a yyyy-mm-dd string from a native date input.
+ *  Does not revalidate/refresh the admin page — the client patches the product
+ *  from the response so each click is one API call (a refresh re-fetches three
+ *  admin lists and trips the booking rate limit on the next delete). */
 export async function addAvailableDateAction(
   productId: string,
   date: string,
-): Promise<FormActionResult> {
+): Promise<DatePoolResult> {
   if (!date) return { ok: false, message: "Choose a date first." };
   try {
     const res = await addAvailableDate(productId, date);
     if (!res.success) return { ok: false, message: res.message };
-    revalidateBooking();
-    return { ok: true, message: "Date added" };
+    return { ok: true, message: "Date added", product: productFrom(res) };
   } catch (err) {
     return fail(err, "addAvailableDateAction", "Couldn't add the date.");
   }
@@ -151,12 +167,11 @@ export async function addAvailableDateAction(
 export async function removeAvailableDateAction(
   productId: string,
   dateId: string,
-): Promise<FormActionResult> {
+): Promise<DatePoolResult> {
   try {
     const res = await removeAvailableDate(productId, dateId);
     if (!res.success) return { ok: false, message: res.message };
-    revalidateBooking();
-    return { ok: true, message: "Date removed" };
+    return { ok: true, message: "Date removed", product: productFrom(res) };
   } catch (err) {
     return fail(err, "removeAvailableDateAction", "Couldn't remove the date.");
   }
@@ -185,7 +200,7 @@ export async function addAvailableDateRangeAction(
   productId: string,
   from: string,
   to: string,
-): Promise<FormActionResult> {
+): Promise<DatePoolResult> {
   if (!from || !to) return { ok: false, message: "Choose both a start and end date." };
   const start = new Date(`${from}T00:00:00Z`);
   const end = new Date(`${to}T00:00:00Z`);
@@ -203,23 +218,38 @@ export async function addAvailableDateRangeAction(
 
   let added = 0;
   let skipped = 0;
+  let latest: AdminBookingProduct | undefined;
   for (const day of days) {
     try {
       const res = await addAvailableDate(productId, day);
-      if (res.success) added++;
-      else skipped++;
-    } catch {
+      if (res.success) {
+        added++;
+        latest = productFrom(res);
+      } else {
+        skipped++;
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 429) {
+        if (added === 0) {
+          return fail(err, "addAvailableDateRangeAction", "Couldn't add that range.");
+        }
+        return {
+          ok: true,
+          message: `Added ${added} dates, then hit the rate limit. Wait a minute before adding more.`,
+          product: latest,
+        };
+      }
       skipped++;
     }
   }
 
-  revalidateBooking();
   if (added === 0) {
     return { ok: false, message: `No dates added — all ${skipped} were already in the pool.` };
   }
   return {
     ok: true,
     message: skipped > 0 ? `Added ${added} dates (${skipped} already existed)` : `Added ${added} dates`,
+    product: latest,
   };
 }
 

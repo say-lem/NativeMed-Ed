@@ -1,6 +1,5 @@
 "use client";
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { AlertTriangle, Loader2, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useConfirm } from "@/components/shared/ConfirmDialog";
@@ -27,11 +26,14 @@ function todayValue(): string {
 export default function ManageDatesModal({
   product,
   onClose,
+  onProductChange,
+  onDateRemoved,
 }: {
   product: AdminBookingProduct;
   onClose: () => void;
+  onProductChange: (product: AdminBookingProduct) => void;
+  onDateRemoved: (dateId: string) => void;
 }) {
-  const router = useRouter();
   const confirm = useConfirm();
   const [mode, setMode] = useState<Mode>("single");
   const [date, setDate] = useState("");
@@ -67,7 +69,7 @@ export default function ManageDatesModal({
       if (res.ok) {
         toast.success(res.message ?? "Date added");
         setDate("");
-        router.refresh();
+        if (res.product) onProductChange(res.product);
       } else {
         toast.error(res.message ?? "Couldn't add the date.");
       }
@@ -85,7 +87,7 @@ export default function ManageDatesModal({
         toast.success(res.message ?? "Dates added");
         setRangeFrom("");
         setRangeTo("");
-        router.refresh();
+        if (res.product) onProductChange(res.product);
       } else {
         toast.error(res.message ?? "Couldn't add that range.");
       }
@@ -103,10 +105,14 @@ export default function ManageDatesModal({
     setBusyId(dateId);
     startRemove(async () => {
       const res = await removeAvailableDateAction(product._id, dateId);
-      if (res.ok) toast.success(res.message ?? "Date removed");
-      else toast.error(res.message ?? "Something went wrong");
+      if (res.ok) {
+        toast.success(res.message ?? "Date removed");
+        if (res.product) onProductChange(res.product);
+        else onDateRemoved(dateId);
+      } else {
+        toast.error(res.message ?? "Something went wrong");
+      }
       setBusyId(null);
-      router.refresh();
     });
   };
 
