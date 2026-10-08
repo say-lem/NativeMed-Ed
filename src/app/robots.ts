@@ -4,9 +4,10 @@ import { SITE_URL } from "@/lib/site";
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: {
-      userAgent: "*",
-      allow: "/",
+      userAgent: '*',
+      allow: '/',
+      disallow: ['/_next/', '/static/'],
     },
-    sitemap: `${SITE_URL}/sitemap.xml`,
-  };
+    sitemap: `${SITE_URL}/sitemap.xml/`, // Added trailing slash here
+  }
 }
