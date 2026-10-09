@@ -42,7 +42,7 @@ test('PDF proxy blocks SSRF destinations before fetching and rejects HTML', asyn
       return new Response('data', { headers: { 'content-type': type } });
     },
   });
-  for (const url of ['http://127.0.0.1/a', 'https://evil.test/a', 'https://res.cloudinary.com.evil.test/a', 'https://user@res.cloudinary.com/a', 'https://res.cloudinary.com:8443/a']) {
+  for (const url of ['http://127.0.0.1/a', 'https://evil.test/a', 'https://res.cloudinary.com.evil.test/a', 'https://user@res.cloudinary.com/a', 'https://res.cloudinary.com:8443/a', 'https://api.cloudinary.com/v1_1/account/raw/upload', 'https://api.cloudinary.com.evil.test/v1_1/account/raw/download']) {
     await assert.rejects(fetchStoredPdf(url));
   }
   assert.equal(calls.length, 0);
@@ -52,6 +52,11 @@ test('PDF proxy blocks SSRF destinations before fetching and rejects HTML', asyn
   assert.equal(await response.text(), 'data');
   assert.equal(calls[1].options.redirect, 'error');
   assert.equal(calls[1].options.cache, 'no-store');
+  const signedUrl = 'https://api.cloudinary.com/v1_1/account/raw/download?public_id=resource&signature=test&timestamp=123';
+  const download = await fetchStoredPdf(signedUrl);
+  assert.equal(await download.text(), 'data');
+  assert.equal(calls[2].url.href, signedUrl);
+  assert.equal(calls[2].options.redirect, 'error');
 });
 
 test('identity comes from backend verification and fails closed', async () => {

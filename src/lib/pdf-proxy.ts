@@ -2,7 +2,11 @@
  * arbitrary hosts, and never serve upstream HTML under our application origin. */
 export async function fetchStoredPdf(fileUrl: string): Promise<Response> {
   const url = new URL(fileUrl);
-  if (url.protocol !== "https:" || url.hostname !== "res.cloudinary.com" ||
+  // Signed raw downloads use the API host, not the delivery CDN host.
+  const allowedStorageEndpoint = url.hostname === "res.cloudinary.com" ||
+    (url.hostname === "api.cloudinary.com" &&
+      /^\/v1_1\/[a-zA-Z0-9_-]+\/raw\/download$/.test(url.pathname));
+  if (url.protocol !== "https:" || !allowedStorageEndpoint ||
       url.port || url.username || url.password) {
     throw new Error("Invalid PDF storage URL");
   }
