@@ -9,7 +9,8 @@ import TitleCase from "@/components/shared/TitleCase";
 import { Button } from "@/components/ui/button";
 import { getCourses } from "@/services/courses.service";
 import { getLiveCourses } from "@/services/liveCourses.service";
-import { formatMoney } from "@/lib/price";
+import { formatMoney, priceFor, purchasableIntervals } from "@/lib/price";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 import type { Course, LiveCourse } from "@/types/api";
 
 interface PageProps {
@@ -41,6 +42,71 @@ async function loadProduct(id: string): Promise<Product | null> {
     console.error("[product-detail] fetch error:", err.code, err.message);
     return null;
   }
+}
+
+function toAbsoluteUrl(path: string): string {
+  return path.startsWith("http") ? path : `${SITE_URL}${path.startsWith("/") ? "" : "/"}${path}`;
+}
+
+/**
+ * schema.org Product markup for rich results. Deliberately omits `aggregateRating`/
+ * `review` — there is no per-course review data in the backend (the `Review` model is a
+ * site-wide testimonials feed, not linked to a course), and fabricating ratings risks a
+ * Google manual action for spam. `offers` is omitted entirely when nothing is purchasable
+ * (no pricing set) rather than inventing a price.
+ */
+function buildProductJsonLd(product: Product) {
+  const { kind, data } = product;
+  const url = `${SITE_URL}/products/${data._id}`;
+  const image = toAbsoluteUrl(data.thumbnailUrl || "/Images/card image.png");
+  const description = data.description || data.detailedDescription;
+  const availability = data.paymentsPaused
+    ? "https://schema.org/OutOfStock"
+    : "https://schema.org/InStock";
+
+  let offers: Record<string, unknown> | undefined;
+  if (kind === "course") {
+    const intervals = purchasableIntervals(data);
+    if (intervals.length === 1) {
+      offers = {
+        "@type": "Offer",
+        url,
+        priceCurrency: "GBP",
+        price: priceFor(data, intervals[0])!.toFixed(2),
+        availability,
+      };
+    } else if (intervals.length > 1) {
+      const prices = intervals.map((iv) => priceFor(data, iv)!);
+      offers = {
+        "@type": "AggregateOffer",
+        url,
+        priceCurrency: "GBP",
+        lowPrice: Math.min(...prices).toFixed(2),
+        highPrice: Math.max(...prices).toFixed(2),
+        offerCount: intervals.length,
+        availability,
+      };
+    }
+  } else if (data.price != null) {
+    offers = {
+      "@type": "Offer",
+      url,
+      priceCurrency: "GBP",
+      price: data.price.toFixed(2),
+      availability,
+    };
+  }
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: data.title,
+    ...(description ? { description } : {}),
+    image,
+    url,
+    brand: { "@type": "Brand", name: SITE_NAME },
+    ...(offers ? { offers } : {}),
+  };
 }
 
 export default async function ProductByIdPage({ params }: PageProps) {
@@ -75,6 +141,10 @@ export default async function ProductByIdPage({ params }: PageProps) {
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildProductJsonLd(product)) }}
+      />
       <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-8 sm:pt-12 lg:pt-20 pb-16 sm:pb-24 lg:pb-36">
         <aside className="px-0 sm:px-4 lg:px-10">
           <div className="authFormBorder rounded-[16px] p-3 sm:p-4 gap-4 sm:gap-5 md:gap-6 lg:gap-8 flex flex-col md:flex-row justify-center overflow-x-hidden">
