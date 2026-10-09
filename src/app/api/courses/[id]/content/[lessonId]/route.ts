@@ -1,3 +1,4 @@
+import { fetchStoredPdf } from "@/lib/pdf-proxy";
 import { NextRequest } from "next/server";
 import { getCourseContent } from "@/services/courses.service";
 import { getCourseAccess } from "@/lib/access";
@@ -35,26 +36,20 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
   if (!fileUrl) return new Response("Not found", { status: 404 });
 
-  const upstream = await fetch(fileUrl);
-  if (!upstream.ok || !upstream.body) {
-    console.error(
-      "[content-proxy] upstream fetch failed:",
-      upstream.status,
-      upstream.headers.get("x-cld-error") ?? "",
-      fileUrl,
-    );
+  let upstream: Response;
+  try {
+    upstream = await fetchStoredPdf(fileUrl);
+  } catch {
     return new Response("Upstream error", { status: 502 });
   }
 
-  const contentType =
-    upstream.headers.get("content-type") ?? "application/pdf";
-
   return new Response(upstream.body, {
     headers: {
-      "Content-Type": contentType,
+      "Content-Type": "application/pdf",
       "Content-Disposition": "inline",
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "sandbox; default-src 'none'",
     },
   });
 }

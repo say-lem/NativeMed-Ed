@@ -1,3 +1,4 @@
+import { fetchStoredPdf } from "@/lib/pdf-proxy";
 import { NextRequest } from "next/server";
 import { getFreeProduct } from "@/services/freeProducts.service";
 import { slugify } from "@/lib/slug";
@@ -30,13 +31,10 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
   if (!fileUrl) return new Response("Not found", { status: 404 });
 
-  const upstream = await fetch(fileUrl);
-  if (!upstream.ok || !upstream.body) {
-    console.error(
-      "[free-product-download] upstream fetch failed:",
-      upstream.status,
-      fileUrl,
-    );
+  let upstream: Response;
+  try {
+    upstream = await fetchStoredPdf(fileUrl);
+  } catch {
     return new Response("Upstream error", { status: 502 });
   }
 
@@ -48,6 +46,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       "Content-Disposition": `attachment; filename="${filename}"`,
       "Cache-Control": "private, no-store",
       "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "sandbox; default-src 'none'",
     },
   });
 }

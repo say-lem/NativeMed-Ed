@@ -44,10 +44,8 @@ export async function clearSession(): Promise<void> {
 }
 
 // --- Display profile ------------------------------------------------------
-// The user's display fields (name/email/phone) are cached in a cookie at login
-// so layouts can render the shell WITHOUT calling `/auth/me` on every request
-// (which was tripping the backend's auth rate limiter). Role/identity gating
-// still comes from the signed JWT, never this cookie — see lib/current-user.ts.
+// Cached display fields only. Authorization is verified by the backend; see
+// lib/current-user.ts. Never use this unsigned cookie for access decisions.
 
 export async function setProfile(user: User): Promise<void> {
   const store = await cookies();

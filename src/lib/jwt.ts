@@ -29,7 +29,7 @@ export function decodeJwt(token: string): JwtPayload | null {
 }
 
 export function isExpired(payload: JwtPayload | null, leewaySeconds = 30): boolean {
-  if (!payload) return true;
+  if (!payload || !Number.isFinite(payload.exp)) return true;
   const nowSeconds = Math.floor(Date.now() / 1000);
   return payload.exp - leewaySeconds <= nowSeconds;
 }

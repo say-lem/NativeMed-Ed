@@ -8,7 +8,7 @@ export function safeRedirect(
   target: string | undefined | null,
   fallback = "/dashboard",
 ): string {
-  if (!target || !target.startsWith("/")) return fallback;
+  if (!target || !target.startsWith("/") || /[\\\x00-\x20\x7f]/.test(target)) return fallback;
   // Reject protocol-relative ("//evil.com") and backslash tricks ("/\evil.com").
   if (target.startsWith("//") || target.startsWith("/\\")) return fallback;
   return target;

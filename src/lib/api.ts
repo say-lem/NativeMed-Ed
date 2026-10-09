@@ -1,3 +1,5 @@
+import "server-only";
+import { cache } from "react";
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import {
   clearSession,
@@ -35,50 +37,40 @@ function isAuthEndpoint(url?: string): boolean {
   return AUTH_ENDPOINT_PATTERNS.some((p) => url.includes(p));
 }
 
-let refreshInFlight: Promise<AuthTokens | null> | null = null;
-
+// React cache is scoped to a server render. Never share credentials in a
+// process-global promise: concurrent requests can belong to different users.
 async function performRefresh(): Promise<AuthTokens | null> {
-  if (refreshInFlight) return refreshInFlight;
-
-  refreshInFlight = (async () => {
+  try {
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) return null;
+    const tokens = await refreshTokens(refreshToken);
+    if (!tokens) return null;
     try {
-      const refreshToken = await getRefreshToken();
-      if (!refreshToken) return null;
-
-      const res = await axios.post<ApiResponse<AuthTokens>>(
-        `${baseURL}/auth/refresh-token`,
-        { refreshToken },
-        { headers: { "Content-Type": "application/json" } },
-      );
-
-      if (!res.data.success) return null;
-
-      const tokens = res.data.data;
-      try {
-        await setSession(tokens);
-      } catch {
-        // Server Component context cannot set cookies.
-        // Tokens are still returned so the in-flight request can retry once.
-      }
-      return tokens;
+      await setSession(tokens);
     } catch {
-      return null;
-    } finally {
-      refreshInFlight = null;
+      // Server Components cannot write cookies; the proxy persists rotation.
     }
-  })();
-
-  return refreshInFlight;
+    return tokens;
+  } catch {
+    return null;
+  }
 }
+
+const refreshTokens = cache(async (refreshToken: string): Promise<AuthTokens | null> => {
+  const res = await axios.post<ApiResponse<AuthTokens>>(
+    `${baseURL}/auth/refresh-token`,
+    { refreshToken },
+    { headers: { "Content-Type": "application/json" }, timeout: 15_000, maxRedirects: 0 },
+  );
+  return res.data.success ? res.data.data : null;
+});
 
 type RetriableConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
   _netRetry?: number;
 };
 
-// Transient transport failures (e.g. Render free-tier cold start) reset the
-// socket with NO http response — the request never reached the server, so
-// retrying is safe for any method (login included).
+// A missing response does not prove a mutation failed. Only retry reads.
 const MAX_NETWORK_RETRIES = 3;
 const RETRY_BASE_DELAY_MS = 1000;
 const RETRIABLE_CODES = new Set([
@@ -101,7 +93,7 @@ api.interceptors.response.use(
     const status = error.response?.status;
 
     // Transient network blip (e.g. cold start) → retry with backoff.
-    if (original && isTransientNetworkError(error)) {
+    if (original && ["get", "head", "options"].includes(original.method?.toLowerCase() ?? "get") && isTransientNetworkError(error)) {
       const attempt = original._netRetry ?? 0;
       if (attempt < MAX_NETWORK_RETRIES) {
         original._netRetry = attempt + 1;
