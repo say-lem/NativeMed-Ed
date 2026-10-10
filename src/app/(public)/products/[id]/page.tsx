@@ -49,13 +49,16 @@ function toAbsoluteUrl(path: string): string {
 }
 
 /**
- * schema.org Product markup for rich results. Deliberately omits `aggregateRating`/
- * `review` — there is no per-course review data in the backend (the `Review` model is a
- * site-wide testimonials feed, not linked to a course), and fabricating ratings risks a
- * Google manual action for spam. `offers` is omitted entirely when nothing is purchasable
- * (no pricing set) rather than inventing a price.
+ * schema.org Course markup (Google's "Course info" rich result) — deliberately NOT
+ * `Product`. These are online exam-prep courses, not physical retail goods: typing them
+ * as `Product` with an `offers.price` pulls them into Google's Merchant listings
+ * experience, which expects shipping/return-policy/GTIN fields that don't honestly apply
+ * to a digital subscription. `Course` supports the same price via `offers` without that.
+ * Also omits `aggregateRating`/`review` — there is no per-course review data in the
+ * backend (the `Review` model is a site-wide testimonials feed, not linked to a course),
+ * and fabricating ratings risks a Google manual action for spam.
  */
-function buildProductJsonLd(product: Product) {
+function buildCourseJsonLd(product: Product) {
   const { kind, data } = product;
   const url = `${SITE_URL}/products/${data._id}`;
   const image = toAbsoluteUrl(data.thumbnailUrl || "/Images/card image.png");
@@ -97,14 +100,24 @@ function buildProductJsonLd(product: Product) {
     };
   }
 
+  const courseInstance: Record<string, unknown> = {
+    "@type": "CourseInstance",
+    courseMode: "Online",
+  };
+  if (kind === "live_course") {
+    courseInstance.startDate = data.startDate;
+    courseInstance.endDate = data.endDate;
+  }
+
   return {
     "@context": "https://schema.org",
-    "@type": "Product",
+    "@type": "Course",
     name: data.title,
     ...(description ? { description } : {}),
     image,
     url,
-    brand: { "@type": "Brand", name: SITE_NAME },
+    provider: { "@type": "Organization", name: SITE_NAME, sameAs: SITE_URL },
+    hasCourseInstance: [courseInstance],
     ...(offers ? { offers } : {}),
   };
 }
@@ -143,7 +156,7 @@ export default async function ProductByIdPage({ params }: PageProps) {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildProductJsonLd(product)) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildCourseJsonLd(product)) }}
       />
       <section className="px-4 sm:px-8 md:px-10 lg:px-15 radialBgGradient pt-8 sm:pt-12 lg:pt-20 pb-16 sm:pb-24 lg:pb-36">
         <aside className="px-0 sm:px-4 lg:px-10">
