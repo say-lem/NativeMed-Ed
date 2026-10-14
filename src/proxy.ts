@@ -20,21 +20,31 @@ interface RefreshSuccess {
   refreshToken: string;
 }
 
-async function tryRefresh(refreshToken: string): Promise<RefreshSuccess | null> {
+type RefreshResult =
+  | { ok: true; data: RefreshSuccess }
+  // "invalid": the refresh token is genuinely rejected — log out.
+  // "unavailable": rate limited / backend hiccup — NOT a verdict on the
+  // session, so the caller must not treat it like an invalid token.
+  | { ok: false; reason: "invalid" | "unavailable" };
+
+async function tryRefresh(refreshToken: string): Promise<RefreshResult> {
   try {
     const res = await fetch(`${baseURL}/auth/refresh-token`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ refreshToken }),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const reason = res.status === 401 || res.status === 403 ? "invalid" : "unavailable";
+      return { ok: false, reason };
+    }
     const json = (await res.json()) as
       | { success: true; data: RefreshSuccess }
       | { success: false };
-    if (!json.success) return null;
-    return json.data;
+    if (!json.success) return { ok: false, reason: "invalid" };
+    return { ok: true, data: json.data };
   } catch {
-    return null;
+    return { ok: false, reason: "unavailable" };
   }
 }
 
@@ -72,22 +82,29 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   // refresh token is persisted (Server Components cannot, which is the bug
   // this fixes). The backend rotates + invalidates the old refresh token.
   const refreshed = await tryRefresh(refreshToken);
-  if (!refreshed) {
-    return redirectToLogin(request);
+  if (!refreshed.ok) {
+    if (refreshed.reason === "invalid") {
+      return redirectToLogin(request);
+    }
+    // Rate limited / backend hiccup — don't wipe a possibly-valid session
+    // over it. Let the request through with the existing tokens; the
+    // in-render API client has its own refresh-on-401 fallback and will
+    // retry once the limiter window clears.
+    return NextResponse.next();
   }
 
   // Forward the new access token to the downstream render in this same request.
-  request.cookies.set(ACCESS_TOKEN_COOKIE, refreshed.accessToken);
-  request.cookies.set(REFRESH_TOKEN_COOKIE, refreshed.refreshToken);
+  request.cookies.set(ACCESS_TOKEN_COOKIE, refreshed.data.accessToken);
+  request.cookies.set(REFRESH_TOKEN_COOKIE, refreshed.data.refreshToken);
 
   const response = NextResponse.next({
     request: { headers: request.headers },
   });
-  response.cookies.set(ACCESS_TOKEN_COOKIE, refreshed.accessToken, {
+  response.cookies.set(ACCESS_TOKEN_COOKIE, refreshed.data.accessToken, {
     ...cookieOptions,
     maxAge: ACCESS_TOKEN_MAX_AGE,
   });
-  response.cookies.set(REFRESH_TOKEN_COOKIE, refreshed.refreshToken, {
+  response.cookies.set(REFRESH_TOKEN_COOKIE, refreshed.data.refreshToken, {
     ...cookieOptions,
     maxAge: REFRESH_TOKEN_MAX_AGE,
   });
