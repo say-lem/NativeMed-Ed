@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { IoSearchSharp } from "react-icons/io5";
 import { Loader2, X } from "lucide-react";
@@ -39,15 +39,44 @@ export default function CasesListClient({
   const [isPending, startTransition] = useTransition();
   const basePath = `${rootPath}/${parentSlug}`;
 
+  // Tracks the last `initialSearch` we know about, so we can tell "the URL
+  // changed because WE pushed/replaced it" apart from "the URL changed
+  // because the user hit Back/Forward" (same prop change, different cause).
+  const prevInitialSearch = useRef(initialSearch);
+  // Whether the current filtered session already has its own history entry
+  // — only the empty→non-empty transition should push; further edits while
+  // already filtered replace in place instead of stacking one entry per
+  // debounce pause.
+  const hasPushedRef = useRef(initialSearch !== "");
+
+  // Back/Forward restored a different `search` than what's in the box —
+  // resync it instead of letting the effect below immediately push the
+  // stale local value right back onto the URL (which is what made Back
+  // effectively undo itself).
+  useEffect(() => {
+    if (initialSearch === prevInitialSearch.current) return;
+    prevInitialSearch.current = initialSearch;
+    hasPushedRef.current = initialSearch !== "";
+    setInput(initialSearch);
+  }, [initialSearch]);
+
   useEffect(() => {
     const trimmed = input.trim();
     if (trimmed === initialSearch) return;
 
     const handler = setTimeout(() => {
+      prevInitialSearch.current = trimmed;
       const params = new URLSearchParams();
       if (trimmed) params.set("search", trimmed);
       const url = params.toString() ? `${basePath}?${params}` : basePath;
-      startTransition(() => router.push(url));
+
+      if (trimmed && !hasPushedRef.current) {
+        hasPushedRef.current = true;
+        startTransition(() => router.push(url));
+      } else {
+        if (!trimmed) hasPushedRef.current = false;
+        startTransition(() => router.replace(url));
+      }
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(handler);
