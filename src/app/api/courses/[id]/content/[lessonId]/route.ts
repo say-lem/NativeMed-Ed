@@ -16,7 +16,7 @@ interface RouteParams {
  * cache this route's response beyond the request. Video/audio lessons are Google-Drive links
  * opened externally from the lesson list, never routed through here.
  */
-export async function GET(_req: NextRequest, { params }: RouteParams) {
+export async function GET(req: NextRequest, { params }: RouteParams) {
   const { id, lessonId } = await params;
 
   const access = await getCourseAccess(id);
@@ -38,18 +38,23 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
 
   let upstream: Response;
   try {
-    upstream = await fetchStoredPdf(fileUrl);
+    upstream = await fetchStoredPdf(fileUrl, req.headers.get("range"));
   } catch {
     return new Response("Upstream error", { status: 502 });
   }
 
-  return new Response(upstream.body, {
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": "inline",
-      "Cache-Control": "private, no-store",
-      "X-Content-Type-Options": "nosniff",
-      "Content-Security-Policy": "sandbox; default-src 'none'",
-    },
+  const headers = new Headers({
+    "Content-Type": "application/pdf",
+    "Content-Disposition": "inline",
+    "Cache-Control": "private, no-store",
+    "X-Content-Type-Options": "nosniff",
+    "Content-Security-Policy": "sandbox; default-src 'none'",
+    "Accept-Ranges": "bytes",
   });
+  const contentLength = upstream.headers.get("content-length");
+  const contentRange = upstream.headers.get("content-range");
+  if (contentLength) headers.set("Content-Length", contentLength);
+  if (contentRange) headers.set("Content-Range", contentRange);
+
+  return new Response(upstream.body, { status: upstream.status, headers });
 }
