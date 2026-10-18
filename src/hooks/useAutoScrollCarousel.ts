@@ -4,25 +4,56 @@ import { useEffect, useRef, useState } from "react";
 /**
  * Infinite auto-scrolling drag carousel — shared by Testimonial and UpcomingEvents.
  *
- * The caller renders the item list twice (`[...items, ...items]`) and tags each rendered
- * card with `data-card` so this hook can find them. The track sits at the scroll midpoint by
- * default, so drift in either direction wraps between 0 and the midpoint invisibly, because
- * the two halves are identical.
+ * The caller renders the item list twice (`[...items, ...items]`) ONLY when `shouldLoop` is
+ * true, and tags each rendered card with `data-card` so this hook can find them. `shouldLoop`
+ * is measured, not assumed from item count: a single copy of the list is rendered first, and
+ * only promoted to a doubled loop once it's confirmed to actually overflow the visible track.
+ * With few items the single copy already fits, so duplicating it would just show the same
+ * cards twice side by side instead of hiding the second half off-screen. Once doubled, the
+ * track sits at the scroll midpoint by default, so drift in either direction wraps between 0
+ * and the midpoint invisibly, because the two halves are identical.
  */
 export function useAutoScrollCarousel(itemCount: number, pxPerSecond = 40) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [shouldLoop, setShouldLoop] = useState(false);
+  const shouldLoopRef = useRef(false);
   const hoverRef = useRef(false);
   const interactRef = useRef(false);
   const dragRef = useRef<{ startX: number; startScroll: number } | null>(null);
 
   useEffect(() => {
+    shouldLoopRef.current = shouldLoop;
+  }, [shouldLoop]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || itemCount <= 1) {
+      setShouldLoop(false);
+      return;
+    }
+
+    const check = () => {
+      // If already doubled, the measured width covers both halves — halve it back down
+      // to compare against a single copy.
+      const singleWidth = shouldLoopRef.current
+        ? track.scrollWidth / 2
+        : track.scrollWidth;
+      setShouldLoop(singleWidth > track.clientWidth + 1);
+    };
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(track);
+    return () => ro.disconnect();
+  }, [itemCount]);
+
+  useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    // A single item isn't duplicated by the caller (nothing to loop), so there's no
-    // second half to drift/wrap toward — auto-scrolling here would just make the one
-    // card jitter against its own width instead of sitting still.
-    if (itemCount <= 1) return;
+    // A single item isn't duplicated by the caller (nothing to loop), and a short list
+    // that already fits the track isn't duplicated either — in both cases there's no
+    // second half to drift/wrap toward, so auto-scrolling would just jitter in place.
+    if (itemCount <= 1 || !shouldLoop) return;
 
     const initPos = () => {
       track.scrollLeft = track.scrollWidth / 2;
@@ -57,7 +88,7 @@ export function useAutoScrollCarousel(itemCount: number, pxPerSecond = 40) {
       cancelAnimationFrame(rafId);
       window.removeEventListener("resize", initPos);
     };
-  }, [pxPerSecond, itemCount]);
+  }, [pxPerSecond, itemCount, shouldLoop]);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -131,6 +162,7 @@ export function useAutoScrollCarousel(itemCount: number, pxPerSecond = 40) {
   return {
     trackRef,
     activeIndex,
+    shouldLoop,
     trackProps: {
       onMouseEnter: () => {
         hoverRef.current = true;

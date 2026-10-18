@@ -9,15 +9,14 @@ import { useAutoScrollCarousel } from "@/hooks/useAutoScrollCarousel";
 import type { Review } from "@/types/api";
 
 function Testimonial({ reviews }: { reviews: Review[] }) {
-  const { trackRef, activeIndex, trackProps } = useAutoScrollCarousel(
+  const { trackRef, activeIndex, trackProps, shouldLoop } = useAutoScrollCarousel(
     reviews.length,
   );
 
-  // Render the list twice so the auto-scroll can wrap seamlessly (the track sits at the
-  // midpoint by default, so drift in either direction wraps between the two identical
-  // halves invisibly). With only one review there's nothing to loop toward — duplicating
-  // it would just show the same card twice.
-  const loop = reviews.length > 1 ? [...reviews, ...reviews] : reviews;
+  // Only duplicate the list (for a seamless scroll loop) once the hook has measured that
+  // a single copy actually overflows the track — otherwise every card is already visible
+  // at once, and duplicating would just show each review twice.
+  const loop = shouldLoop ? [...reviews, ...reviews] : reviews;
 
   if (reviews.length === 0) return null;
 

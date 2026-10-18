@@ -10,15 +10,14 @@ import { useAutoScrollCarousel } from "@/hooks/useAutoScrollCarousel";
 import type { Activity } from "@/types/api";
 
 export default function UpcomingEvents({ events }: { events: Activity[] }) {
-  const { trackRef, activeIndex, trackProps } = useAutoScrollCarousel(
+  const { trackRef, activeIndex, trackProps, shouldLoop } = useAutoScrollCarousel(
     events.length,
   );
 
-  // Render the list twice so the auto-scroll can wrap seamlessly (the track sits at the
-  // midpoint by default, so drift in either direction wraps between the two identical
-  // halves invisibly). With only one event there's nothing to loop toward — duplicating
-  // it would just show the same card twice.
-  const loop = events.length > 1 ? [...events, ...events] : events;
+  // Only duplicate the list (for a seamless scroll loop) once the hook has measured that
+  // a single copy actually overflows the track — otherwise every card is already visible
+  // at once, and duplicating would just show each activity twice.
+  const loop = shouldLoop ? [...events, ...events] : events;
 
   if (events.length === 0) return null;
 
