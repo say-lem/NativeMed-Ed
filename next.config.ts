@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: {
+    // Keep build workers within the deployment runner's process/thread limits.
+    cpus: 1,
     serverActions: {
       // Server Actions default to a 1MB body limit. PDF lessons are uploaded
       // through a server action as multipart FormData and can be up to 300MB
