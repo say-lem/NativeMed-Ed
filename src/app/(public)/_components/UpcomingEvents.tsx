@@ -36,19 +36,13 @@ export default function UpcomingEvents({ events }: { events: Activity[] }) {
       >
         <div className="flex w-max gap-3 sm:gap-4 lg:gap-5 py-2">
           {loop.map((event, i) => {
-            const orig = i % events.length;
-            const isActive = orig === activeIndex;
             const { day, month } = formatDateParts(event.date);
             return (
               <div
                 key={`${event._id}-${i}`}
                 data-card
                 aria-hidden={i >= events.length}
-                className={`flex-none flex gap-4 items-start py-4 px-4 sm:py-5 sm:px-6 rounded-[16px] w-72 sm:w-88 md:w-96 transition-[opacity,border-color,box-shadow] duration-300 ${
-                  isActive
-                    ? "bg-[rgba(245,239,255,1)] border-2 border-primary opacity-100 shadow-md"
-                    : "bg-[rgba(245,239,255,0.7)] border border-[rgba(155,124,209,0.4)] opacity-70"
-                }`}
+                className="flex-none flex gap-4 items-start py-4 px-4 sm:py-5 sm:px-6 rounded-[16px] w-72 sm:w-88 md:w-96 bg-[rgba(245,239,255,1)] border-2 border-primary opacity-100 shadow-md"
               >
                 <div className="shrink-0 flex flex-col items-center justify-center rounded-[12px] bg-white w-14 h-14 sm:w-16 sm:h-16">
                   <span className="font-semibold text-lg sm:text-xl leading-none text-primary-100">
