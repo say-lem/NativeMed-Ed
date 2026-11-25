@@ -45,6 +45,9 @@
     "typescript": "^5"
   },
   "overrides": {
-    "proxy-addr": "^2.0.8"
+    "proxy-addr": "^2.0.8",
+    "@ts-morph/common": {
+      "minimatch": "^11.0.1"
+    }
   }
 }
