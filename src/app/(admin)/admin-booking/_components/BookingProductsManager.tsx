@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { AlertTriangle, CalendarDays, Loader2, Pencil, Plus, Trash2 } from "lucide-react";
@@ -24,11 +24,13 @@ export default function BookingProductsManager({
   const [editing, setEditing] = useState<AdminBookingProduct | null>(null);
   const [managingDatesId, setManagingDatesId] = useState<string | null>(null);
   const [, startAction] = useTransition();
+  const [prevProducts, setPrevProducts] = useState(products);
   const [localProducts, setLocalProducts] = useState(products);
 
-  useEffect(() => {
+  if (products !== prevProducts) {
+    setPrevProducts(products);
     setLocalProducts(products);
-  }, [products]);
+  }
 
   const applyProduct = (updated: AdminBookingProduct) => {
     setLocalProducts((prev) =>
